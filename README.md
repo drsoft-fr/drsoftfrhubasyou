@@ -1,0 +1,42 @@
+# drSoft.fr HubAsYou
+
+Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédiées par HubAsYou, par l'**API d'administration** de PrestaShop (OAuth2). Contrat de l'API : [`docs/api.md`](docs/api.md).
+
+- **API** : `POST`, `PATCH`, `GET`, `DELETE /admin-api/hubasyou/shipments…`, droits `hubasyou_shipment_read` / `hubasyou_shipment_write`.
+- **Compte client** : les colis dans le détail de la commande (crochet `displayOrderDetail`).
+- **BO** : les colis dans la fiche de la commande (crochet `displayAdminOrderMain`), avec « Modifier » (transporteur, numéro et URL de suivi, état) et « Supprimer » (page de confirmation) : contrôleur `AdminDrSoftFrHubAsYouShipment`, onglet caché sous Commandes. Le contenu d'un colis ne se modifie pas : on le supprime et HubAsYou le renvoie.
+- **E-mails** au client, chacun désactivable dans la configuration, 7 langues (fr, en, de, it, es, nl, pt) :
+    - au départ de chaque colis, une fois par colis (modèle `drsoftfrhubasyou_shipment`) ;
+    - quand tout est livré, une fois par commande, avec le récapitulatif des colis (modèle `drsoftfrhubasyou_delivered`). L'état « Livré » de PrestaShop n'envoie pas d'e-mail par défaut : c'est cet e-mail qui prévient le client.
+- **État de la commande** : « Expédié » au premier colis parti, « Livré » quand tout est livré (états réglables).
+
+## Installation
+
+1. `make package`, puis BO › Modules › Gestionnaire de modules › Envoyer un module : `dist/drsoftfrhubasyou-<version>.zip` (l'archive contient `vendor/`, l'autoloader composer).
+2. BO › Modules › drSoft.fr HubAsYou › Configurer : états de commande et e-mail ; la page rappelle les étapes de l'accès de HubAsYou.
+3. Commandes › États : si l'état choisi pour le premier colis envoie déjà un e-mail (« Expédié » : modèle `shipped`), le décocher pour éviter un double e-mail au client.
+4. Paramètres avancés › API d'administration : créer le client API de HubAsYou avec les deux droits du module.
+
+En développement, après un `git clone` dans `modules/` : `composer dump-autoload` (aucune dépendance), puis installer le module.
+
+## Personnalisation
+
+- Gabarit du compte client : `themes/<thème>/modules/drsoftfrhubasyou/views/templates/hook/order-detail.tpl` (classes `hubasyou-shipments`, `hubasyou-shipment__…`).
+- E-mails : `themes/<thème>/modules/drsoftfrhubasyou/mails/<iso>/drsoftfrhubasyou_shipment.html|txt` et `drsoftfrhubasyou_delivered.html|txt` (variables : `{firstname}`, `{lastname}`, `{order_name}`, `{shipments_html}` / `{shipments_txt}` pour le second ; `{carrier_name}`, `{tracking_number}`, `{tracking_url}`, `{tracking_link_html}`, `{products_html}` / `{products_txt}` pour le premier).
+- E-mails d'état de PrestaShop : réglés dans Commandes › États (« Envoyer un e-mail au client »), indépendamment du module. Pour ne pas les envoyer, décocher l'e-mail de l'état : le changement d'état automatique continue.
+- Libellés : `translations/<locale>/ModulesDrsoftfrhubasyouShop.<locale>.xlf` (BO › International › Traductions, module drsoftfrhubasyou).
+
+## Structure
+
+- `src/ApiPlatform/Resources/` : ressources de l'API (lues par PrestaShop pour tout module actif). **Pas de `index.php` dans ce dossier** : API Platform exécute chaque fichier qu'il y trouve.
+- `controllers/admin/` : page du BO (modifier, supprimer), qui envoie les mêmes commandes CQRS que l'API.
+- `src/Application/` : commandes et requêtes CQRS (`AddShipmentCommand`, `EditShipmentCommand`, `DeleteShipmentCommand`, `GetShipmentForEditing`, `ListShipments`), leurs gestionnaires (`#[AsCommandHandler]`, `#[AsQueryHandler]`) et `ShipmentNotifier` (e-mail, état de la commande).
+- `src/Domain/` : identifiant, états du colis, règles des champs (`ShipmentRules`, vérifiées par les commandes : mêmes règles pour l'API et le BO), exceptions (422 / 404 ; codes pour les messages traduits du BO).
+- `src/Infrastructure/` : tables (`drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison), réglages, installation.
+- `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
+
+La désinstallation supprime les colis reçus.
+
+## Choix
+
+Le cœur de PrestaShop 9.1 a ses propres colis (`shipment`, fonction « improved_shipment », en bêta et désactivée) : le module ne s'en sert pas, pour ne pas changer la création de toutes les commandes. Son format (colis, `orderDetailId`, `quantity`) est le même, pour pouvoir y passer plus tard.

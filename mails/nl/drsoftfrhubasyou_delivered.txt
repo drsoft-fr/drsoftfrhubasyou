@@ -1,0 +1,13 @@
+Uw bestelling is bezorgd
+
+Beste {firstname},
+
+Alle pakketten van uw bestelling {order_name} zijn bezorgd:
+
+{shipments_txt}
+
+We hopen dat u tevreden bent met uw aankoop. Is er iets mis, beantwoord dan gewoon deze e-mail of neem contact met ons op via uw account.
+
+Tot snel,
+{shop_name}
+{shop_url}

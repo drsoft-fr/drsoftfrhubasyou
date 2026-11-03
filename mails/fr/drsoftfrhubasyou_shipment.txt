@@ -1,0 +1,16 @@
+Votre colis est en route
+
+Bonjour {firstname},
+
+Un colis de votre commande {order_name} vient de partir. Il contient :
+{products_txt}
+
+Transporteur : {carrier_name}
+Numéro de suivi : {tracking_number}
+{tracking_url}
+
+Vous retrouvez le suivi de chaque colis dans votre compte, rubrique « Historique et détails de mes commandes ».
+
+À bientôt,
+{shop_name}
+{shop_url}

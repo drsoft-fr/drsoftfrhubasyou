@@ -1,0 +1,13 @@
+Your order has been delivered
+
+Hello {firstname},
+
+Every parcel of your order {order_name} has been delivered:
+
+{shipments_txt}
+
+We hope you enjoy your purchase. If anything is wrong, simply reply to this e-mail or contact us from your account.
+
+See you soon,
+{shop_name}
+{shop_url}

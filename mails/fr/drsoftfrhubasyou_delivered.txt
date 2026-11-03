@@ -1,0 +1,13 @@
+Votre commande est livrée
+
+Bonjour {firstname},
+
+Tous les colis de votre commande {order_name} ont été livrés :
+
+{shipments_txt}
+
+Nous espérons que votre achat vous donnera satisfaction. Si quelque chose ne va pas, répondez simplement à cet e-mail ou contactez-nous depuis votre compte.
+
+À bientôt,
+{shop_name}
+{shop_url}

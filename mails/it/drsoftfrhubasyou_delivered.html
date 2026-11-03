@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Il suo ordine è stato consegnato</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;color:#222222;font-size:15px;line-height:1.6;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <a href="{shop_url}" style="text-decoration:none;"><img src="{shop_logo}" alt="{shop_name}" style="border:0;max-width:200px;height:auto;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0 0 16px;font-size:22px;">Il suo ordine è stato consegnato</p>
+              <p style="margin:0 0 16px;">Buongiorno {firstname},</p>
+              <p style="margin:0 0 8px;">Tutti i pacchi del suo ordine <strong>{order_name}</strong> sono stati consegnati:</p>
+              {shipments_html}
+              <p style="margin:24px 0 0;">Speriamo che il suo acquisto la soddisfi. Se qualcosa non va, risponda semplicemente a questa e-mail o ci contatti dal suo account.</p>
+              <p style="margin:24px 0 0;">A presto,<br>{shop_name}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

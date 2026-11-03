@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="drsoftfrhubasyou" source-language="en" target-language="pt-PT" datatype="plaintext">
+    <body>
+      <trans-unit id="6020672e227fdc0012c3199fbcde01a1">
+        <source>Your order has been delivered</source>
+        <target>O seu pedido foi entregue</target>
+      </trans-unit>
+      <trans-unit id="85a59e26f3ed8b3aefc811077b1e6b5d">
+        <source>Your parcel is on its way</source>
+        <target>A sua encomenda está a caminho</target>
+      </trans-unit>
+      <trans-unit id="747cf5c8587184b9e489ff897d97c20d">
+        <source>Shipped</source>
+        <target>Enviado</target>
+      </trans-unit>
+      <trans-unit id="7ec4f8b296984ffe6ea829b7e1743577">
+        <source>In transit</source>
+        <target>Em trânsito</target>
+      </trans-unit>
+      <trans-unit id="67edd3b99247c9eb5884a02802a20fa7">
+        <source>Delivered</source>
+        <target>Entregue</target>
+      </trans-unit>
+      <trans-unit id="a3700dd7f0a22402d523c62a4789ca88">
+        <source>Delivery problem</source>
+        <target>Problema na entrega</target>
+      </trans-unit>
+      <trans-unit id="00ccf448900f884bd7fd4407bdb26661">
+        <source>Your parcels</source>
+        <target>As suas encomendas</target>
+      </trans-unit>
+      <trans-unit id="857336b452d52ffca639aff1f49f8cad">
+        <source>Your parcel</source>
+        <target>A sua encomenda</target>
+      </trans-unit>
+      <trans-unit id="4adc67ea2281b6abefb0c10dcafb1c36">
+        <source>Parcel %number%</source>
+        <target>Encomenda %number%</target>
+      </trans-unit>
+      <trans-unit id="d31947f63ecf6a70eeb750befef371ce">
+        <source>on %date%</source>
+        <target>a %date%</target>
+      </trans-unit>
+      <trans-unit id="216554c866b407d70af9f44c0f460000">
+        <source>Shipped on %date%</source>
+        <target>Enviado a %date%</target>
+      </trans-unit>
+      <trans-unit id="ea55f818d75e80289cfac21b1b011eef">
+        <source>Track parcel %number%</source>
+        <target>Seguir a encomenda %number%</target>
+      </trans-unit>
+      <trans-unit id="249401a7e7751a2c379b70482e9f1310">
+        <source>Tracking number: %number%</source>
+        <target>Número de seguimento: %number%</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

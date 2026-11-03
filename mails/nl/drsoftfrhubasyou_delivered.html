@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uw bestelling is bezorgd</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;color:#222222;font-size:15px;line-height:1.6;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <a href="{shop_url}" style="text-decoration:none;"><img src="{shop_logo}" alt="{shop_name}" style="border:0;max-width:200px;height:auto;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0 0 16px;font-size:22px;">Uw bestelling is bezorgd</p>
+              <p style="margin:0 0 16px;">Beste {firstname},</p>
+              <p style="margin:0 0 8px;">Alle pakketten van uw bestelling <strong>{order_name}</strong> zijn bezorgd:</p>
+              {shipments_html}
+              <p style="margin:24px 0 0;">We hopen dat u tevreden bent met uw aankoop. Is er iets mis, beantwoord dan gewoon deze e-mail of neem contact met ons op via uw account.</p>
+              <p style="margin:24px 0 0;">Tot snel,<br>{shop_name}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

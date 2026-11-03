@@ -1,0 +1,16 @@
+Your parcel is on its way
+
+Hello {firstname},
+
+A parcel of your order {order_name} has just left. It contains:
+{products_txt}
+
+Carrier: {carrier_name}
+Tracking number: {tracking_number}
+{tracking_url}
+
+You can follow each parcel in your account, under "Order history and details".
+
+See you soon,
+{shop_name}
+{shop_url}

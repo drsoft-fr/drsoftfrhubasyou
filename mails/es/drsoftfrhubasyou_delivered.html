@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Su pedido ha sido entregado</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;color:#222222;font-size:15px;line-height:1.6;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <a href="{shop_url}" style="text-decoration:none;"><img src="{shop_logo}" alt="{shop_name}" style="border:0;max-width:200px;height:auto;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0 0 16px;font-size:22px;">Su pedido ha sido entregado</p>
+              <p style="margin:0 0 16px;">Hola, {firstname}:</p>
+              <p style="margin:0 0 8px;">Todos los paquetes de su pedido <strong>{order_name}</strong> han sido entregados:</p>
+              {shipments_html}
+              <p style="margin:24px 0 0;">Esperamos que disfrute de su compra. Si algo no va bien, responda simplemente a este correo o contáctenos desde su cuenta.</p>
+              <p style="margin:24px 0 0;">Hasta pronto,<br>{shop_name}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

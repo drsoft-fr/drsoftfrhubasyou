@@ -1,0 +1,20 @@
+###> composer ###
+composer.lock
+/vendor/
+###< composer ###
+
+###> dist ###
+/dist/
+###< dist ###
+
+###> log ###
+*.log
+###< log ###
+
+###> phpstorm ###
+/.idea/
+###< phpstorm ###
+
+###> prestashop ###
+config*.xml
+###< prestashop ###

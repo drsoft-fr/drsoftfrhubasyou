@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ihre Bestellung wurde zugestellt</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;color:#222222;font-size:15px;line-height:1.6;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <a href="{shop_url}" style="text-decoration:none;"><img src="{shop_logo}" alt="{shop_name}" style="border:0;max-width:200px;height:auto;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0 0 16px;font-size:22px;">Ihre Bestellung wurde zugestellt</p>
+              <p style="margin:0 0 16px;">Guten Tag {firstname},</p>
+              <p style="margin:0 0 8px;">Alle Pakete Ihrer Bestellung <strong>{order_name}</strong> wurden zugestellt:</p>
+              {shipments_html}
+              <p style="margin:24px 0 0;">Wir hoffen, dass Sie mit Ihrem Einkauf zufrieden sind. Falls etwas nicht stimmt, antworten Sie einfach auf diese E-Mail oder kontaktieren Sie uns über Ihr Kundenkonto.</p>
+              <p style="margin:24px 0 0;">Bis bald,<br>{shop_name}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

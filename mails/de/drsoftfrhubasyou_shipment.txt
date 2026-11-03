@@ -1,0 +1,16 @@
+Ihr Paket ist unterwegs
+
+Guten Tag {firstname},
+
+Ein Paket Ihrer Bestellung {order_name} ist soeben verschickt worden. Es enthält:
+{products_txt}
+
+Versanddienstleister: {carrier_name}
+Sendungsnummer: {tracking_number}
+{tracking_url}
+
+Die Sendungsverfolgung jedes Pakets finden Sie in Ihrem Kundenkonto unter „Bestellverlauf und Details“.
+
+Bis bald,
+{shop_name}
+{shop_url}

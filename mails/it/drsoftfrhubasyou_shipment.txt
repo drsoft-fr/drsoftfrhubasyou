@@ -1,0 +1,16 @@
+Il suo pacco è in viaggio
+
+Buongiorno {firstname},
+
+Un pacco del suo ordine {order_name} è appena partito. Contiene:
+{products_txt}
+
+Corriere: {carrier_name}
+Numero di tracciamento: {tracking_number}
+{tracking_url}
+
+Può seguire ogni pacco nel suo account, alla voce «Storico e dettagli dei miei ordini».
+
+A presto,
+{shop_name}
+{shop_url}

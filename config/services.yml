@@ -1,0 +1,18 @@
+# Loaded by every PrestaShop kernel (back office, Admin API) for the active module
+services:
+  _defaults:
+    public: false
+    autowire: true
+    autoconfigure: true
+
+  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository:
+    public: true
+
+  DrSoftFr\Module\HubAsYou\Application\Service\ShipmentNotifier: ~
+
+  # CQRS handlers: registered on the command / query bus by #[AsCommandHandler] / #[AsQueryHandler]
+  DrSoftFr\Module\HubAsYou\Application\CommandHandler\AddShipmentHandler: ~
+  DrSoftFr\Module\HubAsYou\Application\CommandHandler\EditShipmentHandler: ~
+  DrSoftFr\Module\HubAsYou\Application\CommandHandler\DeleteShipmentHandler: ~
+  DrSoftFr\Module\HubAsYou\Application\QueryHandler\GetShipmentForEditingHandler: ~
+  DrSoftFr\Module\HubAsYou\Application\QueryHandler\ListShipmentsHandler: ~

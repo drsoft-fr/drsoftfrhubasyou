@@ -1,0 +1,13 @@
+Il suo ordine è stato consegnato
+
+Buongiorno {firstname},
+
+Tutti i pacchi del suo ordine {order_name} sono stati consegnati:
+
+{shipments_txt}
+
+Speriamo che il suo acquisto la soddisfi. Se qualcosa non va, risponda semplicemente a questa e-mail o ci contatti dal suo account.
+
+A presto,
+{shop_name}
+{shop_url}

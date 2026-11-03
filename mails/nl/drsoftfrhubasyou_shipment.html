@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uw pakket is onderweg</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;color:#222222;font-size:15px;line-height:1.6;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <a href="{shop_url}" style="text-decoration:none;"><img src="{shop_logo}" alt="{shop_name}" style="border:0;max-width:200px;height:auto;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0 0 16px;font-size:22px;">Uw pakket is onderweg</p>
+              <p style="margin:0 0 16px;">Beste {firstname},</p>
+              <p style="margin:0 0 16px;">Een pakket van uw bestelling <strong>{order_name}</strong> is zojuist vertrokken. Het bevat:</p>
+              {products_html}
+              <p style="margin:16px 0 0;">Vervoerder: {carrier_name}<br>Trackingnummer: {tracking_link_html}</p>
+              <p style="margin:24px 0 0;">U kunt elk pakket volgen in uw account, onder "Bestelgeschiedenis en details".</p>
+              <p style="margin:24px 0 0;">Tot snel,<br>{shop_name}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

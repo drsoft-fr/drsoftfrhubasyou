@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="drsoftfrhubasyou" source-language="en" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="bc173867fcee98290eb949a724da2717">
+        <source>drSoft.fr HubAsYou</source>
+        <target>drSoft.fr HubAsYou</target>
+      </trans-unit>
+      <trans-unit id="4f5bf8f8789257287572741497e1d669">
+        <source>Receives the parcel tracking of the orders shipped by HubAsYou through the Admin API</source>
+        <target>Reçoit par l'API d'administration le suivi des colis des commandes expédiées par HubAsYou</target>
+      </trans-unit>
+      <trans-unit id="b5540c5c076575d6e00963875023e617">
+        <source>Are you sure you want to uninstall? The parcels received will be deleted.</source>
+        <target>Voulez-vous vraiment désinstaller ce module ? Les colis reçus seront supprimés.</target>
+      </trans-unit>
+      <trans-unit id="c888438d14855d7d96a2724ee9c306bd">
+        <source>Settings updated</source>
+        <target>Réglages enregistrés</target>
+      </trans-unit>
+      <trans-unit id="8980f0d3cb6c20afff217282c2d8aebc">
+        <source>-- Do not change the order state --</source>
+        <target>-- Ne pas changer l'état de la commande --</target>
+      </trans-unit>
+      <trans-unit id="f4f70727dc34561dfde1a3c529b6205c">
+        <source>Settings</source>
+        <target>Réglages</target>
+      </trans-unit>
+      <trans-unit id="595d71710d5853081e64fb58df418788">
+        <source>Order state when the first parcel leaves</source>
+        <target>État de la commande au départ du premier colis</target>
+      </trans-unit>
+      <trans-unit id="507ca19f120d3cab624cbd0ed9883fe8">
+        <source>Set once, when a parcel is shipped, in transit or delivered. If this state sends its own e-mail (Orders › Statuses), the customer receives it in addition to the parcel e-mail.</source>
+        <target>Appliqué une seule fois, quand un colis est expédié, en cours d'acheminement ou livré. Si cet état envoie son propre e-mail (Commandes › États), le client le reçoit en plus de l'e-mail du colis.</target>
+      </trans-unit>
+      <trans-unit id="acadb56770dc64e01d37255af68060be">
+        <source>Order state when everything is delivered</source>
+        <target>État de la commande quand tout est livré</target>
+      </trans-unit>
+      <trans-unit id="c563dceea683a720e15414092b935c88">
+        <source>Set when every unit of the order is in a delivered parcel.</source>
+        <target>Appliqué quand toutes les unités de la commande sont dans des colis livrés.</target>
+      </trans-unit>
+      <trans-unit id="5f98e547d8b095bf68973283820d246f">
+        <source>E-mail the customer for each parcel</source>
+        <target>Envoyer un e-mail au client pour chaque colis</target>
+      </trans-unit>
+      <trans-unit id="2c3bf81269474d711c45dd3b89f2d8bc">
+        <source>Sent once per parcel, when it leaves, in the language of the order (template "drsoftfrhubasyou_shipment").</source>
+        <target>Envoyé une fois par colis, à son départ, dans la langue de la commande (modèle « drsoftfrhubasyou_shipment »).</target>
+      </trans-unit>
+      <trans-unit id="ee2e89d0972548df48041879af61b60c">
+        <source>Access for HubAsYou</source>
+        <target>Accès de HubAsYou</target>
+      </trans-unit>
+      <trans-unit id="d94a56066d4b115182d193c8d35a5bd3">
+        <source>The Admin API is disabled: enable it in Advanced Parameters › New &amp; Experimental Features (Admin API).</source>
+        <target>L'API d'administration est désactivée : activez-la dans Paramètres avancés › Fonctionnalités nouvelles et expérimentales (API d'administration).</target>
+      </trans-unit>
+      <trans-unit id="2d1ae0c13ff2a5b794b09ef2ce187d16">
+        <source>Advanced Parameters › Admin API › Add new API client.</source>
+        <target>Paramètres avancés › API d'administration › Ajouter un client API.</target>
+      </trans-unit>
+      <trans-unit id="95fb8bde60541086638ecf1742b79c13">
+        <source>Tick the scopes hubasyou_shipment_read and hubasyou_shipment_write (module drsoftfrhubasyou).</source>
+        <target>Cochez les droits hubasyou_shipment_read et hubasyou_shipment_write (module drsoftfrhubasyou).</target>
+      </trans-unit>
+      <trans-unit id="d55f45ace0eb2542d28108fd5c6e155b">
+        <source>Send the client ID and secret to HubAsYou, with the API address:</source>
+        <target>Transmettez à HubAsYou l'identifiant et le secret du client, avec l'adresse de l'API :</target>
+      </trans-unit>
+      <trans-unit id="5d2794712008f649b415e7799743e6db">
+        <source>To find the ids of the orders and order lines, HubAsYou can use a webservice key (Advanced Parameters › Webservice, resource "orders").</source>
+        <target>Pour connaître les identifiants des commandes et de leurs lignes, HubAsYou peut utiliser une clé webservice (Paramètres avancés › Webservice, ressource « orders »).</target>
+      </trans-unit>
+      <trans-unit id="802d0aed19dc59fabf11fc3534b056d5">
+        <source>HubAsYou parcels</source>
+        <target>Colis HubAsYou</target>
+      </trans-unit>
+      <trans-unit id="f38e9081d395bb971dd1bf81f65f22e6">
+        <source>Parcel</source>
+        <target>Colis</target>
+      </trans-unit>
+      <trans-unit id="068f80c7519d0528fb08e82137a72131">
+        <source>Products</source>
+        <target>Produits</target>
+      </trans-unit>
+      <trans-unit id="2205dc082ba550b67ad71e3e2241d9a6">
+        <source>Tracking</source>
+        <target>Suivi</target>
+      </trans-unit>
+      <trans-unit id="5f0ca3e8b37b653d3bb4b9898d7d6317">
+        <source>Dates</source>
+        <target>Dates</target>
+      </trans-unit>
+      <trans-unit id="50ae956185a245adb831abbf46b45cca">
+        <source>Shipped:</source>
+        <target>Expédié :</target>
+      </trans-unit>
+      <trans-unit id="c7ddfe23173708ee80757d83d63f7219">
+        <source>Delivered:</source>
+        <target>Livré :</target>
+      </trans-unit>
+      <trans-unit id="df1555fe48479f594280a2e03f9a8186">
+        <source>E-mail:</source>
+        <target>E-mail :</target>
+      </trans-unit>
+      <trans-unit id="04a4551b20fe64603c541cffa32e229d">
+        <source>No e-mail sent</source>
+        <target>Aucun e-mail envoyé</target>
+      </trans-unit>
+      <trans-unit id="1255c2a49a4528b50c8b088a3e7a72a8">
+        <source>No parcel received from HubAsYou yet.</source>
+        <target>Aucun colis reçu de HubAsYou pour l'instant.</target>
+      </trans-unit>
+      <trans-unit id="8112f5855e7a7b59b06f397f1317a6c1">
+        <source>Parcel not found.</source>
+        <target>Colis introuvable.</target>
+      </trans-unit>
+      <trans-unit id="e448997ab2451fbde042cc6804f449b2">
+        <source>Parcel %reference% updated.</source>
+        <target>Colis %reference% enregistré.</target>
+      </trans-unit>
+      <trans-unit id="35dc103181f6245e09b2d30ca40b2fa1">
+        <source>Parcel %reference% deleted.</source>
+        <target>Colis %reference% supprimé.</target>
+      </trans-unit>
+      <trans-unit id="06585e493b938ced34bc223c7619db8c">
+        <source>Parcel %reference%</source>
+        <target>Colis %reference%</target>
+      </trans-unit>
+      <trans-unit id="440c9c89b6ec175848b558ec5c1c6090">
+        <source>Edit the tracking of parcel %reference%</source>
+        <target>Modifier le suivi du colis %reference%</target>
+      </trans-unit>
+      <trans-unit id="70747e61d8a3c432cca40ee9ee793cec">
+        <source>Products: %products%. The content of a parcel cannot be changed: to fix it, delete the parcel and ask HubAsYou to send it again.</source>
+        <target>Produits : %products%. Le contenu d'un colis ne se modifie pas : pour le corriger, supprimez le colis et demandez à HubAsYou de le renvoyer.</target>
+      </trans-unit>
+      <trans-unit id="914419aa32f04011357d3b604a86d7eb">
+        <source>Carrier</source>
+        <target>Transporteur</target>
+      </trans-unit>
+      <trans-unit id="5068c162a60b5859f973f701333f45c5">
+        <source>Tracking number</source>
+        <target>Numéro de suivi</target>
+      </trans-unit>
+      <trans-unit id="0979779c4569141b98591d326d343ec2">
+        <source>Tracking URL</source>
+        <target>URL de suivi</target>
+      </trans-unit>
+      <trans-unit id="0a17cbf147ced1b106fe824683644490">
+        <source>Page of the carrier shown to the customer (http or https). Leave empty for none.</source>
+        <target>Page du transporteur affichée au client (http ou https). Laisser vide s'il n'y en a pas.</target>
+      </trans-unit>
+      <trans-unit id="ec53a8c4f07baed5d8825072c89799be">
+        <source>Status</source>
+        <target>État</target>
+      </trans-unit>
+      <trans-unit id="6424691d4b928f30024f78e520276e0e">
+        <source>Saving runs the same effects as HubAsYou: e-mail once per parcel, order state.</source>
+        <target>L'enregistrement a les mêmes effets qu'un envoi de HubAsYou : e-mail une fois par colis, état de la commande.</target>
+      </trans-unit>
+      <trans-unit id="99b4c3eece1304c210af09f9003716bb">
+        <source>Back to the order</source>
+        <target>Retour à la commande</target>
+      </trans-unit>
+      <trans-unit id="84b3f0efa7753f2195f424742a97ad0c">
+        <source>Delete parcel %reference%?</source>
+        <target>Supprimer le colis %reference% ?</target>
+      </trans-unit>
+      <trans-unit id="2adec8ed1d51024773d3b240238f655d">
+        <source>The parcel disappears from the customer account and its units can be put in another parcel.</source>
+        <target>Le colis disparaît du compte du client et ses unités peuvent être mises dans un autre colis.</target>
+      </trans-unit>
+      <trans-unit id="acf7020694a54de90c500b4843f19e4d">
+        <source>HubAsYou can send it again with the same reference.</source>
+        <target>HubAsYou peut le renvoyer avec la même référence.</target>
+      </trans-unit>
+      <trans-unit id="b45964e53da453889d193e79d2716072">
+        <source>The e-mail already sent to the customer and the order state are not undone: change the state by hand if needed.</source>
+        <target>L'e-mail déjà envoyé au client et l'état de la commande ne sont pas annulés : changez l'état à la main si besoin.</target>
+      </trans-unit>
+      <trans-unit id="cbcc84ed160ac0313fb9de14ce6c721e">
+        <source>Delete the parcel</source>
+        <target>Supprimer le colis</target>
+      </trans-unit>
+      <trans-unit id="1859a268e5769ac51153f752991db699">
+        <source>The carrier and the tracking number are required.</source>
+        <target>Le transporteur et le numéro de suivi sont obligatoires.</target>
+      </trans-unit>
+      <trans-unit id="b11b5eba9ae7bf83ff7231f7d5685c97">
+        <source>The carrier and the tracking number cannot exceed 64 characters.</source>
+        <target>Le transporteur et le numéro de suivi ne peuvent pas dépasser 64 caractères.</target>
+      </trans-unit>
+      <trans-unit id="ff37c1bd9c130ab27eeb72669fd30817">
+        <source>The tracking URL must start with http:// or https:// and cannot exceed 255 characters.</source>
+        <target>L'URL de suivi doit commencer par http:// ou https:// et ne peut pas dépasser 255 caractères.</target>
+      </trans-unit>
+      <trans-unit id="b18eddf69523d225672df21f9ef9dbb4">
+        <source>Unknown status.</source>
+        <target>État inconnu.</target>
+      </trans-unit>
+      <trans-unit id="fed9552e1ee57e4be9ffcab89aefbffe">
+        <source>E-mail the customer when everything is delivered</source>
+        <target>Envoyer un e-mail au client quand tout est livré</target>
+      </trans-unit>
+      <trans-unit id="bd345733d090882cbc6c5bf6dfde081d">
+        <source>Sent once per order, when every unit is in a delivered parcel, with the summary of the parcels (template "drsoftfrhubasyou_delivered"). Independent of the order state: the "Delivered" state of PrestaShop sends no e-mail by default.</source>
+        <target>Envoyé une fois par commande, quand toutes les unités sont dans des colis livrés, avec le récapitulatif des colis (modèle « drsoftfrhubasyou_delivered »). Indépendant de l'état de la commande : l'état « Livré » de PrestaShop n'envoie pas d'e-mail par défaut.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

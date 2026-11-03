@@ -1,0 +1,13 @@
+O seu pedido foi entregue
+
+Olá {firstname},
+
+Todas as encomendas do seu pedido {order_name} foram entregues:
+
+{shipments_txt}
+
+Esperamos que goste da sua compra. Se algo não estiver bem, responda simplesmente a este e-mail ou contacte-nos a partir da sua conta.
+
+Até breve,
+{shop_name}
+{shop_url}

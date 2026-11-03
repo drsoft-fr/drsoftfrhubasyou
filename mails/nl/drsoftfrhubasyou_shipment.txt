@@ -1,0 +1,16 @@
+Uw pakket is onderweg
+
+Beste {firstname},
+
+Een pakket van uw bestelling {order_name} is zojuist vertrokken. Het bevat:
+{products_txt}
+
+Vervoerder: {carrier_name}
+Trackingnummer: {tracking_number}
+{tracking_url}
+
+U kunt elk pakket volgen in uw account, onder "Bestelgeschiedenis en details".
+
+Tot snel,
+{shop_name}
+{shop_url}

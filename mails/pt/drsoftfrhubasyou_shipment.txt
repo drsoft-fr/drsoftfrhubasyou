@@ -1,0 +1,16 @@
+A sua encomenda está a caminho
+
+Olá {firstname},
+
+Uma encomenda do seu pedido {order_name} acabou de sair. Contém:
+{products_txt}
+
+Transportadora: {carrier_name}
+Número de seguimento: {tracking_number}
+{tracking_url}
+
+Pode seguir cada encomenda na sua conta, em «Histórico e detalhes das minhas encomendas».
+
+Até breve,
+{shop_name}
+{shop_url}

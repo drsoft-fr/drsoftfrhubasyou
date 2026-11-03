@@ -1,0 +1,38 @@
+{
+  "name": "drsoft-fr/drsoftfrhubasyou",
+  "description": "Receives the parcel tracking of the orders shipped by HubAsYou through the PrestaShop Admin API",
+  "license": "MIT",
+  "type": "prestashop-module",
+  "authors": [
+    {
+      "name": "drSoft.fr",
+      "email": "contact@drsoft.fr",
+      "homepage": "https://github.com/drsoft-fr"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "DrSoftFr\\Module\\HubAsYou\\": "src/"
+    },
+    "classmap": [
+      "drsoftfrhubasyou.php"
+    ]
+  },
+  "config": {
+    "platform": {
+      "php": "8.1.0"
+    },
+    "preferred-install": "dist",
+    "classmap-authoritative": true,
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "prepend-autoloader": false
+  },
+  "homepage": "https://github.com/drsoft-fr/drsoftfrhubasyou",
+  "require": {
+    "php": ">=8.1"
+  },
+  "support": {
+    "issues": "https://github.com/drsoft-fr/drsoftfrhubasyou/issues"
+  }
+}

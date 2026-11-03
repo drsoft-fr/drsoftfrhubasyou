@@ -1,0 +1,16 @@
+Su paquete está en camino
+
+Hola, {firstname}:
+
+Un paquete de su pedido {order_name} acaba de salir. Contiene:
+{products_txt}
+
+Transportista: {carrier_name}
+Número de seguimiento: {tracking_number}
+{tracking_url}
+
+Puede seguir cada paquete en su cuenta, en «Historial y detalles de mis pedidos».
+
+Hasta pronto,
+{shop_name}
+{shop_url}

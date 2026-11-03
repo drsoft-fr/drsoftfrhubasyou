@@ -1,0 +1,13 @@
+Ihre Bestellung wurde zugestellt
+
+Guten Tag {firstname},
+
+Alle Pakete Ihrer Bestellung {order_name} wurden zugestellt:
+
+{shipments_txt}
+
+Wir hoffen, dass Sie mit Ihrem Einkauf zufrieden sind. Falls etwas nicht stimmt, antworten Sie einfach auf diese E-Mail oder kontaktieren Sie uns über Ihr Kundenkonto.
+
+Bis bald,
+{shop_name}
+{shop_url}

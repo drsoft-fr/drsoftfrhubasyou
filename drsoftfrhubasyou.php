@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use DrSoftFr\Module\HubAsYou\Application\Service\OrderStatePolicy;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Install\Installer;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 
 if (!defined('_PS_VERSION_')) {
@@ -136,6 +138,10 @@ class drsoftfrhubasyou extends Module
                 Configuration::updateValue(Settings::ORDER_STATE_DELIVERED, (int) Tools::getValue('order_state_delivered', 0));
                 Configuration::updateValue(Settings::SEND_MAIL, (int) (bool) Tools::getValue('send_mail', 0));
                 Configuration::updateValue(Settings::SEND_DELIVERED_MAIL, (int) (bool) Tools::getValue('send_delivered_mail', 0));
+                Settings::setChangeableStates(array_filter(
+                    array_column(OrderState::getOrderStates((int) $this->context->language->id), 'id_order_state'),
+                    static fn ($stateId): bool => (bool) Tools::getValue('changeable_state_' . (int) $stateId)
+                ));
 
                 $output .= $this->displayConfirmation($this->trans('Settings updated', [], 'Modules.Drsoftfrhubasyou.Admin'));
             }
@@ -161,13 +167,16 @@ class drsoftfrhubasyou extends Module
      */
     private function renderForm(): string
     {
-        $states = [
-            ['id' => 0, 'name' => $this->trans('-- Do not change the order state --', [], 'Modules.Drsoftfrhubasyou.Admin')],
-        ];
+        $orderStates = [];
 
         foreach (OrderState::getOrderStates((int) $this->context->language->id) as $state) {
-            $states[] = ['id' => (int) $state['id_order_state'], 'name' => $state['name']];
+            $orderStates[] = ['id' => (int) $state['id_order_state'], 'name' => $state['name']];
         }
+
+        $states = array_merge(
+            [['id' => 0, 'name' => $this->trans('-- Do not change the order state --', [], 'Modules.Drsoftfrhubasyou.Admin')]],
+            $orderStates
+        );
 
         $form = [
             'form' => [
@@ -189,6 +198,13 @@ class drsoftfrhubasyou extends Module
                         'name' => 'order_state_delivered',
                         'options' => ['query' => $states, 'id' => 'id', 'name' => 'name'],
                         'desc' => $this->trans('Set when every unit of the order is in a delivered parcel.', [], 'Modules.Drsoftfrhubasyou.Admin'),
+                    ],
+                    [
+                        'type' => 'checkbox',
+                        'label' => $this->trans('Order states the module may change', [], 'Modules.Drsoftfrhubasyou.Admin'),
+                        'name' => 'changeable_state',
+                        'values' => ['query' => $orderStates, 'id' => 'id', 'name' => 'name'],
+                        'desc' => $this->trans('The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. Tick the state set when the first parcel leaves, so that the order can then be set as delivered.', [], 'Modules.Drsoftfrhubasyou.Admin'),
                     ],
                     [
                         'type' => 'switch',
@@ -230,13 +246,20 @@ class drsoftfrhubasyou extends Module
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $fieldsValue = [
+            'order_state_shipped' => Settings::getShippedState(),
+            'order_state_delivered' => Settings::getDeliveredState(),
+            'send_mail' => (int) Settings::isMailEnabled(),
+            'send_delivered_mail' => (int) Settings::isDeliveredMailEnabled(),
+        ];
+        $changeableStates = Settings::getChangeableStates();
+
+        foreach ($orderStates as $state) {
+            $fieldsValue['changeable_state_' . $state['id']] = in_array($state['id'], $changeableStates, true);
+        }
+
         $helper->tpl_vars = [
-            'fields_value' => [
-                'order_state_shipped' => Settings::getShippedState(),
-                'order_state_delivered' => Settings::getDeliveredState(),
-                'send_mail' => (int) Settings::isMailEnabled(),
-                'send_delivered_mail' => (int) Settings::isDeliveredMailEnabled(),
-            ],
+            'fields_value' => $fieldsValue,
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
         ];
@@ -291,7 +314,10 @@ class drsoftfrhubasyou extends Module
             }
             unset($shipment);
 
-            $this->context->smarty->assign(['hubasyou_shipments' => $shipments]);
+            $this->context->smarty->assign([
+                'hubasyou_shipments' => $shipments,
+                'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning((int) $params['id_order']) : '',
+            ]);
 
             return $this->display(__FILE__, 'views/templates/admin/order-shipments.tpl');
         } catch (Throwable $t) {
@@ -299,6 +325,38 @@ class drsoftfrhubasyou extends Module
 
             return '';
         }
+    }
+
+    /**
+     * Warning for the order page when the parcels call for a new order state that the
+     * module may not set from the current one (module settings), empty otherwise.
+     */
+    private function getBlockedStateWarning(int $orderId): string
+    {
+        $order = new Order($orderId);
+
+        if (!Validate::isLoadedObject($order)) {
+            return '';
+        }
+
+        $policy = new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
+        $targetState = $policy->getTargetState($orderId, $policy->getProgress($orderId));
+        $currentState = (int) $order->getCurrentState();
+
+        if (!$targetState || $targetState === $currentState || $policy->mayChangeFrom($currentState)) {
+            return '';
+        }
+
+        $languageId = (int) $this->context->language->id;
+
+        return $this->trans(
+            'According to its parcels, this order should be in the state "%target%", but the module did not change it: its current state "%current%" is not one the module may change (module settings).',
+            [
+                '%target%' => (new OrderState($targetState, $languageId))->name,
+                '%current%' => (new OrderState($currentState, $languageId))->name,
+            ],
+            'Modules.Drsoftfrhubasyou.Admin'
+        );
     }
 
     /**

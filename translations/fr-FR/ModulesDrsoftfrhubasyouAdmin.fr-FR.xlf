@@ -214,6 +214,18 @@
         <source>This order is being updated by HubAsYou: try again in a moment.</source>
         <target>Cette commande est en cours de mise à jour par HubAsYou : réessayez dans un instant.</target>
       </trans-unit>
+      <trans-unit id="5f9f532c2c31de3d8424bf045f85894c">
+        <source>Order states the module may change</source>
+        <target>États de commande que le module peut changer</target>
+      </trans-unit>
+      <trans-unit id="aa36e141ee25535b9f036510c9788d92">
+        <source>The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. Tick the state set when the first parcel leaves, so that the order can then be set as delivered.</source>
+        <target>Le module ne change l'état d'une commande que si son état actuel est coché ici (jamais, par exemple, depuis « Annulé » ou « En attente de paiement »). Sinon, l'état reste tel quel et un avertissement s'affiche sur la fiche de la commande. Cochez l'état appliqué au départ du premier colis, pour que la commande puisse ensuite passer en livrée.</target>
+      </trans-unit>
+      <trans-unit id="12c85d1895a833beb75d4a6f5832648a">
+        <source>According to its parcels, this order should be in the state "%target%", but the module did not change it: its current state "%current%" is not one the module may change (module settings).</source>
+        <target>D'après ses colis, cette commande devrait être à l'état « %target% », mais le module ne l'a pas changé : son état actuel, « %current% », ne fait pas partie des états que le module peut changer (configuration du module).</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -15,6 +15,7 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~
 
   # Application
+  DrSoftFr\Module\HubAsYou\Application\Service\OrderStatePolicy: ~
   DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects: ~
 
   # CQRS handlers: registered on the command / query bus by #[AsCommandHandler] / #[AsQueryHandler]

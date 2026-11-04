@@ -8,6 +8,11 @@
     </h3>
   </div>
   <div class="card-body">
+    {if $hubasyou_state_warning}
+      <div class="alert alert-warning" role="alert">
+        <p class="alert-text">{$hubasyou_state_warning|escape:'html':'UTF-8'}</p>
+      </div>
+    {/if}
     {if $hubasyou_shipments}
       <div class="table-responsive">
         <table class="table">

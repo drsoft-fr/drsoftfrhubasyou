@@ -23,9 +23,25 @@ final class Settings
     /** Send an e-mail to the customer once every parcel is delivered */
     public const SEND_DELIVERED_MAIL = 'DRSOFT_FR_HUBASYOU_SEND_DELIVERED_MAIL';
 
+    /** Order states the module may change the state from, comma-separated ids */
+    public const CHANGEABLE_STATES = 'DRSOFT_FR_HUBASYOU_CHANGEABLE_STATES';
+
+    /**
+     * States proposed at installation, by their PrestaShop configuration key: paid and
+     * not yet delivered (the merchant changes the list in the module settings).
+     */
+    private const DEFAULT_CHANGEABLE_STATE_KEYS = [
+        'PS_OS_PAYMENT',
+        'PS_OS_WS_PAYMENT',
+        'PS_OS_OUTOFSTOCK_PAID',
+        'PS_OS_PREPARATION',
+        'PS_OS_SHIPPING',
+    ];
+
     public const KEYS = [
         self::ORDER_STATE_SHIPPED,
         self::ORDER_STATE_DELIVERED,
+        self::CHANGEABLE_STATES,
         self::SEND_MAIL,
         self::SEND_DELIVERED_MAIL,
     ];
@@ -35,7 +51,8 @@ final class Settings
         return Configuration::updateValue(self::ORDER_STATE_SHIPPED, (int) Configuration::get('PS_OS_SHIPPING'))
             && Configuration::updateValue(self::ORDER_STATE_DELIVERED, (int) Configuration::get('PS_OS_DELIVERED'))
             && Configuration::updateValue(self::SEND_MAIL, 1)
-            && Configuration::updateValue(self::SEND_DELIVERED_MAIL, 1);
+            && Configuration::updateValue(self::SEND_DELIVERED_MAIL, 1)
+            && self::setChangeableStates(self::getDefaultChangeableStates());
     }
 
     public static function uninstall(): bool
@@ -57,6 +74,33 @@ final class Settings
     public static function getDeliveredState(): int
     {
         return (int) Configuration::get(self::ORDER_STATE_DELIVERED);
+    }
+
+    /**
+     * @return int[]
+     */
+    public static function getChangeableStates(): array
+    {
+        return array_values(array_filter(array_map('intval', explode(',', (string) Configuration::get(self::CHANGEABLE_STATES)))));
+    }
+
+    /**
+     * @param int[] $stateIds
+     */
+    public static function setChangeableStates(array $stateIds): bool
+    {
+        $stateIds = array_values(array_unique(array_filter(array_map('intval', $stateIds))));
+        sort($stateIds);
+
+        return Configuration::updateValue(self::CHANGEABLE_STATES, implode(',', $stateIds));
+    }
+
+    /**
+     * @return int[]
+     */
+    public static function getDefaultChangeableStates(): array
+    {
+        return array_map(static fn (string $key): int => (int) Configuration::get($key), self::DEFAULT_CHANGEABLE_STATE_KEYS);
     }
 
     public static function isMailEnabled(): bool

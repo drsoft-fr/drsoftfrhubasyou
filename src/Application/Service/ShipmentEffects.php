@@ -10,7 +10,6 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use Order;
 use PrestaShopLogger;
@@ -34,7 +33,7 @@ class ShipmentEffects
 
     public function __construct(
         private readonly ShipmentRepository $shipments,
-        private readonly OrderRepository $orders,
+        private readonly OrderStatePolicy $statePolicy,
         private readonly OrderMailRepository $orderMails,
         private readonly ShipmentMailer $mailer,
         private readonly OrderStateWriter $stateWriter,
@@ -59,7 +58,7 @@ class ShipmentEffects
                 return;
             }
 
-            $progress = $this->getProgress($orderId);
+            $progress = $this->statePolicy->getProgress($orderId);
 
             $this->sendShipmentMailOnce($order, $shipment);
             $this->updateOrderState($order, $progress);
@@ -77,18 +76,6 @@ class ShipmentEffects
                 true
             );
         }
-    }
-
-    private function getProgress(int $orderId): OrderShippingProgress
-    {
-        return OrderShippingProgress::of(
-            $this->orders->findOrderedQuantities($orderId) ?? [],
-            $this->shipments->getShippedQuantities($orderId, true),
-            array_filter(array_map(
-                static fn (array $shipment): ?ShipmentStatus => ShipmentStatus::tryFrom((string) $shipment['status']),
-                $this->shipments->findByOrder($orderId)
-            ))
-        );
     }
 
     private function sendShipmentMailOnce(Order $order, array $shipment): void
@@ -151,33 +138,33 @@ class ShipmentEffects
     }
 
     /**
-     * Shipped state as soon as a parcel is on its way; delivered state once every
-     * ordered unit is in a delivered parcel. Never goes back to an earlier state.
+     * Moves the order to the state its parcels call for (OrderStatePolicy), only from a
+     * state the module may change; otherwise the state stays as it is, with a warning
+     * in the logs (and on the order page of the back office).
      */
     private function updateOrderState(Order $order, OrderShippingProgress $progress): void
     {
         $orderId = (int) $order->id;
-        $shippedState = Settings::getShippedState();
-        $deliveredState = Settings::getDeliveredState();
+        $targetState = $this->statePolicy->getTargetState($orderId, $progress);
+        $currentState = (int) $order->getCurrentState();
 
-        // Order::hasBeenDelivered() reads the "delivery" flag, also set on the shipped state:
-        // the history of the configured states is checked instead
-        $hasBeenDelivered = $deliveredState && $this->orders->hasHadState($orderId, $deliveredState);
+        if (!$targetState || $targetState === $currentState) {
+            return;
+        }
 
-        if ($progress === OrderShippingProgress::Delivered && $deliveredState) {
-            if (!$hasBeenDelivered) {
-                $this->stateWriter->change($order, $deliveredState);
-            }
+        if (!$this->statePolicy->mayChangeFrom($currentState)) {
+            PrestaShopLogger::addLog(
+                sprintf('%s - order #%d: state not changed to %d, the current state %d is not one the module may change (module settings)', self::MODULE_NAME, $orderId, $targetState, $currentState),
+                2,
+                null,
+                'Order',
+                $orderId,
+                true
+            );
 
             return;
         }
 
-        if ($progress !== OrderShippingProgress::NotShipped
-            && $shippedState
-            && !$hasBeenDelivered
-            && !$this->orders->hasHadState($orderId, $shippedState)
-        ) {
-            $this->stateWriter->change($order, $shippedState);
-        }
+        $this->stateWriter->change($order, $targetState);
     }
 }

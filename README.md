@@ -8,12 +8,12 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
 - **E-mails** au client, chacun désactivable dans la configuration, 7 langues (fr, en, de, it, es, nl, pt) :
     - au départ de chaque colis, une fois par colis (modèle `drsoftfrhubasyou_shipment`) ;
     - quand tout est livré, une fois par commande, avec le récapitulatif des colis (modèle `drsoftfrhubasyou_delivered`). L'état « Livré » de PrestaShop n'envoie pas d'e-mail par défaut : c'est cet e-mail qui prévient le client.
-- **État de la commande** : « Expédié » au premier colis parti, « Livré » quand tout est livré (états réglables).
+- **État de la commande** : « Expédié » au premier colis parti, « Livré » quand tout est livré (états réglables), **seulement depuis les états cochés dans la configuration** (par défaut : paiement accepté, paiement à distance accepté, en attente de réapprovisionnement (payé), en cours de préparation, expédié). Une commande annulée ou en attente de paiement garde son état ; un avertissement s'affiche sur sa fiche et dans le journal.
 
 ## Installation
 
 1. `make package`, puis BO › Modules › Gestionnaire de modules › Envoyer un module : `dist/drsoftfrhubasyou-<version>.zip` (l'archive contient `vendor/`, l'autoloader composer).
-2. BO › Modules › drSoft.fr HubAsYou › Configurer : états de commande et e-mail ; la page rappelle les étapes de l'accès de HubAsYou.
+2. BO › Modules › drSoft.fr HubAsYou › Configurer : états de commande appliqués, états que le module peut changer, e-mails ; la page rappelle les étapes de l'accès de HubAsYou.
 3. Commandes › États : si l'état choisi pour le premier colis envoie déjà un e-mail (« Expédié » : modèle `shipped`), le décocher pour éviter un double e-mail au client.
 4. Paramètres avancés › API d'administration : créer le client API de HubAsYou avec les deux droits du module.
 

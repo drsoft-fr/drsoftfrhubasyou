@@ -11,6 +11,7 @@ use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Query\GetShipmentForEditing;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
@@ -58,6 +59,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     exceptionToStatus: [
         ShipmentConstraintException::class => Response::HTTP_UNPROCESSABLE_ENTITY,
         ShipmentNotFoundException::class => Response::HTTP_NOT_FOUND,
+        // Temporary: the same request can be sent again
+        OrderBusyException::class => Response::HTTP_SERVICE_UNAVAILABLE,
     ],
 )]
 class Shipment

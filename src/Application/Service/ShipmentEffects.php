@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\Service;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\OrderShippingProgress;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
@@ -100,21 +99,54 @@ class ShipmentEffects
             return;
         }
 
-        if ($this->mailer->sendShipmentMail($order, $shipment)) {
-            $this->shipments->update((int) $shipment['id_shipment'], ['mail_sent_at' => new DateTimeImmutable()]);
-        }
+        $shipmentId = (int) $shipment['id_shipment'];
+
+        $this->sendOnce(
+            fn (): bool => $this->shipments->claimMail($shipmentId),
+            fn (): bool => $this->mailer->sendShipmentMail($order, $shipment),
+            fn () => $this->shipments->releaseMail($shipmentId)
+        );
     }
 
     private function sendDeliveredMailOnce(Order $order): void
     {
-        $orderId = (int) $order->id;
-
-        if (!Settings::isDeliveredMailEnabled() || $this->orderMails->hasDeliveredMailBeenSent($orderId)) {
+        if (!Settings::isDeliveredMailEnabled()) {
             return;
         }
 
-        if ($this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId))) {
-            $this->orderMails->markDeliveredMailSent($orderId);
+        $orderId = (int) $order->id;
+
+        $this->sendOnce(
+            fn (): bool => $this->orderMails->claimDeliveredMail($orderId),
+            fn (): bool => $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId)),
+            fn () => $this->orderMails->releaseDeliveredMail($orderId)
+        );
+    }
+
+    /**
+     * The e-mail is reserved in the database (atomic) before it is sent, so two requests
+     * cannot both send it; the reservation is given back if sending fails.
+     *
+     * @param callable(): bool $claim
+     * @param callable(): bool $send
+     * @param callable(): void $release
+     */
+    private function sendOnce(callable $claim, callable $send, callable $release): void
+    {
+        if (!$claim()) {
+            return;
+        }
+
+        try {
+            $sent = $send();
+        } catch (Throwable $t) {
+            $release();
+
+            throw $t;
+        }
+
+        if (!$sent) {
+            $release();
         }
     }
 

@@ -6,7 +6,10 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
 use Db;
 use DbQuery;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+use Throwable;
 
 /**
  * Reads and writes the parcels and their lines.
@@ -20,6 +23,7 @@ class ShipmentRepository
     public const TABLE_LINE = 'drsoft_fr_hubasyou_shipment_line';
 
     private const DATE_FORMAT = 'Y-m-d H:i:s';
+    private const MYSQL_DUPLICATE_KEY = 1062;
 
     public function find(int $shipmentId): ?array
     {
@@ -92,40 +96,56 @@ class ShipmentRepository
     }
 
     /**
-     * Inserts a parcel and its lines.
+     * Inserts a parcel and its lines, together (transaction).
      *
      * @param array $data Column => value (dates as DateTimeInterface or null)
      * @param array<int, int> $lines id_order_detail => quantity
      *
-     * @return int The new id_shipment, 0 on failure
+     * @return int The new id_shipment
+     *
+     * @throws ShipmentConstraintException External reference already used (unique key)
+     * @throws ShipmentException Database error
      */
     public function add(array $data, array $lines): int
     {
         $db = Db::getInstance();
         $now = date(self::DATE_FORMAT);
+        $db->execute('START TRANSACTION', false);
 
-        if (!$db->insert(self::TABLE, $this->escape($data) + ['date_add' => $now, 'date_upd' => $now], true)) {
-            return 0;
+        try {
+            if (!$db->insert(self::TABLE, $this->escape($data) + ['date_add' => $now, 'date_upd' => $now], true)) {
+                throw new ShipmentException('The parcel could not be saved.');
+            }
+
+            $shipmentId = (int) $db->Insert_ID();
+            $rows = [];
+
+            foreach ($lines as $orderDetailId => $quantity) {
+                $rows[] = [
+                    'id_shipment' => $shipmentId,
+                    'id_order_detail' => (int) $orderDetailId,
+                    'quantity' => (int) $quantity,
+                ];
+            }
+
+            if (!$db->insert(self::TABLE_LINE, $rows)) {
+                throw new ShipmentException('The lines of the parcel could not be saved.');
+            }
+
+            $db->execute('COMMIT', false);
+
+            return $shipmentId;
+        } catch (Throwable $t) {
+            // In debug mode PrestaShop throws on a database error, otherwise insert() returns false
+            $duplicate = (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY;
+            $db->execute('ROLLBACK', false);
+
+            if ($duplicate) {
+                throw ShipmentConstraintException::duplicateReference((string) $data['external_reference']);
+            }
+
+            throw $t instanceof ShipmentException ? $t : new ShipmentException('The parcel could not be saved.', 0, $t);
         }
-
-        $shipmentId = (int) $db->Insert_ID();
-        $rows = [];
-
-        foreach ($lines as $orderDetailId => $quantity) {
-            $rows[] = [
-                'id_shipment' => $shipmentId,
-                'id_order_detail' => (int) $orderDetailId,
-                'quantity' => (int) $quantity,
-            ];
-        }
-
-        if (!$db->insert(self::TABLE_LINE, $rows)) {
-            $db->delete(self::TABLE, 'id_shipment = ' . $shipmentId);
-
-            return 0;
-        }
-
-        return $shipmentId;
     }
 
     /**
@@ -147,14 +167,48 @@ class ShipmentRepository
     }
 
     /**
-     * Deletes a parcel and its lines.
+     * Deletes a parcel and its lines, together (transaction).
+     *
+     * @throws ShipmentException Database error
      */
-    public function delete(int $shipmentId): bool
+    public function delete(int $shipmentId): void
+    {
+        $db = Db::getInstance();
+        $db->execute('START TRANSACTION', false);
+
+        try {
+            if (!$db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipmentId)
+                || !$db->delete(self::TABLE, 'id_shipment = ' . $shipmentId)
+            ) {
+                throw new ShipmentException('The parcel could not be deleted.');
+            }
+
+            $db->execute('COMMIT', false);
+        } catch (Throwable $t) {
+            $db->execute('ROLLBACK', false);
+
+            throw $t instanceof ShipmentException ? $t : new ShipmentException('The parcel could not be deleted.', 0, $t);
+        }
+    }
+
+    /**
+     * Reserves the "parcel on its way" e-mail of a parcel: true for the one request
+     * that sets the date, false if it was already set (sent or being sent).
+     */
+    public function claimMail(int $shipmentId): bool
     {
         $db = Db::getInstance();
 
-        return $db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipmentId)
-            && $db->delete(self::TABLE, 'id_shipment = ' . $shipmentId);
+        return $db->update(self::TABLE, ['mail_sent_at' => date(self::DATE_FORMAT)], 'id_shipment = ' . $shipmentId . ' AND mail_sent_at IS NULL')
+            && (int) $db->Affected_Rows() === 1;
+    }
+
+    /**
+     * Gives the reservation back when the e-mail could not be sent: tried again at the next save.
+     */
+    public function releaseMail(int $shipmentId): void
+    {
+        Db::getInstance()->update(self::TABLE, ['mail_sent_at' => null], 'id_shipment = ' . $shipmentId, 0, true);
     }
 
     /**

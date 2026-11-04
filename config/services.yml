@@ -12,6 +12,7 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~
 
   # Application
   DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects: ~

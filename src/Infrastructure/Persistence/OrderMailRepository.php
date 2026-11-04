@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
 use Db;
-use DbQuery;
 
 /**
  * E-mails sent once per order ("order delivered").
@@ -14,18 +13,26 @@ class OrderMailRepository
 {
     public const TABLE = 'drsoft_fr_hubasyou_order_mail';
 
-    public function hasDeliveredMailBeenSent(int $orderId): bool
+    /**
+     * Reserves the "order delivered" e-mail: true for the one request that inserts
+     * the row (primary key on the order), false if it exists (sent or being sent).
+     */
+    public function claimDeliveredMail(int $orderId): bool
     {
-        return (bool) Db::getInstance()->getValue(
-            (new DbQuery())->select('1')->from(self::TABLE)->where('id_order = ' . $orderId)
-        );
-    }
+        $db = Db::getInstance();
 
-    public function markDeliveredMailSent(int $orderId): void
-    {
-        Db::getInstance()->insert(self::TABLE, [
+        return $db->insert(self::TABLE, [
             'id_order' => $orderId,
             'delivered_mail_sent_at' => date('Y-m-d H:i:s'),
-        ], false, true, Db::INSERT_IGNORE);
+        ], false, true, Db::INSERT_IGNORE)
+            && (int) $db->Affected_Rows() === 1;
+    }
+
+    /**
+     * Gives the reservation back when the e-mail could not be sent: tried again at the next save.
+     */
+    public function releaseDeliveredMail(int $orderId): void
+    {
+        Db::getInstance()->delete(self::TABLE, 'id_order = ' . $orderId);
     }
 }

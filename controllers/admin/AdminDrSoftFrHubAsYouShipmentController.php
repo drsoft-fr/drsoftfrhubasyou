@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
@@ -230,6 +231,10 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
      */
     private function getErrorMessage(ShipmentException $e): string
     {
+        if ($e instanceof OrderBusyException) {
+            return $this->trans('This order is being updated by HubAsYou: try again in a moment.', [], self::DOMAIN);
+        }
+
         if (!$e instanceof ShipmentConstraintException) {
             return $e->getMessage();
         }

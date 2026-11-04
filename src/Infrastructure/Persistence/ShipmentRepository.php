@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Db;
 use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
@@ -293,13 +296,25 @@ class ShipmentRepository
         return $rows;
     }
 
+    /**
+     * DATETIME columns hold the shop's local time (as PrestaShop's own tables): a date
+     * received with another offset ("…Z", "…-05:00") is converted first. PrestaShop sets
+     * PHP's default time zone to the shop's (PS_TIMEZONE) when it starts.
+     */
+    private function toShopTime(DateTimeInterface $date): string
+    {
+        return DateTimeImmutable::createFromInterface($date)
+            ->setTimezone(new DateTimeZone(date_default_timezone_get()))
+            ->format(self::DATE_FORMAT);
+    }
+
     private function escape(array $data): array
     {
         $escaped = [];
 
         foreach ($data as $column => $value) {
-            if ($value instanceof \DateTimeInterface) {
-                $value = $value->format(self::DATE_FORMAT);
+            if ($value instanceof DateTimeInterface) {
+                $value = $this->toShopTime($value);
             }
 
             $escaped[$column] = is_string($value) ? pSQL($value) : $value;

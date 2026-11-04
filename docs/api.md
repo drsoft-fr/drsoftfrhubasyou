@@ -75,7 +75,7 @@ Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 
 | `lines[].orderDetailId` | entier | obligatoire | ligne de **cette** commande |
 | `lines[].quantity` | entier ≥ 1 | obligatoire | unités de la ligne dans ce colis |
 
-Dates : envoyées en ISO 8601 (`2026-11-05T10:12:00+01:00`) ; renvoyées au format `AAAA-MM-JJ HH:MM:SS`, heure de la boutique. Un champ vide (`deliveredAt` d'un colis non livré, `trackingUrl` absente) n'apparaît pas dans la réponse.
+Dates : envoyées en ISO 8601, **avec leur décalage horaire** (`2026-11-05T10:12:00+01:00` ou `2026-11-05T09:12:00Z`) ; enregistrées et renvoyées au format `AAAA-MM-JJ HH:MM:SS`, converties à l'heure de la boutique (heure d'été comprise) : les deux exemples donnent `2026-11-05 10:12:00` pour une boutique à Paris. Un champ vide (`deliveredAt` d'un colis non livré, `trackingUrl` absente) n'apparaît pas dans la réponse.
 
 Règles de cohérence :
 

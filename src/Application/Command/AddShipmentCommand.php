@@ -48,7 +48,7 @@ final class AddShipmentCommand
         $this->trackingNumber = ShipmentRules::text('trackingNumber', $trackingNumber);
         $this->trackingUrl = ShipmentRules::url($trackingUrl);
         $this->status = ShipmentStatus::tryFrom($status)
-            ?? throw new ShipmentConstraintException(sprintf('Unknown status "%s".', $status));
+            ?? throw new ShipmentConstraintException(sprintf('Unknown status "%s".', $status), ShipmentConstraintException::INVALID_STATUS);
 
         $quantities = [];
 

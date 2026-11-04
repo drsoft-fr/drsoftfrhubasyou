@@ -9,4 +9,8 @@ namespace DrSoftFr\Module\HubAsYou\Domain\Exception;
  */
 class ShipmentNotFoundException extends ShipmentException
 {
+    public static function withId(int $shipmentId): self
+    {
+        return new self(sprintf('Parcel %d not found.', $shipmentId));
+    }
 }

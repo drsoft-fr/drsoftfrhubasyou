@@ -6,6 +6,7 @@ use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
 use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
@@ -121,20 +122,20 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                         'label' => $this->trans('Carrier', [], self::DOMAIN),
                         'name' => 'carrier_name',
                         'required' => true,
-                        'maxlength' => 64,
+                        'maxlength' => ShipmentRules::TEXT_MAX_LENGTH,
                     ],
                     [
                         'type' => 'text',
                         'label' => $this->trans('Tracking number', [], self::DOMAIN),
                         'name' => 'tracking_number',
                         'required' => true,
-                        'maxlength' => 64,
+                        'maxlength' => ShipmentRules::TEXT_MAX_LENGTH,
                     ],
                     [
                         'type' => 'text',
                         'label' => $this->trans('Tracking URL', [], self::DOMAIN),
                         'name' => 'tracking_url',
-                        'maxlength' => 255,
+                        'maxlength' => ShipmentRules::URL_MAX_LENGTH,
                         'desc' => $this->trans('Page of the carrier shown to the customer (http or https). Leave empty for none.', [], self::DOMAIN),
                     ],
                     [
@@ -235,8 +236,8 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
 
         return match ($e->getCode()) {
             ShipmentConstraintException::EMPTY_FIELD => $this->trans('The carrier and the tracking number are required.', [], self::DOMAIN),
-            ShipmentConstraintException::TOO_LONG => $this->trans('The carrier and the tracking number cannot exceed 64 characters.', [], self::DOMAIN),
-            ShipmentConstraintException::INVALID_URL => $this->trans('The tracking URL must start with http:// or https:// and cannot exceed 255 characters.', [], self::DOMAIN),
+            ShipmentConstraintException::TOO_LONG => $this->trans('The carrier and the tracking number cannot exceed %max% characters.', ['%max%' => ShipmentRules::TEXT_MAX_LENGTH], self::DOMAIN),
+            ShipmentConstraintException::INVALID_URL => $this->trans('The tracking URL must start with http:// or https:// and cannot exceed %max% characters.', ['%max%' => ShipmentRules::URL_MAX_LENGTH], self::DOMAIN),
             ShipmentConstraintException::INVALID_STATUS => $this->trans('Unknown status.', [], self::DOMAIN),
             default => $e->getMessage(),
         };

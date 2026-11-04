@@ -5,10 +5,16 @@ services:
     autowire: true
     autoconfigure: true
 
+  # Infrastructure
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository:
     public: true
+  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter: ~
 
-  DrSoftFr\Module\HubAsYou\Application\Service\ShipmentNotifier: ~
+  # Application
+  DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects: ~
 
   # CQRS handlers: registered on the command / query bus by #[AsCommandHandler] / #[AsQueryHandler]
   DrSoftFr\Module\HubAsYou\Application\CommandHandler\AddShipmentHandler: ~

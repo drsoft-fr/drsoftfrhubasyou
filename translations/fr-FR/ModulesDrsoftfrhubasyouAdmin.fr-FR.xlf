@@ -190,13 +190,13 @@
         <source>The carrier and the tracking number are required.</source>
         <target>Le transporteur et le numéro de suivi sont obligatoires.</target>
       </trans-unit>
-      <trans-unit id="b11b5eba9ae7bf83ff7231f7d5685c97">
-        <source>The carrier and the tracking number cannot exceed 64 characters.</source>
-        <target>Le transporteur et le numéro de suivi ne peuvent pas dépasser 64 caractères.</target>
+      <trans-unit id="0ea00f65eff71675cc3370fbc9cd470d">
+        <source>The carrier and the tracking number cannot exceed %max% characters.</source>
+        <target>Le transporteur et le numéro de suivi ne peuvent pas dépasser %max% caractères.</target>
       </trans-unit>
-      <trans-unit id="ff37c1bd9c130ab27eeb72669fd30817">
-        <source>The tracking URL must start with http:// or https:// and cannot exceed 255 characters.</source>
-        <target>L'URL de suivi doit commencer par http:// ou https:// et ne peut pas dépasser 255 caractères.</target>
+      <trans-unit id="459ee591c28eb967c16ece0501b006f3">
+        <source>The tracking URL must start with http:// or https:// and cannot exceed %max% characters.</source>
+        <target>L'URL de suivi doit commencer par http:// ou https:// et ne peut pas dépasser %max% caractères.</target>
       </trans-unit>
       <trans-unit id="b18eddf69523d225672df21f9ef9dbb4">
         <source>Unknown status.</source>

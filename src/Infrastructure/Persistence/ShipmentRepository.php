@@ -6,6 +6,7 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
 use Db;
 use DbQuery;
+use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 
 /**
  * Reads and writes the parcels and their lines.
@@ -173,7 +174,7 @@ class ShipmentRepository
             ->groupBy('l.id_order_detail');
 
         if ($deliveredOnly) {
-            $query->where("s.status = 'delivered'");
+            $query->where("s.status = '" . ShipmentStatus::Delivered->value . "'");
         }
 
         $quantities = [];

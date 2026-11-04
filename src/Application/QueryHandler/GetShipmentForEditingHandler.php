@@ -20,12 +20,10 @@ final class GetShipmentForEditingHandler
 
     public function handle(GetShipmentForEditing $query): ShipmentForEditing
     {
-        $row = $this->repository->find($query->shipmentId->getValue());
+        $shipmentId = $query->shipmentId->getValue();
 
-        if (!$row) {
-            throw new ShipmentNotFoundException(sprintf('Parcel %d not found.', $query->shipmentId->getValue()));
-        }
-
-        return ShipmentForEditing::fromRow($row);
+        return ShipmentForEditing::fromRow(
+            $this->repository->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId)
+        );
     }
 }

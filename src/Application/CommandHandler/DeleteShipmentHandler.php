@@ -23,7 +23,7 @@ final class DeleteShipmentHandler
         $shipmentId = $command->shipmentId->getValue();
 
         if (!$this->repository->find($shipmentId)) {
-            throw new ShipmentNotFoundException(sprintf('Parcel %d not found.', $shipmentId));
+            throw ShipmentNotFoundException::withId($shipmentId);
         }
 
         if (!$this->repository->delete($shipmentId)) {

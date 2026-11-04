@@ -45,15 +45,6 @@ class ShipmentList
 
     public ?DateTimeImmutable $deliveredAt;
 
-    #[ApiProperty(openapiContext: [
-        'type' => 'array',
-        'items' => [
-            'type' => 'object',
-            'properties' => [
-                'orderDetailId' => ['type' => 'integer'],
-                'quantity' => ['type' => 'integer'],
-            ],
-        ],
-    ])]
+    #[ApiProperty(openapiContext: Shipment::LINES_OPENAPI)]
     public array $lines;
 }

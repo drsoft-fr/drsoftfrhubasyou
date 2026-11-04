@@ -13,6 +13,7 @@ use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Query\GetShipmentForEditing;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use PrestaShopBundle\ApiPlatform\Metadata\CQRSCreate;
 use PrestaShopBundle\ApiPlatform\Metadata\CQRSDelete;
@@ -61,11 +62,23 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 class Shipment
 {
+    /** OpenAPI schema of the lines of a parcel (also used by ShipmentList) */
+    public const LINES_OPENAPI = [
+        'type' => 'array',
+        'items' => [
+            'type' => 'object',
+            'properties' => [
+                'orderDetailId' => ['type' => 'integer'],
+                'quantity' => ['type' => 'integer'],
+            ],
+        ],
+    ];
+
     #[ApiProperty(identifier: true)]
     public int $shipmentId;
 
     #[Assert\NotBlank(groups: ['Create'])]
-    #[Assert\Length(max: 64)]
+    #[Assert\Length(max: ShipmentRules::TEXT_MAX_LENGTH)]
     public string $externalReference;
 
     #[Assert\NotBlank(groups: ['Create'])]
@@ -74,16 +87,16 @@ class Shipment
 
     #[Assert\NotBlank(groups: ['Create'])]
     #[Assert\NotBlank(allowNull: true, groups: ['Update'])]
-    #[Assert\Length(max: 64)]
+    #[Assert\Length(max: ShipmentRules::TEXT_MAX_LENGTH)]
     public string $carrierName;
 
     #[Assert\NotBlank(groups: ['Create'])]
     #[Assert\NotBlank(allowNull: true, groups: ['Update'])]
-    #[Assert\Length(max: 64)]
+    #[Assert\Length(max: ShipmentRules::TEXT_MAX_LENGTH)]
     public string $trackingNumber;
 
     #[Assert\Url(protocols: ['http', 'https'])]
-    #[Assert\Length(max: 255)]
+    #[Assert\Length(max: ShipmentRules::URL_MAX_LENGTH)]
     public ?string $trackingUrl;
 
     #[ApiProperty(openapiContext: ['type' => 'string', 'enum' => ['shipped', 'in_transit', 'delivered', 'exception'], 'example' => 'shipped'])]
@@ -95,17 +108,7 @@ class Shipment
 
     public ?DateTimeImmutable $deliveredAt;
 
-    #[ApiProperty(openapiContext: [
-        'type' => 'array',
-        'items' => [
-            'type' => 'object',
-            'properties' => [
-                'orderDetailId' => ['type' => 'integer'],
-                'quantity' => ['type' => 'integer'],
-            ],
-        ],
-        'example' => [['orderDetailId' => 101, 'quantity' => 1]],
-    ])]
+    #[ApiProperty(openapiContext: [...self::LINES_OPENAPI, 'example' => [['orderDetailId' => 101, 'quantity' => 1]]])]
     #[Assert\NotBlank(groups: ['Create'])]
     #[Assert\All(constraints: [
         new Assert\Collection(fields: [

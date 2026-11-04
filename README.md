@@ -30,9 +30,9 @@ En développement, après un `git clone` dans `modules/` : `composer dump-autolo
 
 - `src/ApiPlatform/Resources/` : ressources de l'API (lues par PrestaShop pour tout module actif). **Pas de `index.php` dans ce dossier** : API Platform exécute chaque fichier qu'il y trouve.
 - `controllers/admin/` : page du BO (modifier, supprimer), qui envoie les mêmes commandes CQRS que l'API.
-- `src/Application/` : commandes et requêtes CQRS (`AddShipmentCommand`, `EditShipmentCommand`, `DeleteShipmentCommand`, `GetShipmentForEditing`, `ListShipments`), leurs gestionnaires (`#[AsCommandHandler]`, `#[AsQueryHandler]`) et `ShipmentNotifier` (e-mail, état de la commande).
-- `src/Domain/` : identifiant, états du colis, règles des champs (`ShipmentRules`, vérifiées par les commandes : mêmes règles pour l'API et le BO), exceptions (422 / 404 ; codes pour les messages traduits du BO).
-- `src/Infrastructure/` : tables (`drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison), réglages, installation.
+- `src/Application/` : commandes et requêtes CQRS (`AddShipmentCommand`, `EditShipmentCommand`, `DeleteShipmentCommand`, `GetShipmentForEditing`, `ListShipments`), leurs gestionnaires (`#[AsCommandHandler]`, `#[AsQueryHandler]`) et `ShipmentEffects`, qui enchaîne les effets d'un colis enregistré (e-mails, état de la commande), recalculés à chaque fois depuis les colis enregistrés.
+- `src/Domain/` : règles métier sans accès à la base : identifiant et états du colis, avancement de la commande (`OrderShippingProgress`), règles des champs (`ShipmentRules`, vérifiées par les commandes : mêmes règles pour l'API et le BO), des quantités (`ShipmentQuantities`) et des dates (`ShipmentDates`), exceptions (422 / 404 ; codes pour les messages traduits du BO).
+- `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), réglages, installation.
 - `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
 
 La désinstallation supprime les colis reçus.

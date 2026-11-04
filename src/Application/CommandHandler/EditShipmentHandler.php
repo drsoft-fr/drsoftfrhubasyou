@@ -6,9 +6,10 @@ namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
 use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
-use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentNotifier;
+use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
@@ -17,27 +18,21 @@ use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 final class EditShipmentHandler
 {
     public function __construct(
-        private readonly ShipmentRepository $repository,
-        private readonly ShipmentNotifier $notifier,
+        private readonly ShipmentRepository $shipments,
+        private readonly ShipmentEffects $effects,
     ) {
     }
 
     public function handle(EditShipmentCommand $command): void
     {
         $shipmentId = $command->shipmentId->getValue();
-        $current = $this->repository->find($shipmentId);
-
-        if (!$current) {
-            throw new ShipmentNotFoundException(sprintf('Parcel %d not found.', $shipmentId));
-        }
+        $current = $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
 
         $data = array_filter([
             'carrier_name' => $command->carrierName,
             'tracking_number' => $command->trackingNumber,
             'tracking_url' => $command->trackingUrl,
             'status' => $command->status?->value,
-            'shipped_at' => $command->shippedAt,
-            'delivered_at' => $command->deliveredAt,
         ], static fn ($value): bool => $value !== null);
 
         // An empty URL removes the tracking page
@@ -45,21 +40,20 @@ final class EditShipmentHandler
             $data['tracking_url'] = null;
         }
 
-        // Default dates when the parcel reaches a state without a date sent
-        $now = new DateTimeImmutable();
+        // Dates sent, otherwise the saved ones, completed for the state of the parcel
+        $date = static fn (?string $value): ?DateTimeImmutable => $value ? new DateTimeImmutable($value) : null;
 
-        if ($command->status?->isOnItsWay() && empty($current['shipped_at']) && !isset($data['shipped_at'])) {
-            $data['shipped_at'] = $now;
-        }
+        [$data['shipped_at'], $data['delivered_at']] = ShipmentDates::complete(
+            $command->status ?? ShipmentStatus::from((string) $current['status']),
+            $command->shippedAt ?? $date($current['shipped_at']),
+            $command->deliveredAt ?? $date($current['delivered_at']),
+            new DateTimeImmutable()
+        );
 
-        if ($command->status === ShipmentStatus::Delivered && empty($current['delivered_at']) && !isset($data['delivered_at'])) {
-            $data['delivered_at'] = $now;
-        }
-
-        if (!$this->repository->update($shipmentId, $data)) {
+        if (!$this->shipments->update($shipmentId, $data)) {
             throw new ShipmentException('The parcel could not be saved.');
         }
 
-        $this->notifier->onShipmentSaved($shipmentId);
+        $this->effects->onShipmentSaved($shipmentId);
     }
 }

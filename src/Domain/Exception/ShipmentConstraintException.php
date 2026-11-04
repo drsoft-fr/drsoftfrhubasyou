@@ -17,6 +17,7 @@ class ShipmentConstraintException extends ShipmentException
     public const INVALID_URL = 3;
     public const INVALID_STATUS = 4;
     public const DUPLICATE_REFERENCE = 5;
+    public const INVALID_DATES = 6;
 
     public static function duplicateReference(string $externalReference): self
     {

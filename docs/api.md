@@ -69,8 +69,8 @@ Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 
 | `trackingNumber` | texte, 64 max. | **obligatoire** | numéro de suivi |
 | `trackingUrl` | URL http(s), 255 max. | facultatif | page de suivi du transporteur, lien affiché au client |
 | `status` | texte | **obligatoire** | `shipped`, `in_transit`, `delivered`, `exception` |
-| `shippedAt` | date | facultatif | date d'expédition ; par défaut, date de réception du premier état `shipped`, `in_transit` ou `delivered` |
-| `deliveredAt` | date | facultatif | date de livraison ; par défaut, date de réception de l'état `delivered` |
+| `shippedAt` | date | facultatif | date d'expédition ; par défaut, date de réception du premier état `shipped`, `in_transit` ou `delivered` (pour un colis déclaré livré à une date passée : sa date de livraison) |
+| `deliveredAt` | date | facultatif | date de livraison, **seulement avec l'état `delivered`** ; par défaut, date de réception de cet état ; jamais avant `shippedAt` |
 | `lines` | liste | **obligatoire**, au moins une ligne | contenu du colis ; non modifiable |
 | `lines[].orderDetailId` | entier | obligatoire | ligne de **cette** commande |
 | `lines[].quantity` | entier ≥ 1 | obligatoire | unités de la ligne dans ce colis |
@@ -83,7 +83,8 @@ Règles de cohérence :
 - la même ligne envoyée deux fois dans un colis est additionnée ;
 - le contenu d'un colis (`externalReference`, `orderId`, `lines`) ne se modifie pas : en cas d'erreur, **supprimer le colis** (`DELETE`) puis le déclarer à nouveau ; sa `externalReference` redevient libre et ses unités peuvent être remises en colis. Le marchand peut faire de même depuis le BO (fiche de la commande, colis HubAsYou : « Supprimer »), et y corriger le suivi (« Modifier » : transporteur, numéro, URL, état) ;
 - une suppression n'annule ni l'e-mail déjà envoyé au client ni l'état de la commande ;
-- un `PATCH` ne change que les champs envoyés ; une date déjà enregistrée n'est pas écrasée par la date par défaut.
+- un `PATCH` ne change que les champs envoyés ; une date déjà enregistrée n'est pas écrasée par la date par défaut ;
+- l'état d'un colis peut changer librement (pour corriger une erreur), mais ses dates restent cohérentes : `deliveredAt` n'est accepté qu'avec l'état `delivered` (envoyé ou déjà enregistré), la livraison ne peut pas précéder l'expédition (`422` sinon), et un colis qui quitte l'état `delivered` perd sa date de livraison (une nouvelle est fixée s'il le redevient).
 
 ## 4. Exemples
 

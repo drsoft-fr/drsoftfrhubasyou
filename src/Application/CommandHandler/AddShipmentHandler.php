@@ -49,7 +49,7 @@ final class AddShipmentHandler
                 $command->lines
             );
 
-            [$shippedAt, $deliveredAt] = ShipmentDates::complete($command->status, $command->shippedAt, $command->deliveredAt, new DateTimeImmutable());
+            [$shippedAt, $deliveredAt] = ShipmentDates::resolve($command->status, $command->shippedAt, $command->deliveredAt, null, null, new DateTimeImmutable());
 
             $shipmentId = $this->shipments->add(
                 [

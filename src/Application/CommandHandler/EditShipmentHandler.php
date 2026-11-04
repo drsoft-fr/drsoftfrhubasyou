@@ -55,13 +55,15 @@ final class EditShipmentHandler
                 $data['tracking_url'] = null;
             }
 
-            // Dates sent, otherwise the saved ones, completed for the state of the parcel
+            // Dates sent, otherwise the saved ones, made consistent with the state of the parcel
             $date = static fn (?string $value): ?DateTimeImmutable => $value ? new DateTimeImmutable($value) : null;
 
-            [$data['shipped_at'], $data['delivered_at']] = ShipmentDates::complete(
+            [$data['shipped_at'], $data['delivered_at']] = ShipmentDates::resolve(
                 $command->status ?? ShipmentStatus::from((string) $current['status']),
-                $command->shippedAt ?? $date($current['shipped_at']),
-                $command->deliveredAt ?? $date($current['delivered_at']),
+                $command->shippedAt,
+                $command->deliveredAt,
+                $date($current['shipped_at']),
+                $date($current['delivered_at']),
                 new DateTimeImmutable()
             );
 

@@ -16,6 +16,9 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
 2. BO › Modules › drSoft.fr HubAsYou › Configurer : états de commande appliqués, états que le module peut changer, e-mails ; la page rappelle les étapes de l'accès de HubAsYou.
 3. Commandes › États : si l'état choisi pour le premier colis envoie déjà un e-mail (« Expédié » : modèle `shipped`), le décocher pour éviter un double e-mail au client.
 4. Paramètres avancés › API d'administration : créer le client API de HubAsYou avec les deux droits du module.
+5. Paramètres avancés › Équipe › Permissions, pour chaque profil autre que SuperAdmin (qui a tous les droits) :
+    - onglet **Modules**, module drSoft.fr HubAsYou : « Voir », sans quoi la fiche de la commande n'affiche pas les colis (PrestaShop n'exécute les crochets du BO d'un module que pour les profils qui peuvent le voir) ;
+    - onglet **Commandes › Colis HubAsYou** : « Voir » pour ouvrir un colis, « Modifier » pour le bouton « Modifier », « Supprimer » pour le bouton « Supprimer ». Les boutons ne s'affichent qu'avec le droit correspondant, et le contrôleur le vérifie de nouveau à l'enregistrement.
 
 En développement, après un `git clone` dans `modules/` : `composer dump-autoload` (aucune dépendance), puis installer le module.
 

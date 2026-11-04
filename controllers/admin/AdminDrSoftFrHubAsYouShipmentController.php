@@ -20,7 +20,7 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
  */
 class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
 {
-    public const TAB_CLASS_NAME = 'AdminDrSoftFrHubAsYouShipment';
+    public const TAB_CLASS_NAME = drsoftfrhubasyou::TAB_SHIPMENT;
 
     private const DOMAIN = 'Modules.Drsoftfrhubasyou.Admin';
 
@@ -45,7 +45,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $this->shipment = (new ShipmentRepository())->find((int) Tools::getValue('id_shipment'));
 
         if (!$this->shipment) {
-            $this->errors[] = $this->trans('Parcel not found.', [], self::DOMAIN);
+            $this->addError($this->trans('Parcel not found.', [], self::DOMAIN));
         }
     }
 
@@ -58,7 +58,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $shipmentId = (int) $this->shipment['id_shipment'];
 
         try {
-            if (Tools::isSubmit('submitHubAsYouShipmentEdit')) {
+            if (Tools::isSubmit('submitHubAsYouShipmentEdit') && $this->checkPermission('edit')) {
                 $this->getCommandBus()->handle(new EditShipmentCommand(
                     $shipmentId,
                     (string) Tools::getValue('carrier_name'),
@@ -70,27 +70,59 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                 $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
             }
 
-            if (Tools::isSubmit('submitHubAsYouShipmentDelete')) {
+            if (Tools::isSubmit('submitHubAsYouShipmentDelete') && $this->checkPermission('delete')) {
                 $this->getCommandBus()->handle(new DeleteShipmentCommand($shipmentId));
 
                 $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
             }
         } catch (ShipmentException $e) {
-            $this->errors[] = $this->getErrorMessage($e);
+            $this->addError($this->getErrorMessage($e));
         }
 
         return parent::postProcess();
     }
 
+    /**
+     * Edit form (permission "edit" of this tab) or delete confirmation (permission
+     * "delete"); without the permission, only the error is shown.
+     */
     public function initContent(): void
     {
-        if ($this->shipment) {
-            $this->content = Tools::getValue('hubasyou_view') === 'delete'
+        $view = Tools::getValue('hubasyou_view') === 'delete' ? 'delete' : 'edit';
+
+        if ($this->shipment && $this->checkPermission($view)) {
+            $this->content = $view === 'delete'
                 ? $this->renderDeleteConfirmation()
                 : $this->renderEditForm();
         }
 
         parent::initContent();
+    }
+
+    /**
+     * Permission of the employee's profile on this tab (Advanced Parameters › Team ›
+     * Permissions), with PrestaShop's message when it is missing.
+     *
+     * @param 'edit'|'delete' $action
+     */
+    private function checkPermission(string $action): bool
+    {
+        if ($this->access($action)) {
+            return true;
+        }
+
+        $this->addError($action === 'delete'
+            ? $this->trans('You do not have permission to delete this.', [], 'Admin.Notifications.Error')
+            : $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error'));
+
+        return false;
+    }
+
+    private function addError(string $message): void
+    {
+        if (!in_array($message, $this->errors, true)) {
+            $this->errors[] = $message;
+        }
     }
 
     public function initToolbarTitle(): void

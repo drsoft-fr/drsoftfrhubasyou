@@ -28,6 +28,9 @@ if (file_exists($autoloadPath)) {
  */
 class drsoftfrhubasyou extends Module
 {
+    /** Hidden tab of the back office that edits and deletes a parcel (controller and permissions) */
+    public const TAB_SHIPMENT = 'AdminDrSoftFrHubAsYouShipment';
+
     /**
      * @var string $authorEmail Author email
      */
@@ -58,7 +61,7 @@ class drsoftfrhubasyou extends Module
         $this->tabs = [
             [
                 // Edit / delete a parcel, from the order page (hidden from the menu)
-                'class_name' => 'AdminDrSoftFrHubAsYouShipment',
+                'class_name' => self::TAB_SHIPMENT,
                 // Locale or ISO code => name (first one for the other languages)
                 'name' => [
                     'en' => 'HubAsYou parcels',
@@ -304,11 +307,19 @@ class drsoftfrhubasyou extends Module
         try {
             $shipments = $this->presentShipments((new ShipmentRepository())->findByOrder((int) ($params['id_order'] ?? 0)));
 
+            // Buttons only for the permissions of the employee's profile on the parcel tab
+            // (the controller checks them again)
+            $employee = $this->context->employee;
+            $actions = array_filter(
+                ['edit', 'delete'],
+                static fn (string $action): bool => $employee && $employee->can($action, self::TAB_SHIPMENT)
+            );
+
             foreach ($shipments as &$shipment) {
-                foreach (['edit', 'delete'] as $view) {
-                    $shipment[$view . '_url'] = $this->context->link->getAdminLink('AdminDrSoftFrHubAsYouShipment', true, [], [
+                foreach ($actions as $action) {
+                    $shipment[$action . '_url'] = $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
                         'id_shipment' => $shipment['id'],
-                        'hubasyou_view' => $view,
+                        'hubasyou_view' => $action,
                     ]);
                 }
             }

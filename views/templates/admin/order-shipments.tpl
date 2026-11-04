@@ -32,10 +32,16 @@
                   <span class="badge {if $shipment.status == 'delivered'}badge-success{elseif $shipment.status == 'exception'}badge-danger{else}badge-info{/if}">
                     {$shipment.status_label|escape:'html':'UTF-8'}
                   </span>
-                  <div class="mt-2">
-                    <a href="{$shipment.edit_url|escape:'html':'UTF-8'}" class="btn btn-sm btn-outline-secondary">{l s='Edit' d='Admin.Actions'}</a>
-                    <a href="{$shipment.delete_url|escape:'html':'UTF-8'}" class="btn btn-sm btn-outline-danger">{l s='Delete' d='Admin.Actions'}</a>
-                  </div>
+                  {if !empty($shipment.edit_url) || !empty($shipment.delete_url)}
+                    <div class="mt-2">
+                      {if !empty($shipment.edit_url)}
+                        <a href="{$shipment.edit_url|escape:'html':'UTF-8'}" class="btn btn-sm btn-outline-secondary">{l s='Edit' d='Admin.Actions'}</a>
+                      {/if}
+                      {if !empty($shipment.delete_url)}
+                        <a href="{$shipment.delete_url|escape:'html':'UTF-8'}" class="btn btn-sm btn-outline-danger">{l s='Delete' d='Admin.Actions'}</a>
+                      {/if}
+                    </div>
+                  {/if}
                 </td>
                 <td>
                   {foreach $shipment.lines as $line}

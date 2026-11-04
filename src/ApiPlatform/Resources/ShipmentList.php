@@ -12,6 +12,12 @@ use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
 
 /**
  * Paginated list of parcels: GET /hubasyou/shipments?orderId=…&externalReference=…
+ *
+ * PrestaShop's QueryListProvider merges the GET parameters into every item before
+ * building it, so the filters "orderId" (a string in the URL) and "externalReference"
+ * would replace the values of each parcel. Each parcel's own values are copied aside
+ * when the query result is normalized (CQRSQueryMapping), then copied back over the
+ * merged ones (ApiResourceMapping).
  */
 #[ApiResource(
     operations: [
@@ -19,6 +25,14 @@ use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
             uriTemplate: '/hubasyou/shipments',
             CQRSQuery: ListShipments::class,
             scopes: ['hubasyou_shipment_read'],
+            CQRSQueryMapping: [
+                '[items][@index][orderId]' => '[items][@index][parcelOrderId]',
+                '[items][@index][externalReference]' => '[items][@index][parcelExternalReference]',
+            ],
+            ApiResourceMapping: [
+                '[parcelOrderId]' => '[orderId]',
+                '[parcelExternalReference]' => '[externalReference]',
+            ],
             itemsField: 'items',
             countField: 'count',
         ),

@@ -67,7 +67,7 @@ class ShipmentRepository
         $query = (new DbQuery())
             ->select('1')
             ->from(self::TABLE)
-            ->where("external_reference = '" . pSQL($externalReference) . "'");
+            ->where("external_reference = '" . pSQL($externalReference, true) . "'");
 
         return (bool) Db::getInstance()->getValue($query);
     }
@@ -100,7 +100,7 @@ class ShipmentRepository
         }
 
         if ($externalReference !== null && $externalReference !== '') {
-            $where[] = "s.external_reference = '" . pSQL($externalReference) . "'";
+            $where[] = "s.external_reference = '" . pSQL($externalReference, true) . "'";
         }
 
         $db = Db::getInstance();
@@ -317,7 +317,8 @@ class ShipmentRepository
                 $value = $this->toShopTime($value);
             }
 
-            $escaped[$column] = is_string($value) ? pSQL($value) : $value;
+            // Saved as received (SQL-escaped only): the templates escape it for HTML
+            $escaped[$column] = is_string($value) ? pSQL($value, true) : $value;
         }
 
         return $escaped;

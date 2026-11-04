@@ -25,7 +25,7 @@ En développement, après un `git clone` dans `modules/` : `composer dump-autolo
 ## Personnalisation
 
 - Gabarit du compte client : `themes/<thème>/modules/drsoftfrhubasyou/views/templates/hook/order-detail.tpl` (classes `hubasyou-shipments`, `hubasyou-shipment__…`).
-- E-mails : `themes/<thème>/modules/drsoftfrhubasyou/mails/<iso>/drsoftfrhubasyou_shipment.html|txt` et `drsoftfrhubasyou_delivered.html|txt` (variables : `{firstname}`, `{lastname}`, `{order_name}`, `{shipments_html}` / `{shipments_txt}` pour le second ; `{carrier_name}`, `{tracking_number}`, `{tracking_url}`, `{tracking_link_html}`, `{products_html}` / `{products_txt}` pour le premier).
+- E-mails : `themes/<thème>/modules/drsoftfrhubasyou/mails/<iso>/drsoftfrhubasyou_shipment.html|txt` et `drsoftfrhubasyou_delivered.html|txt` (variables : `{firstname}`, `{lastname}`, `{order_name}`, `{shipments_html}` / `{shipments_txt}` pour le second ; pour le premier, `{carrier_name_html}`, `{tracking_number_html}`, `{tracking_link_html}`, `{products_html}` dans le gabarit HTML et `{carrier_name}`, `{tracking_number}`, `{tracking_url}`, `{products_txt}` dans le gabarit texte). PrestaShop met les mêmes valeurs, telles quelles, dans les deux gabarits : dans le HTML, n'utiliser que les variables `…_html`, échappées ; les autres sont brutes, pour le texte.
 - E-mails d'état de PrestaShop : réglés dans Commandes › États (« Envoyer un e-mail au client »), indépendamment du module. Pour ne pas les envoyer, décocher l'e-mail de l'état : le changement d'état automatique continue.
 - Libellés : `translations/<locale>/ModulesDrsoftfrhubasyouShop.<locale>.xlf` (BO › International › Traductions, module drsoftfrhubasyou).
 

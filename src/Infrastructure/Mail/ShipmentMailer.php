@@ -15,6 +15,11 @@ use Validate;
 /**
  * E-mails of the module to the customer, in the language of the order.
  * Templates overridable in themes/<theme>/modules/drsoftfrhubasyou/mails/<iso>/.
+ *
+ * PrestaShop puts the same variables, as they are, in the HTML and the text template:
+ * the values received from HubAsYou are therefore given twice, escaped for the HTML
+ * template (…_html) and raw for the text one. {firstname}, {lastname} and {order_name}
+ * come from PrestaShop (names validated by Validate::isCustomerName, as in its own e-mails).
  */
 class ShipmentMailer
 {
@@ -32,15 +37,7 @@ class ShipmentMailer
      */
     public function sendShipmentMail(Order $order, array $shipment): bool
     {
-        return $this->send(
-            $order,
-            self::TEMPLATE_SHIPMENT,
-            'Your parcel is on its way',
-            $this->getShipmentVars($shipment) + [
-                '{products_html}' => $this->getProductsHtml($shipment['lines']),
-                '{products_txt}' => $this->getProductsTxt($shipment['lines']),
-            ]
-        );
+        return $this->send($order, self::TEMPLATE_SHIPMENT, 'Your parcel is on its way', $this->getShipmentMailVars($shipment));
     }
 
     /**
@@ -52,28 +49,50 @@ class ShipmentMailer
      */
     public function sendDeliveredMail(Order $order, array $shipments): bool
     {
+        return $this->send($order, self::TEMPLATE_DELIVERED, 'Your order has been delivered', $this->getDeliveredMailVars($shipments));
+    }
+
+    /**
+     * Variables of the "parcel on its way" template (without those of the customer and the order).
+     *
+     * @param array $shipment Row of ShipmentRepository (with its lines)
+     *
+     * @return array<string, string>
+     */
+    public function getShipmentMailVars(array $shipment): array
+    {
+        return $this->getTrackingVars($shipment) + [
+            '{products_html}' => $this->getProductsHtml($shipment['lines']),
+            '{products_txt}' => $this->getProductsTxt($shipment['lines']),
+        ];
+    }
+
+    /**
+     * Variables of the "order delivered" template (without those of the customer and the order).
+     *
+     * @param array[] $shipments Rows of ShipmentRepository (with their lines)
+     *
+     * @return array<string, string>
+     */
+    public function getDeliveredMailVars(array $shipments): array
+    {
         $html = '';
         $txt = '';
 
         foreach ($shipments as $shipment) {
-            $vars = $this->getShipmentVars($shipment);
+            $vars = $this->getTrackingVars($shipment);
             $html .= '<tr><td style="padding:12px 0;border-top:1px solid #e5e5e5;">'
-                . htmlspecialchars($vars['{carrier_name}'], ENT_QUOTES, 'UTF-8') . ' · ' . $vars['{tracking_link_html}']
+                . $vars['{carrier_name_html}'] . ' · ' . $vars['{tracking_link_html}']
                 . $this->getProductsHtml($shipment['lines'], 'margin:8px 0 0;padding-left:18px;')
                 . '</td></tr>';
             $txt .= $vars['{carrier_name}'] . ' · ' . $vars['{tracking_number}'] . "\n"
                 . $this->getProductsTxt($shipment['lines']) . "\n\n";
         }
 
-        return $this->send(
-            $order,
-            self::TEMPLATE_DELIVERED,
-            'Your order has been delivered',
-            [
-                '{shipments_html}' => '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="color:inherit;font-size:inherit;">' . $html . '</table>',
-                '{shipments_txt}' => rtrim($txt),
-            ]
-        );
+        return [
+            '{shipments_html}' => '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="color:inherit;font-size:inherit;">' . $html . '</table>',
+            '{shipments_txt}' => rtrim($txt),
+        ];
     }
 
     private function send(Order $order, string $template, string $subject, array $vars): bool
@@ -113,18 +132,27 @@ class ShipmentMailer
         );
     }
 
-    private function getShipmentVars(array $shipment): array
+    /**
+     * Carrier and tracking: raw for the text template, escaped (…_html) for the HTML one.
+     *
+     * @return array<string, string>
+     */
+    private function getTrackingVars(array $shipment): array
     {
+        $carrierName = (string) $shipment['carrier_name'];
+        $trackingNumber = (string) $shipment['tracking_number'];
         $trackingUrl = (string) ($shipment['tracking_url'] ?? '');
-        $trackingNumber = htmlspecialchars((string) $shipment['tracking_number'], ENT_QUOTES, 'UTF-8');
+        $trackingNumberHtml = $this->escape($trackingNumber);
 
         return [
-            '{carrier_name}' => (string) $shipment['carrier_name'],
-            '{tracking_number}' => (string) $shipment['tracking_number'],
+            '{carrier_name}' => $carrierName,
+            '{carrier_name_html}' => $this->escape($carrierName),
+            '{tracking_number}' => $trackingNumber,
+            '{tracking_number_html}' => $trackingNumberHtml,
             '{tracking_url}' => $trackingUrl,
             '{tracking_link_html}' => $trackingUrl !== ''
-                ? '<a href="' . htmlspecialchars($trackingUrl, ENT_QUOTES, 'UTF-8') . '" style="color:inherit;text-decoration:underline;">' . $trackingNumber . '</a>'
-                : $trackingNumber,
+                ? '<a href="' . $this->escape($trackingUrl) . '" style="color:inherit;text-decoration:underline;">' . $trackingNumberHtml . '</a>'
+                : $trackingNumberHtml,
         ];
     }
 
@@ -133,7 +161,7 @@ class ShipmentMailer
         $items = '';
 
         foreach ($lines as $line) {
-            $items .= '<li>' . (int) $line['quantity'] . ' × ' . htmlspecialchars((string) $line['product_name'], ENT_QUOTES, 'UTF-8') . '</li>';
+            $items .= '<li>' . (int) $line['quantity'] . ' × ' . $this->escape((string) $line['product_name']) . '</li>';
         }
 
         return '<ul style="' . $style . '">' . $items . '</ul>';
@@ -148,5 +176,10 @@ class ShipmentMailer
         }
 
         return rtrim($text);
+    }
+
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 }

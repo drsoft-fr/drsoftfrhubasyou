@@ -74,13 +74,13 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                     (string) Tools::getValue('hubasyou_version'),
                 ));
 
-                $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
+                $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
             }
 
             if (Tools::isSubmit('submitHubAsYouShipmentDelete') && $this->checkPermission('delete')) {
                 $this->getCommandBus()->handle(new DeleteShipmentCommand($shipmentId));
 
-                $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
+                $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
             }
         } catch (ShipmentConflictException) {
             // Changed meanwhile (HubAsYou, another employee): show its current values and version
@@ -142,7 +142,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         parent::initToolbarTitle();
 
         if ($this->shipment) {
-            $this->toolbar_title[] = $this->trans('Parcel %reference%', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN);
+            $this->toolbar_title[] = $this->trans('Parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN);
         }
     }
 
@@ -157,10 +157,11 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $form = [
             'form' => [
                 'legend' => [
-                    'title' => $this->trans('Edit the tracking of parcel %reference%', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN),
+                    // HelperForm prints the legend and the description as they are: values escaped here
+                    'title' => $this->trans('Edit the tracking of parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN),
                     'icon' => 'icon-truck',
                 ],
-                'description' => $this->trans('Products: %products%. The content of a parcel cannot be changed: to fix it, delete the parcel and ask HubAsYou to send it again.', ['%products%' => $this->getProductsSummary()], self::DOMAIN),
+                'description' => $this->trans('Products: %products%. The content of a parcel cannot be changed: to fix it, delete the parcel and ask HubAsYou to send it again.', ['%products%' => $this->escapeHtml($this->getProductsSummary())], self::DOMAIN),
                 'input' => [
                     [
                         'type' => 'text',
@@ -255,6 +256,15 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     private function getFormValue(string $field, string $saved): string
     {
         return $this->showCurrentValues ? $saved : (string) Tools::getValue($field, $saved);
+    }
+
+    /**
+     * The page title, the form legend and description and the flash messages are printed
+     * as they are (or only stripped of tags): values received from HubAsYou go in escaped.
+     */
+    private function escapeHtml(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 
     private function getProductsSummary(): string

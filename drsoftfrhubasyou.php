@@ -383,6 +383,8 @@ class drsoftfrhubasyou extends Module
             'external_reference' => (string) $row['external_reference'],
             'carrier_name' => (string) $row['carrier_name'],
             'tracking_number' => (string) $row['tracking_number'],
+            // For {l} sprintf values, which are never escaped (and the front office |escape is a no-op)
+            'tracking_number_html' => htmlspecialchars((string) $row['tracking_number'], ENT_QUOTES, 'UTF-8'),
             'tracking_url' => (string) ($row['tracking_url'] ?? ''),
             'status' => (string) $row['status'],
             'status_label' => $labels[$row['status']] ?? (string) $row['status'],

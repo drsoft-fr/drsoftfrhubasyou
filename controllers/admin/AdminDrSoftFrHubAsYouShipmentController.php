@@ -5,6 +5,7 @@ declare(strict_types=1);
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
@@ -30,6 +31,9 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     public $module;
 
     private ?array $shipment = null;
+
+    /** After a conflict: the form shows the saved values, not the ones sent */
+    private bool $showCurrentValues = false;
 
     public function __construct()
     {
@@ -65,6 +69,9 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                     (string) Tools::getValue('tracking_number'),
                     (string) Tools::getValue('tracking_url'),
                     (string) Tools::getValue('status'),
+                    null,
+                    null,
+                    (string) Tools::getValue('hubasyou_version'),
                 ));
 
                 $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
@@ -75,6 +82,11 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
 
                 $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->shipment['external_reference']], self::DOMAIN));
             }
+        } catch (ShipmentConflictException) {
+            // Changed meanwhile (HubAsYou, another employee): show its current values and version
+            $this->addError($this->trans('This parcel was changed (by HubAsYou or another employee) while you were editing it. Its current values are shown below: check them and save again if needed.', [], self::DOMAIN));
+            $this->shipment = (new ShipmentRepository())->find($shipmentId);
+            $this->showCurrentValues = true;
         } catch (ShipmentException $e) {
             $this->addError($this->getErrorMessage($e));
         }
@@ -178,6 +190,10 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                         'options' => ['query' => $statusOptions, 'id' => 'id', 'name' => 'name'],
                         'desc' => $this->trans('Saving runs the same effects as HubAsYou: e-mail once per parcel, order state.', [], self::DOMAIN),
                     ],
+                    [
+                        'type' => 'hidden',
+                        'name' => 'hubasyou_version',
+                    ],
                 ],
                 'submit' => [
                     'title' => $this->trans('Save', [], 'Admin.Actions'),
@@ -204,10 +220,12 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $helper->token = Tools::getAdminTokenLite(self::TAB_CLASS_NAME);
         $helper->tpl_vars = [
             'fields_value' => [
-                'carrier_name' => Tools::getValue('carrier_name', $this->shipment['carrier_name']),
-                'tracking_number' => Tools::getValue('tracking_number', $this->shipment['tracking_number']),
-                'tracking_url' => Tools::getValue('tracking_url', (string) $this->shipment['tracking_url']),
-                'status' => Tools::getValue('status', $this->shipment['status']),
+                'carrier_name' => $this->getFormValue('carrier_name', $this->shipment['carrier_name']),
+                'tracking_number' => $this->getFormValue('tracking_number', $this->shipment['tracking_number']),
+                'tracking_url' => $this->getFormValue('tracking_url', (string) $this->shipment['tracking_url']),
+                'status' => $this->getFormValue('status', $this->shipment['status']),
+                // Version the employee is working from: kept after a refused save, renewed after a conflict
+                'hubasyou_version' => $this->getFormValue('hubasyou_version', ShipmentRepository::version($this->shipment)),
             ],
             'languages' => $this->getLanguages(),
             'id_language' => $this->context->language->id,
@@ -229,6 +247,14 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         ]);
 
         return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/delete-confirm.tpl');
+    }
+
+    /**
+     * Value sent by the form (refused save: the employee's input is kept), else the saved one.
+     */
+    private function getFormValue(string $field, string $saved): string
+    {
+        return $this->showCurrentValues ? $saved : (string) Tools::getValue($field, $saved);
     }
 
     private function getProductsSummary(): string

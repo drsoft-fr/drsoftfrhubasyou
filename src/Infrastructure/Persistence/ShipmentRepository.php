@@ -40,6 +40,25 @@ class ShipmentRepository
         return $this->withLines([$row])[0];
     }
 
+    /**
+     * Version of a parcel: fingerprint of the values a change can overwrite (tracking,
+     * state, dates). Unlike date_upd (precise to the second), it changes with any
+     * change of these values.
+     *
+     * @param array $row Row of find()
+     */
+    public static function version(array $row): string
+    {
+        return sha1(json_encode([
+            $row['carrier_name'],
+            $row['tracking_number'],
+            $row['tracking_url'],
+            $row['status'],
+            $row['shipped_at'],
+            $row['delivered_at'],
+        ]));
+    }
+
     public function existsByExternalReference(string $externalReference): bool
     {
         $query = (new DbQuery())

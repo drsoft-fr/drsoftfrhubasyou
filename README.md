@@ -4,7 +4,7 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
 
 - **API** : `POST`, `PATCH`, `GET`, `DELETE /admin-api/hubasyou/shipments…`, droits `hubasyou_shipment_read` / `hubasyou_shipment_write`.
 - **Compte client** : les colis dans le détail de la commande (crochet `displayOrderDetail`).
-- **BO** : les colis dans la fiche de la commande (crochet `displayAdminOrderMain`), avec « Modifier » (transporteur, numéro et URL de suivi, état) et « Supprimer » (page de confirmation) : contrôleur `AdminDrSoftFrHubAsYouShipment`, onglet caché sous Commandes. Le contenu d'un colis ne se modifie pas : on le supprime et HubAsYou le renvoie.
+- **BO** : les colis dans la fiche de la commande (crochet `displayAdminOrderMain`), avec « Modifier » (transporteur, numéro et URL de suivi, état) et « Supprimer » (page de confirmation) : contrôleur `AdminDrSoftFrHubAsYouShipment`, onglet caché sous Commandes. Le contenu d'un colis ne se modifie pas : on le supprime et HubAsYou le renvoie. Si le colis change pendant qu'un employé le modifie (mise à jour de HubAsYou, autre employé), son enregistrement est refusé et le formulaire montre les valeurs actuelles (version du colis vérifiée à l'enregistrement).
 - **E-mails** au client, chacun désactivable dans la configuration, 7 langues (fr, en, de, it, es, nl, pt) :
     - au départ de chaque colis, une fois par colis (modèle `drsoftfrhubasyou_shipment`) ;
     - quand tout est livré, une fois par commande, avec le récapitulatif des colis (modèle `drsoftfrhubasyou_delivered`). L'état « Livré » de PrestaShop n'envoie pas d'e-mail par défaut : c'est cet e-mail qui prévient le client.

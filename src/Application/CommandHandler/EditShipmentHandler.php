@@ -7,6 +7,7 @@ namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
@@ -36,6 +37,11 @@ final class EditShipmentHandler
         $this->lock->synchronized($orderId, function () use ($command, $shipmentId): void {
             // Read again under the lock: the parcel may have changed or been deleted meanwhile
             $current = $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
+
+            // Optimistic check, under the lock so nothing can change between it and the save
+            if ($command->expectedVersion !== null && $command->expectedVersion !== ShipmentRepository::version($current)) {
+                throw ShipmentConflictException::forShipment($shipmentId);
+            }
 
             $data = array_filter([
                 'carrier_name' => $command->carrierName,

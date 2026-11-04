@@ -226,6 +226,10 @@
         <source>According to its parcels, this order should be in the state "%target%", but the module did not change it: its current state "%current%" is not one the module may change (module settings).</source>
         <target>D'après ses colis, cette commande devrait être à l'état « %target% », mais le module ne l'a pas changé : son état actuel, « %current% », ne fait pas partie des états que le module peut changer (configuration du module).</target>
       </trans-unit>
+      <trans-unit id="aaa6fc100d33fd6a98d4fa63f0cc0af0">
+        <source>This parcel was changed (by HubAsYou or another employee) while you were editing it. Its current values are shown below: check them and save again if needed.</source>
+        <target>Ce colis a été modifié (par HubAsYou ou un autre employé) pendant que vous le modifiiez. Ses valeurs actuelles sont affichées ci-dessous : vérifiez-les et enregistrez de nouveau si besoin.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

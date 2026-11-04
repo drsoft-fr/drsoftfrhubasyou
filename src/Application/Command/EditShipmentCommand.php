@@ -14,6 +14,8 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
  * Updates the tracking of a parcel (Admin API PATCH, back office form).
  *
  * Null fields are left unchanged; an empty trackingUrl removes the tracking page.
+ * expectedVersion (back office): version of the parcel the change is based on
+ * (ShipmentRepository::version()); refused if the parcel changed meanwhile.
  * The content of the parcel (order, lines, external reference) cannot be changed:
  * delete the parcel and declare it again.
  */
@@ -38,6 +40,7 @@ final class EditShipmentCommand
         ?string $status = null,
         public readonly ?DateTimeImmutable $shippedAt = null,
         public readonly ?DateTimeImmutable $deliveredAt = null,
+        public readonly ?string $expectedVersion = null,
     ) {
         $this->shipmentId = new ShipmentId($shipmentId);
         $this->carrierName = $carrierName === null ? null : ShipmentRules::text('carrierName', $carrierName);

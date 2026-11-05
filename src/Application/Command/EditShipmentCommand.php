@@ -17,7 +17,8 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
  * expectedVersion (back office): version of the parcel the change is based on
  * (ShipmentRepository::version()); refused if the parcel changed meanwhile.
  * The content of the parcel (order, lines, external reference) cannot be changed:
- * delete the parcel and declare it again.
+ * delete the parcel and declare it again. These fields are only received to refuse a
+ * different value (Admin API), instead of ignoring it.
  */
 final class EditShipmentCommand
 {
@@ -32,6 +33,16 @@ final class EditShipmentCommand
 
     public readonly ?ShipmentStatus $status;
 
+    public readonly ?string $externalReference;
+
+    /**
+     * @var array<int, int>|null id_order_detail => quantity
+     */
+    public readonly ?array $lines;
+
+    /**
+     * @param array<int, array{orderDetailId?: int, quantity?: int}>|null $lines
+     */
     public function __construct(
         int $shipmentId,
         ?string $carrierName = null,
@@ -41,7 +52,12 @@ final class EditShipmentCommand
         public readonly ?DateTimeImmutable $shippedAt = null,
         public readonly ?DateTimeImmutable $deliveredAt = null,
         public readonly ?string $expectedVersion = null,
+        ?string $externalReference = null,
+        public readonly ?int $orderId = null,
+        ?array $lines = null,
     ) {
+        $this->externalReference = $externalReference === null ? null : trim($externalReference);
+        $this->lines = $lines === null ? null : ShipmentRules::lines($lines);
         $this->shipmentId = new ShipmentId($shipmentId);
         $this->carrierName = $carrierName === null ? null : ShipmentRules::text('carrierName', $carrierName);
         $this->trackingNumber = $trackingNumber === null ? null : ShipmentRules::text('trackingNumber', $trackingNumber);

@@ -57,4 +57,67 @@ final class ShipmentRules
 
         return $value;
     }
+
+    /**
+     * Lines of a parcel, by order line. The same order line sent twice is added up.
+     *
+     * @param array<int, array{orderDetailId?: int, quantity?: int}> $lines
+     *
+     * @return array<int, int> id_order_detail => quantity
+     *
+     * @throws ShipmentConstraintException
+     */
+    public static function lines(array $lines): array
+    {
+        $quantities = [];
+
+        foreach ($lines as $line) {
+            $orderDetailId = (int) ($line['orderDetailId'] ?? 0);
+            $quantity = (int) ($line['quantity'] ?? 0);
+
+            if ($orderDetailId <= 0 || $quantity <= 0) {
+                throw new ShipmentConstraintException('Each line needs a positive orderDetailId and quantity.');
+            }
+
+            $quantities[$orderDetailId] = ($quantities[$orderDetailId] ?? 0) + $quantity;
+        }
+
+        if (!$quantities) {
+            throw new ShipmentConstraintException('A parcel needs at least one line.');
+        }
+
+        return $quantities;
+    }
+
+    /**
+     * The content of a parcel cannot change: refused rather than ignored, so the sender
+     * does not believe it was applied. Null: not sent. Sending the saved values again
+     * (a whole parcel) is accepted, nothing would be lost.
+     *
+     * @param array<int, int>|null $lines id_order_detail => quantity
+     * @param array<int, int> $savedLines id_order_detail => quantity
+     *
+     * @throws ShipmentConstraintException
+     */
+    public static function assertContentUnchanged(
+        ?string $externalReference,
+        ?int $orderId,
+        ?array $lines,
+        string $savedExternalReference,
+        int $savedOrderId,
+        array $savedLines,
+    ): void {
+        $changed = array_keys(array_filter([
+            'externalReference' => $externalReference !== null && $externalReference !== $savedExternalReference,
+            'orderId' => $orderId !== null && $orderId !== $savedOrderId,
+            'lines' => $lines !== null && $lines != $savedLines,
+        ]));
+
+        if ($changed) {
+            throw new ShipmentConstraintException(sprintf(
+                'The content of a parcel cannot be changed (%s): delete the parcel and declare it again.',
+                implode(', ', $changed)
+            ));
+        }
+    }
 }

@@ -81,7 +81,7 @@ Règles de cohérence :
 
 - une ligne de commande peut être répartie sur plusieurs colis, mais **la somme des quantités mises en colis ne peut pas dépasser la quantité commandée** (une unité remboursée ou retournée reste acceptée dans un colis : le colis est bien parti) ;
 - la même ligne envoyée deux fois dans un colis est additionnée ;
-- le contenu d'un colis (`externalReference`, `orderId`, `lines`) ne se modifie pas : en cas d'erreur, **supprimer le colis** (`DELETE`) puis le déclarer à nouveau ; sa `externalReference` redevient libre et ses unités peuvent être remises en colis. Le marchand peut faire de même depuis le BO (fiche de la commande, colis HubAsYou : « Supprimer »), et y corriger le suivi (« Modifier » : transporteur, numéro, URL, état) ;
+- le contenu d'un colis (`externalReference`, `orderId`, `lines`) ne se modifie pas : un `PATCH` avec une autre valeur est refusé en entier (`422`, rien n'est appliqué) ; renvoyer les mêmes valeurs est accepté. En cas d'erreur, **supprimer le colis** (`DELETE`) puis le déclarer à nouveau ; sa `externalReference` redevient libre et ses unités peuvent être remises en colis. Le marchand peut faire de même depuis le BO (fiche de la commande, colis HubAsYou : « Supprimer »), et y corriger le suivi (« Modifier » : transporteur, numéro, URL, état) ;
 - une suppression n'annule ni l'e-mail déjà envoyé au client ni l'état de la commande ;
 - un `PATCH` ne change que les champs envoyés ; une date déjà enregistrée n'est pas écrasée par la date par défaut ;
 - l'état d'un colis peut changer librement (pour corriger une erreur), mais ses dates restent cohérentes : `deliveredAt` n'est accepté qu'avec l'état `delivered` (envoyé ou déjà enregistré), la livraison ne peut pas précéder l'expédition (`422` sinon), et un colis qui quitte l'état `delivered` perd sa date de livraison (une nouvelle est fixée s'il le redevient).
@@ -133,7 +133,7 @@ Réponse `200 OK` : le colis complet.
 | `403` | jeton sans le droit demandé | `detail` : `Invalid scope.` |
 | `404` | colis introuvable | `detail` |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
-| `422` | refus métier : `externalReference` déjà utilisée, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
+| `422` | refus métier : `externalReference` déjà utilisée, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail` ; renvoyer la même requête un peu plus tard |
 
 **Requêtes simultanées** : les requêtes qui touchent les colis d'une même commande sont traitées l'une après l'autre (une requête attend la précédente jusqu'à 15 secondes, puis répond `503`). HubAsYou peut donc envoyer en parallèle les colis d'une commande : les quantités, l'état de la commande et les e-mails restent justes.

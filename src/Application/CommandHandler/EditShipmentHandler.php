@@ -11,6 +11,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
@@ -37,6 +38,15 @@ final class EditShipmentHandler
         $this->lock->synchronized($orderId, function () use ($command, $shipmentId): void {
             // Read again under the lock: the parcel may have changed or been deleted meanwhile
             $current = $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
+
+            ShipmentRules::assertContentUnchanged(
+                $command->externalReference,
+                $command->orderId,
+                $command->lines,
+                (string) $current['external_reference'],
+                (int) $current['id_order'],
+                array_column($current['lines'], 'quantity', 'id_order_detail')
+            );
 
             // Optimistic check, under the lock so nothing can change between it and the save
             if ($command->expectedVersion !== null && $command->expectedVersion !== ShipmentRepository::version($current)) {

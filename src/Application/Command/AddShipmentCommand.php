@@ -49,25 +49,6 @@ final class AddShipmentCommand
         $this->trackingUrl = ShipmentRules::url($trackingUrl);
         $this->status = ShipmentStatus::tryFrom($status)
             ?? throw new ShipmentConstraintException(sprintf('Unknown status "%s".', $status), ShipmentConstraintException::INVALID_STATUS);
-
-        $quantities = [];
-
-        foreach ($lines as $line) {
-            $orderDetailId = (int) ($line['orderDetailId'] ?? 0);
-            $quantity = (int) ($line['quantity'] ?? 0);
-
-            if ($orderDetailId <= 0 || $quantity <= 0) {
-                throw new ShipmentConstraintException('Each line needs a positive orderDetailId and quantity.');
-            }
-
-            // The same order line sent twice in a parcel is added up
-            $quantities[$orderDetailId] = ($quantities[$orderDetailId] ?? 0) + $quantity;
-        }
-
-        if (!$quantities) {
-            throw new ShipmentConstraintException('A parcel needs at least one line.');
-        }
-
-        $this->lines = $quantities;
+        $this->lines = ShipmentRules::lines($lines);
     }
 }

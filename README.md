@@ -16,6 +16,8 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
     - Droits : le recalcul après un remboursement ne se fait que si l'employé a le droit « Voir » sur le module (voir Installation). Sinon, il se fait à la réception du colis suivant.
 - **État de la commande** : « Expédié » au premier colis parti, « Livré » quand la commande est entièrement livrée (états réglables), **seulement depuis les états cochés dans la configuration** (par défaut : paiement accepté, paiement à distance accepté, en attente de réapprovisionnement (payé), en cours de préparation, expédié). Une commande annulée ou en attente de paiement garde son état ; un avertissement s'affiche sur sa fiche et dans le journal.
 
+- **Journal** : chaque colis ajouté, modifié ou supprimé est inscrit dans Paramètres avancés › Journaux, avec son auteur (client API ou employé), sa commande et ce qui a changé. Exemple : `parcel #12 (HAY-000981) of order #45 edited by API client "hubasyou": status: "shipped" -> "delivered"`. Ces lignes ont le niveau « Informatif » : elles ne s'enregistrent que si le niveau minimal du journal le permet (`PS_MIN_LOGGER_LEVEL_IN_DB`).
+
 ## Installation
 
 1. `make package`, puis BO › Modules › Gestionnaire de modules › Envoyer un module : `dist/drsoftfrhubasyou-<version>.zip` (l'archive contient `vendor/`, l'autoloader composer).
@@ -43,7 +45,7 @@ En développement, après un `git clone` dans `modules/` : `composer dump-autolo
 - `controllers/admin/` : page du BO (modifier, supprimer), qui envoie les mêmes commandes CQRS que l'API.
 - `src/Application/` : commandes et requêtes CQRS (`AddShipmentCommand`, `EditShipmentCommand`, `DeleteShipmentCommand`, `GetShipmentForEditing`, `ListShipments`), leurs gestionnaires (`#[AsCommandHandler]`, `#[AsQueryHandler]`) et `ShipmentEffects`, qui enchaîne les effets d'un colis enregistré (e-mails, état de la commande), recalculés à chaque fois depuis les colis enregistrés.
 - `src/Domain/` : règles métier sans accès à la base : identifiant et états du colis, avancement de la commande (`OrderShippingProgress`), règles des champs (`ShipmentRules`, vérifiées par les commandes : mêmes règles pour l'API et le BO), des quantités (`ShipmentQuantities`) et des dates (`ShipmentDates`), exceptions (422 / 404 ; codes pour les messages traduits du BO).
-- `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), verrou par commande (`Lock/OrderLock`, `GET_LOCK` de la base : les colis d'une même commande sont traités une requête à la fois), réglages, installation.
+- `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), verrou par commande (`Lock/OrderLock`, `GET_LOCK` de la base : les colis d'une même commande sont traités une requête à la fois), journal (`Log/ShipmentJournal`), réglages, installation.
 - `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
 
 La désinstallation supprime les colis reçus.

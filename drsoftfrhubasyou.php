@@ -333,6 +333,7 @@ class drsoftfrhubasyou extends Module
             $this->context->smarty->assign([
                 'hubasyou_shipments' => $shipments,
                 'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning((int) $params['id_order']) : '',
+                'hubasyou_delivered_mail_at' => ($date = (new OrderMailRepository())->findDeliveredMailDate((int) ($params['id_order'] ?? 0))) ? Tools::displayDate($date) : '',
             ]);
 
             return $this->display(__FILE__, 'views/templates/admin/order-shipments.tpl');

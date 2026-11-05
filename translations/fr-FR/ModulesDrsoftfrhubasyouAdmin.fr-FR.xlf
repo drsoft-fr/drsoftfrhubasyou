@@ -50,6 +50,10 @@
         <source>Sent once per parcel, while it is on its way, in the language of the order (template "drsoftfrhubasyou_shipment"). Not sent for a parcel received as already delivered.</source>
         <target>Envoyé une fois par colis, pendant son acheminement, dans la langue de la commande (modèle « drsoftfrhubasyou_shipment »). Pas d'envoi pour un colis reçu déjà livré.</target>
       </trans-unit>
+      <trans-unit id="beb76192ff4e71f5c0af8731f6c8cf93">
+        <source>Order delivered e-mail: %date%</source>
+        <target>E-mail « commande livrée » : %date%</target>
+      </trans-unit>
       <trans-unit id="ee2e89d0972548df48041879af61b60c">
         <source>Access for HubAsYou</source>
         <target>Accès de HubAsYou</target>

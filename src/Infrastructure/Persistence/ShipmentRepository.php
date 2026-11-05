@@ -25,6 +25,9 @@ class ShipmentRepository
     public const TABLE = 'drsoft_fr_hubasyou_shipment';
     public const TABLE_LINE = 'drsoft_fr_hubasyou_shipment_line';
 
+    /** The values that can change after the creation of a parcel */
+    public const VERSIONED_COLUMNS = ['carrier_name', 'tracking_number', 'tracking_url', 'status', 'shipped_at', 'delivered_at'];
+
     private const DATE_FORMAT = 'Y-m-d H:i:s';
     private const MYSQL_DUPLICATE_KEY = 1062;
 
@@ -52,14 +55,7 @@ class ShipmentRepository
      */
     public static function version(array $row): string
     {
-        return sha1(json_encode([
-            $row['carrier_name'],
-            $row['tracking_number'],
-            $row['tracking_url'],
-            $row['status'],
-            $row['shipped_at'],
-            $row['delivered_at'],
-        ]));
+        return sha1(json_encode(array_map(static fn (string $column) => $row[$column], self::VERSIONED_COLUMNS)));
     }
 
     public function existsByExternalReference(string $externalReference): bool

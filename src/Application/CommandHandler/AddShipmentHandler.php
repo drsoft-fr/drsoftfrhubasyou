@@ -12,6 +12,7 @@ use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentQuantities;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentId;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
@@ -24,6 +25,7 @@ final class AddShipmentHandler
         private readonly OrderRepository $orders,
         private readonly ShipmentEffects $effects,
         private readonly OrderLock $lock,
+        private readonly ShipmentJournal $journal,
     ) {
     }
 
@@ -64,6 +66,10 @@ final class AddShipmentHandler
                 ],
                 $command->lines
             );
+
+            if ($shipment = $this->shipments->find($shipmentId)) {
+                $this->journal->added($shipment);
+            }
 
             $this->effects->onShipmentSaved($shipmentId);
 

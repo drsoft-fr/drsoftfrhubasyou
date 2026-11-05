@@ -14,6 +14,7 @@ use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 
@@ -24,6 +25,7 @@ final class EditShipmentHandler
         private readonly ShipmentRepository $shipments,
         private readonly ShipmentEffects $effects,
         private readonly OrderLock $lock,
+        private readonly ShipmentJournal $journal,
     ) {
     }
 
@@ -79,6 +81,10 @@ final class EditShipmentHandler
 
             if (!$this->shipments->update($shipmentId, $data)) {
                 throw new ShipmentException('The parcel could not be saved.');
+            }
+
+            if ($saved = $this->shipments->find($shipmentId)) {
+                $this->journal->edited($current, $saved);
             }
 
             $this->effects->onShipmentSaved($shipmentId);

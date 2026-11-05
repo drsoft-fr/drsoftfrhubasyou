@@ -13,6 +13,7 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal: ~
 
   # Application
   DrSoftFr\Module\HubAsYou\Application\Service\OrderStatePolicy: ~

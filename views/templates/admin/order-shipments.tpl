@@ -66,6 +66,9 @@
           </tbody>
         </table>
       </div>
+      {if $hubasyou_delivered_mail_at}
+        <p class="small mb-0">{l s='Order delivered e-mail: %date%' sprintf=['%date%' => $hubasyou_delivered_mail_at] d='Modules.Drsoftfrhubasyou.Admin'}</p>
+      {/if}
     {else}
       <p class="mb-0">{l s='No parcel received from HubAsYou yet.' d='Modules.Drsoftfrhubasyou.Admin'}</p>
     {/if}

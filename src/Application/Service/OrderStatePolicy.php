@@ -68,6 +68,16 @@ class OrderStatePolicy
     }
 
     /**
+     * The "order delivered" e-mail is enabled for the shop of the order, and the order is
+     * entirely delivered.
+     */
+    public function mayDeliveredMailBeSent(Order $order): bool
+    {
+        return Settings::isDeliveredMailEnabled($order)
+            && $this->getProgress((int) $order->id) === OrderShippingProgress::Delivered;
+    }
+
+    /**
      * The module changes the state of an order only from one of the states chosen in
      * its settings (never, for example, from "Cancelled" or "Awaiting payment").
      */

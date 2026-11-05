@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
+use DrSoftFr\Module\HubAsYou\Application\Command\SendDeliveredMailCommand;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
@@ -15,7 +16,8 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 
 /**
  * Back office › order page › HubAsYou parcels: edit the tracking of a parcel
- * (?hubasyou_view=edit) or delete it after a confirmation page (?hubasyou_view=delete).
+ * (?hubasyou_view=edit) or delete it after a confirmation page (?hubasyou_view=delete);
+ * send the "order delivered" e-mail again (button of the order page).
  *
  * Same CQRS commands as the Admin API, so the same rules apply.
  */
@@ -60,6 +62,17 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         }
 
         $shipmentId = (int) $this->shipment['id_shipment'];
+
+        // Button of the order page (sent with a parcel of the order): the answer is shown there
+        if (Tools::isSubmit('submitHubAsYouDeliveredMail') && $this->checkPermission('edit')) {
+            try {
+                $this->getCommandBus()->handle(new SendDeliveredMailCommand((int) $this->shipment['id_order']));
+            } catch (ShipmentException $e) {
+                $this->redirectToOrder($this->getErrorMessage($e), 'error');
+            }
+
+            $this->redirectToOrder($this->trans('The order delivered e-mail has been sent.', [], self::DOMAIN));
+        }
 
         try {
             if (Tools::isSubmit('submitHubAsYouShipmentEdit') && $this->checkPermission('edit')) {
@@ -283,10 +296,13 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         ]);
     }
 
-    private function redirectToOrder(string $message): void
+    /**
+     * @param 'success'|'error' $type
+     */
+    private function redirectToOrder(string $message, string $type = 'success'): void
     {
         try {
-            SymfonyContainer::getInstance()->get('request_stack')->getSession()->getFlashBag()->add('success', $message);
+            SymfonyContainer::getInstance()->get('request_stack')->getSession()->getFlashBag()->add($type, $message);
         } catch (Throwable) {
             // No session: the order page shows the new state of the parcels anyway
         }
@@ -312,6 +328,8 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             ShipmentConstraintException::TOO_LONG => $this->trans('The carrier and the tracking number cannot exceed %max% characters.', ['%max%' => ShipmentRules::TEXT_MAX_LENGTH], self::DOMAIN),
             ShipmentConstraintException::INVALID_URL => $this->trans('The tracking URL must start with http:// or https:// and cannot exceed %max% characters.', ['%max%' => ShipmentRules::URL_MAX_LENGTH], self::DOMAIN),
             ShipmentConstraintException::INVALID_STATUS => $this->trans('Unknown status.', [], self::DOMAIN),
+            ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED => $this->trans('This e-mail cannot be sent: the order is not entirely delivered, or this e-mail is disabled in the module settings.', [], self::DOMAIN),
+            ShipmentConstraintException::DELIVERED_MAIL_FAILED => $this->trans('The order delivered e-mail could not be sent: check the e-mail settings and the logs, then try again.', [], self::DOMAIN),
             default => $e->getMessage(),
         };
     }

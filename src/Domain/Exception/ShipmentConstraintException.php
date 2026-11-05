@@ -18,6 +18,8 @@ class ShipmentConstraintException extends ShipmentException
     public const INVALID_STATUS = 4;
     public const DUPLICATE_REFERENCE = 5;
     public const INVALID_DATES = 6;
+    public const DELIVERED_MAIL_NOT_ALLOWED = 7;
+    public const DELIVERED_MAIL_FAILED = 8;
 
     public static function duplicateReference(string $externalReference): self
     {

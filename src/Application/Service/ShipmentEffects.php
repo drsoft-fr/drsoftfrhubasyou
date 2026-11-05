@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\Service;
 
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\OrderShippingProgress;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
@@ -85,6 +86,33 @@ class ShipmentEffects
         }, function (Throwable $t) use ($orderId): void {
             $this->logFailure(sprintf('order #%d', $orderId), $t, $orderId);
         });
+    }
+
+    /**
+     * "Order delivered" e-mail at the merchant's request, even if already sent; its date
+     * becomes the date of this sending. Unlike the automatic e-mail, a failure is reported.
+     *
+     * @throws ShipmentConstraintException The e-mail is not allowed for this order, or could not be sent
+     */
+    public function sendDeliveredMailNow(int $orderId): void
+    {
+        $order = new Order($orderId);
+
+        if (!Validate::isLoadedObject($order) || !$this->statePolicy->mayDeliveredMailBeSent($order)) {
+            throw new ShipmentConstraintException('The order is not entirely delivered, or this e-mail is disabled.', ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED);
+        }
+
+        try {
+            $sent = $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId));
+        } catch (Throwable $t) {
+            throw new ShipmentConstraintException('The e-mail could not be sent.', ShipmentConstraintException::DELIVERED_MAIL_FAILED, $t);
+        }
+
+        if (!$sent) {
+            throw new ShipmentConstraintException('The e-mail could not be sent.', ShipmentConstraintException::DELIVERED_MAIL_FAILED);
+        }
+
+        $this->orderMails->saveDeliveredMailDate($orderId);
     }
 
     /**

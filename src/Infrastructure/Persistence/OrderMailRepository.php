@@ -30,6 +30,20 @@ class OrderMailRepository
     }
 
     /**
+     * Date of the last sending, for an e-mail sent at the merchant's request.
+     */
+    public function saveDeliveredMailDate(int $orderId): void
+    {
+        Db::getInstance()->execute(sprintf(
+            "INSERT INTO `%s%s` (id_order, delivered_mail_sent_at) VALUES (%d, '%s') ON DUPLICATE KEY UPDATE delivered_mail_sent_at = VALUES(delivered_mail_sent_at)",
+            _DB_PREFIX_,
+            self::TABLE,
+            $orderId,
+            date('Y-m-d H:i:s')
+        ));
+    }
+
+    /**
      * Date of the "order delivered" e-mail, null when it has not been sent.
      */
     public function findDeliveredMailDate(int $orderId): ?string

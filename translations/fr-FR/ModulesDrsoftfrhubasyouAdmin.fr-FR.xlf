@@ -54,6 +54,30 @@
         <source>Order delivered e-mail: %date%</source>
         <target>E-mail « commande livrée » : %date%</target>
       </trans-unit>
+      <trans-unit id="bdb015333b222467c9ab7c4f8dbac5e9">
+        <source>Order delivered e-mail: not sent</source>
+        <target>E-mail « commande livrée » : non envoyé</target>
+      </trans-unit>
+      <trans-unit id="ad195852d30fb93a4ad076cbb6fa9373">
+        <source>Send the e-mail again</source>
+        <target>Renvoyer l'e-mail</target>
+      </trans-unit>
+      <trans-unit id="0b6a5e197f2efe0b9e2385822bb236a0">
+        <source>Send the e-mail</source>
+        <target>Envoyer l'e-mail</target>
+      </trans-unit>
+      <trans-unit id="c5c6cb802c0e30e5c631cda9c520b693">
+        <source>The order delivered e-mail has been sent.</source>
+        <target>L'e-mail « commande livrée » a été envoyé.</target>
+      </trans-unit>
+      <trans-unit id="f5025240bb824817fec4e18c28ad0543">
+        <source>This e-mail cannot be sent: the order is not entirely delivered, or this e-mail is disabled in the module settings.</source>
+        <target>Cet e-mail ne peut pas être envoyé : la commande n'est pas entièrement livrée, ou cet e-mail est désactivé dans la configuration du module.</target>
+      </trans-unit>
+      <trans-unit id="45da365b49e4e75f2c628f31382ec0bd">
+        <source>The order delivered e-mail could not be sent: check the e-mail settings and the logs, then try again.</source>
+        <target>L'e-mail « commande livrée » n'a pas pu être envoyé : vérifiez la configuration des e-mails et les journaux, puis réessayez.</target>
+      </trans-unit>
       <trans-unit id="ee2e89d0972548df48041879af61b60c">
         <source>Access for HubAsYou</source>
         <target>Accès de HubAsYou</target>

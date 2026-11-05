@@ -334,6 +334,10 @@ class drsoftfrhubasyou extends Module
                 'hubasyou_shipments' => $shipments,
                 'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning((int) $params['id_order']) : '',
                 'hubasyou_delivered_mail_at' => ($date = (new OrderMailRepository())->findDeliveredMailDate((int) ($params['id_order'] ?? 0))) ? Tools::displayDate($date) : '',
+                'hubasyou_delivered_mail_allowed' => $mailAllowed = $shipments && $this->mayDeliveredMailBeSent((int) $params['id_order']),
+                'hubasyou_delivered_mail_url' => $mailAllowed && in_array('edit', $actions, true) ? $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
+                    'id_shipment' => $shipments[0]['id'],
+                ]) : '',
             ]);
 
             return $this->display(__FILE__, 'views/templates/admin/order-shipments.tpl');
@@ -377,6 +381,14 @@ class drsoftfrhubasyou extends Module
         } catch (Throwable $t) {
             $this->handleException($t);
         }
+    }
+
+    private function mayDeliveredMailBeSent(int $orderId): bool
+    {
+        $order = new Order($orderId);
+
+        return Validate::isLoadedObject($order)
+            && (new OrderStatePolicy(new ShipmentRepository(), new OrderRepository()))->mayDeliveredMailBeSent($order);
     }
 
     /**

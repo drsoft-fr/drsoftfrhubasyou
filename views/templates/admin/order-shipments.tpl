@@ -66,8 +66,27 @@
           </tbody>
         </table>
       </div>
-      {if $hubasyou_delivered_mail_at}
-        <p class="small mb-0">{l s='Order delivered e-mail: %date%' sprintf=['%date%' => $hubasyou_delivered_mail_at] d='Modules.Drsoftfrhubasyou.Admin'}</p>
+      {if $hubasyou_delivered_mail_at || $hubasyou_delivered_mail_allowed}
+        <div class="d-flex flex-wrap align-items-center justify-content-between mt-2">
+          <p class="small mb-0">
+            {if $hubasyou_delivered_mail_at}
+              {l s='Order delivered e-mail: %date%' sprintf=['%date%' => $hubasyou_delivered_mail_at] d='Modules.Drsoftfrhubasyou.Admin'}
+            {else}
+              {l s='Order delivered e-mail: not sent' d='Modules.Drsoftfrhubasyou.Admin'}
+            {/if}
+          </p>
+          {if $hubasyou_delivered_mail_url}
+            <form method="post" action="{$hubasyou_delivered_mail_url|escape:'html':'UTF-8'}" class="mb-0">
+              <button type="submit" name="submitHubAsYouDeliveredMail" value="1" class="btn btn-sm btn-outline-secondary">
+                {if $hubasyou_delivered_mail_at}
+                  {l s='Send the e-mail again' d='Modules.Drsoftfrhubasyou.Admin'}
+                {else}
+                  {l s='Send the e-mail' d='Modules.Drsoftfrhubasyou.Admin'}
+                {/if}
+              </button>
+            </form>
+          {/if}
+        </div>
       {/if}
     {else}
       <p class="mb-0">{l s='No parcel received from HubAsYou yet.' d='Modules.Drsoftfrhubasyou.Admin'}</p>

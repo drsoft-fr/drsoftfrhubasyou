@@ -55,29 +55,41 @@ class ShipmentJournal
         $this->write($shipment, 'deleted', $this->describe($shipment));
     }
 
+    /**
+     * "Order delivered" e-mail sent at the merchant's request.
+     */
+    public function deliveredMailSent(int $orderId): void
+    {
+        $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', self::MODULE_NAME, $orderId, $this->getActor()));
+    }
+
     private function write(array $shipment, string $action, string $details): void
     {
-        try {
-            $orderId = (int) $shipment['id_order'];
-            $employee = $this->employeeContext->getEmployee();
+        $orderId = (int) $shipment['id_order'];
 
+        $this->log($orderId, sprintf(
+            '%s - parcel #%d (%s) of order #%d %s by %s: %s',
+            self::MODULE_NAME,
+            (int) $shipment['id_shipment'],
+            $shipment['external_reference'],
+            $orderId,
+            $action,
+            $this->getActor(),
+            $details
+        ));
+    }
+
+    private function log(int $orderId, string $message): void
+    {
+        try {
             PrestaShopLogger::addLog(
-                sprintf(
-                    '%s - parcel #%d (%s) of order #%d %s by %s: %s',
-                    self::MODULE_NAME,
-                    (int) $shipment['id_shipment'],
-                    $shipment['external_reference'],
-                    $orderId,
-                    $action,
-                    $this->getActor(),
-                    $details
-                ),
+                $message,
                 self::SEVERITY_INFORMATIVE,
                 null,
                 'Order',
                 $orderId,
                 true,
-                $employee?->getId()
+                $this->employeeContext->getEmployee()?->getId()
             );
         } catch (Throwable) {
             // The parcel is saved: a missing log line must not turn it into an error

@@ -18,7 +18,8 @@ use Validate;
 
 /**
  * What happens after a parcel is saved (Admin API or back office):
- *   - "parcel on its way" e-mail, once per parcel;
+ *   - "parcel on its way" e-mail, once per parcel, while it is travelling (none for a
+ *     parcel already delivered);
  *   - order state: shipped, then delivered when every unit is delivered;
  *   - "order delivered" e-mail, once per order, when every unit is delivered.
  * Each e-mail can be disabled in the module settings.
@@ -82,7 +83,7 @@ class ShipmentEffects
     {
         $status = ShipmentStatus::tryFrom((string) $shipment['status']);
 
-        if (!Settings::isMailEnabled() || !empty($shipment['mail_sent_at']) || !$status?->isOnItsWay()) {
+        if (!Settings::isMailEnabled() || !empty($shipment['mail_sent_at']) || !$status?->isTravelling()) {
             return;
         }
 

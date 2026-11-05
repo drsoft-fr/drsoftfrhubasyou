@@ -29,4 +29,13 @@ enum ShipmentStatus: string
     {
         return $this !== self::Exception;
     }
+
+    /**
+     * True while the parcel is travelling: the customer can still be told it is on its
+     * way (a parcel already delivered has arrived).
+     */
+    public function isTravelling(): bool
+    {
+        return $this === self::Shipped || $this === self::InTransit;
+    }
 }

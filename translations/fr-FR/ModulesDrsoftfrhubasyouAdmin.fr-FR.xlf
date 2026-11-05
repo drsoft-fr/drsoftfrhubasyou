@@ -46,9 +46,9 @@
         <source>E-mail the customer for each parcel</source>
         <target>Envoyer un e-mail au client pour chaque colis</target>
       </trans-unit>
-      <trans-unit id="2c3bf81269474d711c45dd3b89f2d8bc">
-        <source>Sent once per parcel, when it leaves, in the language of the order (template "drsoftfrhubasyou_shipment").</source>
-        <target>Envoyé une fois par colis, à son départ, dans la langue de la commande (modèle « drsoftfrhubasyou_shipment »).</target>
+      <trans-unit id="764b56ae5792ce616a39889e7c4ca8d6">
+        <source>Sent once per parcel, while it is on its way, in the language of the order (template "drsoftfrhubasyou_shipment"). Not sent for a parcel received as already delivered.</source>
+        <target>Envoyé une fois par colis, pendant son acheminement, dans la langue de la commande (modèle « drsoftfrhubasyou_shipment »). Pas d'envoi pour un colis reçu déjà livré.</target>
       </trans-unit>
       <trans-unit id="ee2e89d0972548df48041879af61b60c">
         <source>Access for HubAsYou</source>

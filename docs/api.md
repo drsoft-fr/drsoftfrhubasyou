@@ -143,7 +143,7 @@ Réponse `200 OK` : le colis complet.
 ## 6. Ce qui se passe dans la boutique
 
 - **Compte client** : le détail de la commande affiche chaque colis (produits, transporteur, numéro et lien de suivi, état, date).
-- **E-mail par colis** : au premier état `shipped`, `in_transit` ou `delivered` d'un colis, le client reçoit un e-mail dans la langue de sa commande, avec les produits du colis et le lien de suivi. Une seule fois par colis. Rien pour l'état `exception`.
+- **E-mail par colis** : au premier état `shipped` ou `in_transit` d'un colis, le client reçoit un e-mail dans la langue de sa commande, avec les produits du colis et le lien de suivi. Une seule fois par colis. Rien pour l'état `exception`, ni pour un colis déclaré directement `delivered` : il est déjà arrivé (il figure dans le compte client et dans l'e-mail de livraison).
 - **E-mail de livraison** : quand toutes les unités de la commande sont dans des colis livrés, le client reçoit un e-mail « Votre commande est livrée » avec le récapitulatif des colis. Une seule fois par commande.
 - Chacun de ces deux e-mails peut être désactivé par le marchand.
 - **État de la commande** (réglable par le marchand) : « Expédié » au premier colis parti, puis « Livré » quand toutes les unités de la commande sont dans des colis livrés. Chaque état n'est appliqué qu'une fois ; la commande ne revient jamais en arrière. Le marchand choisit aussi les états **depuis lesquels** le module peut changer celui de la commande : une commande annulée ou en attente de paiement, par exemple, garde son état (le colis est tout de même enregistré, et le marchand est averti sur la fiche de la commande).

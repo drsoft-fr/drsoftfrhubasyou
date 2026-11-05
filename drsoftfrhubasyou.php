@@ -218,7 +218,7 @@ class drsoftfrhubasyou extends Module
                             ['id' => 'send_mail_on', 'value' => 1, 'label' => $this->trans('Yes', [], 'Admin.Global')],
                             ['id' => 'send_mail_off', 'value' => 0, 'label' => $this->trans('No', [], 'Admin.Global')],
                         ],
-                        'desc' => $this->trans('Sent once per parcel, when it leaves, in the language of the order (template "drsoftfrhubasyou_shipment").', [], 'Modules.Drsoftfrhubasyou.Admin'),
+                        'desc' => $this->trans('Sent once per parcel, while it is on its way, in the language of the order (template "drsoftfrhubasyou_shipment"). Not sent for a parcel received as already delivered.', [],'Modules.Drsoftfrhubasyou.Admin'),
                     ],
                     [
                         'type' => 'switch',

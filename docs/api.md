@@ -65,7 +65,7 @@ Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 
 | Champ | Type | Création | Règles |
 | --- | --- | --- | --- |
 | `shipmentId` | entier | — (attribué) | identifiant du colis dans la boutique, à conserver pour les mises à jour |
-| `externalReference` | texte, 64 max. | **obligatoire** | identifiant du colis chez HubAsYou ; **unique** ; non modifiable |
+| `externalReference` | texte, 64 max. | **obligatoire** | identifiant du colis chez HubAsYou ; **unique**, comparé à l'identique (`HAY-1` et `hay-1` sont deux colis, dans le filtre de la liste aussi) ; non modifiable |
 | `orderId` | entier | **obligatoire** | commande existante ; non modifiable |
 | `carrierName` | texte, 64 max. | **obligatoire** | nom du transporteur affiché au client |
 | `trackingNumber` | texte, 64 max. | **obligatoire** | numéro de suivi |

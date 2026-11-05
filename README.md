@@ -48,7 +48,7 @@ En développement, après un `git clone` dans `modules/` : `composer dump-autolo
 - `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), verrou par commande (`Lock/OrderLock`, `GET_LOCK` de la base : les colis d'une même commande sont traités une requête à la fois), journal (`Log/ShipmentJournal`), réglages, installation.
 - `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
 
-La désinstallation supprime les colis reçus.
+**Désinstaller** supprime les colis reçus. **Réinitialiser** les conserve : seuls les réglages reviennent à leurs valeurs par défaut, et les droits de l'onglet Colis HubAsYou sont à redonner aux profils autres que SuperAdmin.
 
 ## Choix
 

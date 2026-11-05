@@ -13,6 +13,7 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
+use PrestaShop\PrestaShop\Core\Module\ModuleManager;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -118,7 +119,7 @@ class drsoftfrhubasyou extends Module
     public function uninstall(): bool
     {
         try {
-            (new Installer())->uninstall();
+            (new Installer())->uninstall($this->isBeingReset());
         } catch (Throwable $t) {
             $this->handleException($t);
 
@@ -126,6 +127,23 @@ class drsoftfrhubasyou extends Module
         }
 
         return parent::uninstall();
+    }
+
+    /**
+     * "Reset" in the back office is an uninstallation followed by an installation, with no
+     * way to keep the data: reset() is only called on an option the back office never sends,
+     * and the actionBeforeResetModule hook is not called on a disabled module (or for an
+     * employee without the "view" permission). So the caller is looked at directly.
+     */
+    private function isBeingReset(): bool
+    {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+            if (($frame['function'] ?? '') === 'reset' && ($frame['class'] ?? '') === ModuleManager::class) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isUsingNewTranslationSystem(): bool

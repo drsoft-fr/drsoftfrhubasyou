@@ -1,7 +1,10 @@
+-- External reference: identifier of HubAsYou, compared exactly (utf8mb4_bin), the same on every
+-- server whatever its default collation. Constraints without a name: unique per database, not
+-- per table prefix. Their rules also apply where the module checks them (ShipmentStatus, ShipmentRules)
 CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment`
 (
     `id_shipment`        INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `external_reference` VARCHAR(64)      NOT NULL,
+    `external_reference` VARCHAR(64) COLLATE utf8mb4_bin NOT NULL,
     `id_order`           INT(10) UNSIGNED NOT NULL,
     `carrier_name`       VARCHAR(64)      NOT NULL,
     `tracking_number`    VARCHAR(64)      NOT NULL,
@@ -14,7 +17,8 @@ CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment`
     `date_upd`           DATETIME         NOT NULL,
     PRIMARY KEY (`id_shipment`),
     UNIQUE KEY `uniq_dfhays_external_reference` (`external_reference`),
-    KEY `idx_dfhays_order` (`id_order`)
+    KEY `idx_dfhays_order` (`id_order`),
+    CHECK (`status` IN ('shipped', 'in_transit', 'delivered', 'exception'))
 ) ENGINE = _MYSQL_ENGINE_
   DEFAULT CHARSET = utf8mb4;
 
@@ -36,8 +40,8 @@ CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment_line`
     PRIMARY KEY (`id_shipment_line`),
     UNIQUE KEY `uniq_dfhaysl_shipment_detail` (`id_shipment`, `id_order_detail`),
     KEY `idx_dfhaysl_order_detail` (`id_order_detail`),
-    CONSTRAINT `fk_dfhaysl_shipment`
-        FOREIGN KEY (`id_shipment`) REFERENCES `_DB_PREFIX_drsoft_fr_hubasyou_shipment` (`id_shipment`)
-            ON DELETE CASCADE ON UPDATE CASCADE
+    CHECK (`quantity` > 0),
+    FOREIGN KEY (`id_shipment`) REFERENCES `_DB_PREFIX_drsoft_fr_hubasyou_shipment` (`id_shipment`)
+        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = _MYSQL_ENGINE_
   DEFAULT CHARSET = utf8mb4;

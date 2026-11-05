@@ -39,12 +39,12 @@ final class AddShipmentHandler
                 throw ShipmentConstraintException::duplicateReference($command->externalReference);
             }
 
-            $ordered = $this->orders->findOrderedQuantities($command->orderId)
+            $orderLines = $this->orders->findLines($command->orderId)
                 ?? throw new ShipmentConstraintException(sprintf('Order %d does not exist.', $command->orderId));
 
             ShipmentQuantities::assertFit(
                 $command->orderId,
-                $ordered,
+                $orderLines,
                 $this->shipments->getShippedQuantities($command->orderId),
                 $command->lines
             );

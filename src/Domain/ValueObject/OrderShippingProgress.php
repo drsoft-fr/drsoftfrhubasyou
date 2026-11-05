@@ -17,17 +17,23 @@ enum OrderShippingProgress
     /** At least one parcel on its way */
     case Shipped;
 
-    /** Every ordered unit is in a delivered parcel */
+    /** Every unit still due is in a delivered parcel, and no parcel is travelling */
     case Delivered;
 
     /**
-     * @param array<int, int> $ordered Units ordered, by order line
+     * A travelling parcel always holds the order back: a returned unit cannot be told
+     * from the one still on its way on the same line, and the "order delivered" e-mail
+     * cannot be taken back. A lost parcel has to be set as "exception" or deleted.
+     *
+     * @param array<int, array{ordered: int, refunded: int, returned: int, virtual: bool}> $orderLines By order line
      * @param array<int, int> $delivered Units in delivered parcels, by order line
      * @param ShipmentStatus[] $statuses States of the parcels of the order
      */
-    public static function of(array $ordered, array $delivered, array $statuses): self
+    public static function of(array $orderLines, array $delivered, array $statuses): self
     {
-        if (ShipmentQuantities::areAllDelivered($ordered, $delivered)) {
+        $isTravelling = array_filter($statuses, static fn (ShipmentStatus $status): bool => $status->isTravelling()) !== [];
+
+        if (!$isTravelling && ShipmentQuantities::areAllDelivered($orderLines, $delivered)) {
             return self::Delivered;
         }
 

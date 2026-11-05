@@ -27,7 +27,7 @@ class OrderStatePolicy
     public function getProgress(int $orderId): OrderShippingProgress
     {
         return OrderShippingProgress::of(
-            $this->orders->findOrderedQuantities($orderId) ?? [],
+            $this->orders->findLines($orderId) ?? [],
             $this->shipments->getShippedQuantities($orderId, true),
             array_filter(array_map(
                 static fn (array $shipment): ?ShipmentStatus => ShipmentStatus::tryFrom((string) $shipment['status']),
@@ -38,7 +38,7 @@ class OrderStatePolicy
 
     /**
      * State the order should be moved to now, null when none: the shipped state as soon
-     * as a parcel is on its way, the delivered state once every ordered unit is in a
+     * as a parcel is on its way, the delivered state once every unit still due is in a
      * delivered parcel. Each state is set once; the order never goes back.
      */
     public function getTargetState(int $orderId, OrderShippingProgress $progress): ?int

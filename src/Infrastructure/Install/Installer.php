@@ -17,6 +17,7 @@ final class Installer
     public const HOOKS = [
         'displayOrderDetail',
         'displayAdminOrderMain',
+        'actionObjectOrderDetailUpdateAfter',
     ];
 
     private const SQL_DIR = __DIR__ . '/Resources/sql/';

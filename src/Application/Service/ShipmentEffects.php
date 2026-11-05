@@ -20,9 +20,10 @@ use Validate;
  * What happens after a parcel is saved (Admin API or back office):
  *   - "parcel on its way" e-mail, once per parcel, while it is travelling (none for a
  *     parcel already delivered);
- *   - order state: shipped, then delivered when every unit is delivered;
- *   - "order delivered" e-mail, once per order, when every unit is delivered.
- * Each e-mail can be disabled in the module settings.
+ *   - order state: shipped, then delivered when every unit still due is delivered;
+ *   - "order delivered" e-mail, once per order, when every unit still due is delivered.
+ * Each e-mail can be disabled in the module settings. The last two also run when the
+ * lines of the order change (refund, return).
  *
  * Everything is worked out again from the saved parcels each time, so a step that
  * failed is done at the next save. A failure never refuses the parcel: it is logged
@@ -31,6 +32,9 @@ use Validate;
 class ShipmentEffects
 {
     private const MODULE_NAME = 'drsoftfrhubasyou';
+
+    /** Changing the state of an order can save its lines: no second run from that hook */
+    private static bool $running = false;
 
     public function __construct(
         private readonly ShipmentRepository $shipments,
@@ -45,7 +49,7 @@ class ShipmentEffects
     {
         $orderId = 0;
 
-        try {
+        $this->run(function () use ($shipmentId, &$orderId): void {
             $shipment = $this->shipments->find($shipmentId);
 
             if (!$shipment) {
@@ -59,24 +63,72 @@ class ShipmentEffects
                 return;
             }
 
-            $progress = $this->statePolicy->getProgress($orderId);
-
             $this->sendShipmentMailOnce($order, $shipment);
-            $this->updateOrderState($order, $progress);
+            $this->applyProgress($order);
+        }, function (Throwable $t) use ($shipmentId, &$orderId): void {
+            $this->logFailure(sprintf('parcel #%d', $shipmentId), $t, $orderId);
+        });
+    }
 
-            if ($progress === OrderShippingProgress::Delivered) {
-                $this->sendDeliveredMailOnce($order);
+    /**
+     * A refund or a return can settle the last units an order was waiting for, with no
+     * parcel left to save.
+     */
+    public function onOrderLinesChanged(int $orderId): void
+    {
+        $this->run(function () use ($orderId): void {
+            $order = new Order($orderId);
+
+            if (Validate::isLoadedObject($order)) {
+                $this->applyProgress($order);
             }
-        } catch (Throwable $t) {
-            PrestaShopLogger::addLog(
-                sprintf('%s - parcel #%d - %s', self::MODULE_NAME, $shipmentId, $t->getMessage()),
-                3,
-                (int) $t->getCode(),
-                'Order',
-                $orderId,
-                true
-            );
+        }, function (Throwable $t) use ($orderId): void {
+            $this->logFailure(sprintf('order #%d', $orderId), $t, $orderId);
+        });
+    }
+
+    /**
+     * @param callable(): void $work
+     * @param callable(Throwable): void $onFailure
+     */
+    private function run(callable $work, callable $onFailure): void
+    {
+        if (self::$running) {
+            return;
         }
+
+        self::$running = true;
+
+        try {
+            $work();
+        } catch (Throwable $t) {
+            $onFailure($t);
+        } finally {
+            self::$running = false;
+        }
+    }
+
+    private function applyProgress(Order $order): void
+    {
+        $progress = $this->statePolicy->getProgress((int) $order->id);
+
+        $this->updateOrderState($order, $progress);
+
+        if ($progress === OrderShippingProgress::Delivered) {
+            $this->sendDeliveredMailOnce($order);
+        }
+    }
+
+    private function logFailure(string $subject, Throwable $t, int $orderId): void
+    {
+        PrestaShopLogger::addLog(
+            sprintf('%s - %s - %s', self::MODULE_NAME, $subject, $t->getMessage()),
+            3,
+            (int) $t->getCode(),
+            'Order',
+            $orderId,
+            true
+        );
     }
 
     private function sendShipmentMailOnce(Order $order, array $shipment): void

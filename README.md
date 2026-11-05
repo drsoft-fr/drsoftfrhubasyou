@@ -8,7 +8,13 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
 - **E-mails** au client, chacun désactivable dans la configuration, 7 langues (fr, en, de, it, es, nl, pt) :
     - au départ de chaque colis, une fois par colis (modèle `drsoftfrhubasyou_shipment`) ; rien pour un colis reçu déjà livré ;
     - quand tout est livré, une fois par commande, avec le récapitulatif des colis (modèle `drsoftfrhubasyou_delivered`). L'état « Livré » de PrestaShop n'envoie pas d'e-mail par défaut : c'est cet e-mail qui prévient le client.
-- **État de la commande** : « Expédié » au premier colis parti, « Livré » quand tout est livré (états réglables), **seulement depuis les états cochés dans la configuration** (par défaut : paiement accepté, paiement à distance accepté, en attente de réapprovisionnement (payé), en cours de préparation, expédié). Une commande annulée ou en attente de paiement garde son état ; un avertissement s'affiche sur sa fiche et dans le journal.
+- **Quand une commande est-elle considérée comme livrée ?** Quand le client a reçu tout ce qu'il doit recevoir et qu'aucun colis n'est encore en route. Le module n'attend pas les produits virtuels (qu'on ne peut pas mettre dans un colis), ni les articles annulés, remboursés ou retournés.
+    - Exemple : 3 articles commandés, 2 livrés, le 3e remboursé. La commande passe en « Livré », même si le remboursement est fait après la livraison du dernier colis.
+    - Colis perdu : tant qu'il reste « Expédié » ou « En transit », la commande ne passe pas en « Livré », même si le client a été remboursé. Il faut passer ce colis en « Problème de livraison » ou le supprimer.
+    - Geste commercial : dans un remboursement partiel, PrestaShop considère l'article comme remboursé dès qu'une quantité est saisie, et le module ne l'attend plus. S'il n'est pas encore parti, la commande peut passer en « Livré » trop tôt. Pour un simple geste commercial, utiliser plutôt un bon d'achat.
+    - Retour partiel : 2 articles identiques commandés, un livré puis retourné, l'autre pas encore parti. Le module ne peut pas savoir lequel des deux a été retourné, et la commande peut passer en « Livré » trop tôt.
+    - Droits : le recalcul après un remboursement ne se fait que si l'employé a le droit « Voir » sur le module (voir Installation). Sinon, il se fait à la réception du colis suivant.
+- **État de la commande** : « Expédié » au premier colis parti, « Livré » quand la commande est entièrement livrée (états réglables), **seulement depuis les états cochés dans la configuration** (par défaut : paiement accepté, paiement à distance accepté, en attente de réapprovisionnement (payé), en cours de préparation, expédié). Une commande annulée ou en attente de paiement garde son état ; un avertissement s'affiche sur sa fiche et dans le journal.
 
 ## Installation
 

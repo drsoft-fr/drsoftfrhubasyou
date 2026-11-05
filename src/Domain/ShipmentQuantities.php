@@ -9,34 +9,43 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 /**
  * Rules on the quantities of an order put in parcels.
  *
- * Every array is indexed by order line (id_order_detail) and holds a number of units.
+ * Every array is indexed by order line (id_order_detail). The lines of the order hold
+ * ['ordered' => int, 'refunded' => int, 'returned' => int, 'virtual' => bool], the others
+ * a number of units.
  */
 final class ShipmentQuantities
 {
     /**
-     * Every line of the new parcel must belong to the order, and the units already
-     * in parcels plus these ones cannot exceed the ordered quantity.
+     * Every line of the new parcel must be a physical product of the order, and the units
+     * already in parcels plus these ones cannot exceed the ordered quantity.
      *
-     * @param array<int, int> $ordered Units ordered
+     * Refunded and returned units are not taken off: a returned unit has usually been in
+     * a parcel, and a parcel that really left must not be refused because of a refund.
+     *
+     * @param array<int, array{ordered: int, refunded: int, returned: int, virtual: bool}> $orderLines
      * @param array<int, int> $inParcels Units already in parcels
      * @param array<int, int> $lines Units of the new parcel
      *
      * @throws ShipmentConstraintException
      */
-    public static function assertFit(int $orderId, array $ordered, array $inParcels, array $lines): void
+    public static function assertFit(int $orderId, array $orderLines, array $inParcels, array $lines): void
     {
         foreach ($lines as $orderDetailId => $quantity) {
-            if (!isset($ordered[$orderDetailId])) {
+            if (!isset($orderLines[$orderDetailId])) {
                 throw new ShipmentConstraintException(sprintf('Order line %d does not belong to order %d.', $orderDetailId, $orderId));
+            }
+
+            if ($orderLines[$orderDetailId]['virtual']) {
+                throw new ShipmentConstraintException(sprintf('Order line %d is a virtual product: it cannot be in a parcel.', $orderDetailId));
             }
 
             $already = $inParcels[$orderDetailId] ?? 0;
 
-            if ($already + $quantity > $ordered[$orderDetailId]) {
+            if ($already + $quantity > $orderLines[$orderDetailId]['ordered']) {
                 throw new ShipmentConstraintException(sprintf(
                     'Order line %d: %d unit(s) ordered, %d already in parcels, %d sent.',
                     $orderDetailId,
-                    $ordered[$orderDetailId],
+                    $orderLines[$orderDetailId]['ordered'],
                     $already,
                     $quantity
                 ));
@@ -45,23 +54,31 @@ final class ShipmentQuantities
     }
 
     /**
-     * True when every ordered unit is in a delivered parcel (false for an order without lines).
+     * True when every unit still due is in a delivered parcel: virtual products, refunded
+     * and returned units are not waited for. False when nothing was delivered at all (an
+     * order without lines, or entirely refunded, is not a delivered order).
      *
-     * @param array<int, int> $ordered Units ordered
+     * @param array<int, array{ordered: int, refunded: int, returned: int, virtual: bool}> $orderLines
      * @param array<int, int> $delivered Units in delivered parcels
      */
-    public static function areAllDelivered(array $ordered, array $delivered): bool
+    public static function areAllDelivered(array $orderLines, array $delivered): bool
     {
-        if (!$ordered) {
-            return false;
-        }
+        $anyDelivered = false;
 
-        foreach ($ordered as $orderDetailId => $quantity) {
-            if (($delivered[$orderDetailId] ?? 0) < $quantity) {
+        foreach ($orderLines as $orderDetailId => $line) {
+            if ($line['virtual']) {
+                continue;
+            }
+
+            $units = $delivered[$orderDetailId] ?? 0;
+
+            if ($units < $line['ordered'] - $line['refunded'] - $line['returned']) {
                 return false;
             }
+
+            $anyDelivered = $anyDelivered || $units > 0;
         }
 
-        return true;
+        return $anyDelivered;
     }
 }

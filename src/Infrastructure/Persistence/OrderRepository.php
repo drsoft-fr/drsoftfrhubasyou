@@ -13,11 +13,13 @@ use DbQuery;
 class OrderRepository
 {
     /**
-     * Units ordered, by order line.
+     * Lines of an order, with what PrestaShop records on them: a product cancelled on an
+     * unpaid order lowers product_quantity, a refund or a return only adds to its own
+     * column. A product deleted from the catalog counts as physical.
      *
-     * @return array<int, int>|null id_order_detail => quantity; null when the order does not exist
+     * @return array<int, array{ordered: int, refunded: int, returned: int, virtual: bool}>|null by id_order_detail; null when the order does not exist
      */
-    public function findOrderedQuantities(int $orderId): ?array
+    public function findLines(int $orderId): ?array
     {
         $db = Db::getInstance();
 
@@ -26,16 +28,22 @@ class OrderRepository
         }
 
         $query = (new DbQuery())
-            ->select('id_order_detail, product_quantity')
-            ->from('order_detail')
-            ->where('id_order = ' . $orderId);
-        $quantities = [];
+            ->select('od.id_order_detail, od.product_quantity, od.product_quantity_refunded, od.product_quantity_return, p.is_virtual')
+            ->from('order_detail', 'od')
+            ->leftJoin('product', 'p', 'p.id_product = od.product_id')
+            ->where('od.id_order = ' . $orderId);
+        $lines = [];
 
         foreach ($db->executeS($query) ?: [] as $row) {
-            $quantities[(int) $row['id_order_detail']] = (int) $row['product_quantity'];
+            $lines[(int) $row['id_order_detail']] = [
+                'ordered' => (int) $row['product_quantity'],
+                'refunded' => (int) $row['product_quantity_refunded'],
+                'returned' => (int) $row['product_quantity_return'],
+                'virtual' => (bool) $row['is_virtual'],
+            ];
         }
 
-        return $quantities;
+        return $lines;
     }
 
     /**

@@ -3,9 +3,14 @@
 declare(strict_types=1);
 
 use DrSoftFr\Module\HubAsYou\Application\Service\OrderStatePolicy;
+use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Install\Installer;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 
@@ -335,6 +340,41 @@ class drsoftfrhubasyou extends Module
             $this->handleException($t);
 
             return '';
+        }
+    }
+
+    /**
+     * A line of the order was saved (refund, return…): it may settle the last units the
+     * order was waiting for. actionProductCancel is too early: PrestaShop calls it before
+     * saving the refunded quantities. A failure here must never stop the refund.
+     */
+    public function hookActionObjectOrderDetailUpdateAfter(array $params): void
+    {
+        try {
+            $line = $params['object'] ?? null;
+
+            if (!$line instanceof OrderDetail) {
+                return;
+            }
+
+            $orderId = (int) $line->id_order;
+            $shipments = new ShipmentRepository();
+
+            if (!$shipments->findByOrder($orderId)) {
+                return;
+            }
+
+            $effects = new ShipmentEffects(
+                $shipments,
+                new OrderStatePolicy($shipments, new OrderRepository()),
+                new OrderMailRepository(),
+                new ShipmentMailer(),
+                new OrderStateWriter()
+            );
+
+            (new OrderLock())->synchronized($orderId, static fn () => $effects->onOrderLinesChanged($orderId));
+        } catch (Throwable $t) {
+            $this->handleException($t);
         }
     }
 

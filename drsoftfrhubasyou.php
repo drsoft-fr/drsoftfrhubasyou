@@ -391,10 +391,10 @@ class drsoftfrhubasyou extends Module
         }
 
         $policy = new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
-        $targetState = $policy->getTargetState($orderId, $policy->getProgress($orderId));
+        $targetState = $policy->getTargetState($order, $policy->getProgress($orderId));
         $currentState = (int) $order->getCurrentState();
 
-        if (!$targetState || $targetState === $currentState || $policy->mayChangeFrom($currentState)) {
+        if (!$targetState || $targetState === $currentState || $policy->mayChangeCurrentState($order)) {
             return '';
         }
 

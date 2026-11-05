@@ -135,7 +135,7 @@ class ShipmentEffects
     {
         $status = ShipmentStatus::tryFrom((string) $shipment['status']);
 
-        if (!Settings::isMailEnabled() || !empty($shipment['mail_sent_at']) || !$status?->isTravelling()) {
+        if (!Settings::isMailEnabled($order) || !empty($shipment['mail_sent_at']) || !$status?->isTravelling()) {
             return;
         }
 
@@ -150,7 +150,7 @@ class ShipmentEffects
 
     private function sendDeliveredMailOnce(Order $order): void
     {
-        if (!Settings::isDeliveredMailEnabled()) {
+        if (!Settings::isDeliveredMailEnabled($order)) {
             return;
         }
 
@@ -198,14 +198,14 @@ class ShipmentEffects
     private function updateOrderState(Order $order, OrderShippingProgress $progress): void
     {
         $orderId = (int) $order->id;
-        $targetState = $this->statePolicy->getTargetState($orderId, $progress);
+        $targetState = $this->statePolicy->getTargetState($order, $progress);
         $currentState = (int) $order->getCurrentState();
 
         if (!$targetState || $targetState === $currentState) {
             return;
         }
 
-        if (!$this->statePolicy->mayChangeFrom($currentState)) {
+        if (!$this->statePolicy->mayChangeCurrentState($order)) {
             PrestaShopLogger::addLog(
                 sprintf('%s - order #%d: state not changed to %d, the current state %d is not one the module may change (module settings)', self::MODULE_NAME, $orderId, $targetState, $currentState),
                 2,

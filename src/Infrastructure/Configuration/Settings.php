@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Configuration;
 
 use Configuration;
+use Order;
 
 /**
- * Module settings (Modules › drSoft.fr HubAsYou › Configure).
+ * Module settings (Modules › drSoft.fr HubAsYou › Configure), saved for the shop chosen
+ * in the back office (Configuration::updateValue follows the shop context).
  */
 final class Settings
 {
@@ -66,22 +68,22 @@ final class Settings
         return $result;
     }
 
-    public static function getShippedState(): int
+    public static function getShippedState(?Order $order = null): int
     {
-        return (int) Configuration::get(self::ORDER_STATE_SHIPPED);
+        return (int) self::get(self::ORDER_STATE_SHIPPED, $order);
     }
 
-    public static function getDeliveredState(): int
+    public static function getDeliveredState(?Order $order = null): int
     {
-        return (int) Configuration::get(self::ORDER_STATE_DELIVERED);
+        return (int) self::get(self::ORDER_STATE_DELIVERED, $order);
     }
 
     /**
      * @return int[]
      */
-    public static function getChangeableStates(): array
+    public static function getChangeableStates(?Order $order = null): array
     {
-        return array_values(array_filter(array_map('intval', explode(',', (string) Configuration::get(self::CHANGEABLE_STATES)))));
+        return array_values(array_filter(array_map('intval', explode(',', (string) self::get(self::CHANGEABLE_STATES, $order)))));
     }
 
     /**
@@ -103,13 +105,25 @@ final class Settings
         return array_map(static fn (string $key): int => (int) Configuration::get($key), self::DEFAULT_CHANGEABLE_STATE_KEYS);
     }
 
-    public static function isMailEnabled(): bool
+    public static function isMailEnabled(?Order $order = null): bool
     {
-        return (bool) Configuration::get(self::SEND_MAIL);
+        return (bool) self::get(self::SEND_MAIL, $order);
     }
 
-    public static function isDeliveredMailEnabled(): bool
+    public static function isDeliveredMailEnabled(?Order $order = null): bool
     {
-        return (bool) Configuration::get(self::SEND_DELIVERED_MAIL);
+        return (bool) self::get(self::SEND_DELIVERED_MAIL, $order);
+    }
+
+    /**
+     * Value for the shop of the order, whatever the shop of the request (an API call can
+     * be made in the context of another shop, or of all of them); PrestaShop falls back on
+     * the shop group, then on the global value. Without an order (configuration page):
+     * value for the shop chosen in the back office. Not always a string: right after a
+     * save, PrestaShop returns the value as it was given.
+     */
+    private static function get(string $key, ?Order $order): mixed
+    {
+        return Configuration::get($key, null, $order ? (int) $order->id_shop_group : null, $order ? (int) $order->id_shop : null);
     }
 }

@@ -9,6 +9,7 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
+use Order;
 
 /**
  * Which state the parcels call for, and whether the module may set it.
@@ -41,10 +42,11 @@ class OrderStatePolicy
      * as a parcel is on its way, the delivered state once every unit still due is in a
      * delivered parcel. Each state is set once; the order never goes back.
      */
-    public function getTargetState(int $orderId, OrderShippingProgress $progress): ?int
+    public function getTargetState(Order $order, OrderShippingProgress $progress): ?int
     {
-        $shippedState = Settings::getShippedState();
-        $deliveredState = Settings::getDeliveredState();
+        $orderId = (int) $order->id;
+        $shippedState = Settings::getShippedState($order);
+        $deliveredState = Settings::getDeliveredState($order);
 
         // Order::hasBeenDelivered() reads the "delivery" flag, also set on the shipped state:
         // the history of the configured states is checked instead
@@ -69,8 +71,8 @@ class OrderStatePolicy
      * The module changes the state of an order only from one of the states chosen in
      * its settings (never, for example, from "Cancelled" or "Awaiting payment").
      */
-    public function mayChangeFrom(int $currentStateId): bool
+    public function mayChangeCurrentState(Order $order): bool
     {
-        return in_array($currentStateId, Settings::getChangeableStates(), true);
+        return in_array((int) $order->getCurrentState(), Settings::getChangeableStates($order), true);
     }
 }

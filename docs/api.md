@@ -10,7 +10,7 @@ L'API repose sur l'**API d'administration de PrestaShop 9** (OAuth2, flux « cli
 
 Côté marchand (BO) :
 
-1. API d'administration activée (Paramètres avancés › Fonctionnalités nouvelles et expérimentales).
+1. API d'administration activée (Paramètres avancés › Fonctionnalités nouvelles et expérimentales). En mode multiboutique, activer aussi « Admin API - Multistore » (fonction en bêta de PrestaShop) : sans elle, toute l'API répond `404`.
 2. **Paramètres avancés › API d'administration › Ajouter un client API**, avec les droits `hubasyou_shipment_read` et `hubasyou_shipment_write` (module `drsoftfrhubasyou`).
 3. Transmettre à HubAsYou l'identifiant et le secret du client.
 
@@ -30,6 +30,8 @@ Réponse : `{"token_type": "Bearer", "expires_in": 3600, "access_token": "…"}`
 ## 2. Points d'entrée
 
 Base : `https://<boutique>/admin-api`. Corps et réponses en JSON (`Content-Type: application/json`).
+
+**Si la boutique utilise le mode multiboutique** : chaque appel (sauf la demande de jeton) doit préciser une boutique, par exemple `POST /hubasyou/shipments?allShops=1` ou `?shopId=2`, sinon PrestaShop répond `400`. Le choix est sans effet sur le colis : les réglages appliqués sont toujours ceux de la boutique de la commande.
 
 | Méthode | URL | Droit | Rôle |
 | --- | --- | --- | --- |

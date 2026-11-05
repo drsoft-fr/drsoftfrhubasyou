@@ -26,6 +26,8 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
     - onglet **Modules**, module drSoft.fr HubAsYou : « Voir », sans quoi la fiche de la commande n'affiche pas les colis (PrestaShop n'exécute les crochets du BO d'un module que pour les profils qui peuvent le voir) ;
     - onglet **Commandes › Colis HubAsYou** : « Voir » pour ouvrir un colis, « Modifier » pour le bouton « Modifier », « Supprimer » pour le bouton « Supprimer ». Les boutons ne s'affichent qu'avec le droit correspondant, et le contrôleur le vérifie de nouveau à l'enregistrement.
 
+**Plusieurs boutiques** : les réglages s'enregistrent pour la boutique choisie dans le BO au moment de l'enregistrement (ou pour toutes). Une commande suit toujours les réglages de sa propre boutique. Exemple : si les e-mails sont coupés pour la boutique B, aucune commande de B n'en déclenche, quel que soit l'appel reçu. PrestaShop coupe l'API d'administration en multiboutique tant que « Admin API - Multistore » (fonction en bêta) n'est pas activée dans Paramètres avancés › Fonctionnalités nouvelles et expérimentales ; HubAsYou doit ensuite ajouter `?allShops=1` à ses appels (voir `docs/api.md`).
+
 En développement, après un `git clone` dans `modules/` : `composer dump-autoload` (aucune dépendance), puis installer le module.
 
 ## Personnalisation

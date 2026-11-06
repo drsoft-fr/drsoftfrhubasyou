@@ -10,7 +10,7 @@ L'API repose sur l'**API d'administration de PrestaShop 9** (OAuth2, flux « cli
 
 Côté marchand (BO) :
 
-1. API d'administration activée (Paramètres avancés › Fonctionnalités nouvelles et expérimentales). En mode multiboutique, activer aussi « Admin API - Multistore » (fonction en bêta de PrestaShop) : sans elle, toute l'API répond `404`.
+1. API d'administration activée (Paramètres avancés › API d'administration, carte Paramètres en bas de page ; le module `ps_apiresources` doit être installé et actif, et la réécriture d'URL activée). En mode multiboutique seulement, activer aussi « Admin API - Multistore » (fonction en bêta de PrestaShop, dans Paramètres avancés › Fonctionnalités nouvelles et expérimentales) : sans elle, toute l'API répond `404`.
 2. **Paramètres avancés › API d'administration › Ajouter un client API**, avec les droits `hubasyou_shipment_read` et `hubasyou_shipment_write` (module `drsoftfrhubasyou`).
 3. Transmettre à HubAsYou l'identifiant et le secret du client.
 

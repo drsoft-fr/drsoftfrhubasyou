@@ -6,7 +6,7 @@
 
   {if !$admin_api_enabled}
     <div class="alert alert-warning">
-      {l s='The Admin API is disabled: enable it in Advanced Parameters › New & Experimental Features (Admin API).' d='Modules.Drsoftfrhubasyou.Admin'}
+      {l s='The Admin API is disabled: enable it in Advanced Parameters › Admin API (Configuration).' d='Modules.Drsoftfrhubasyou.Admin'}
     </div>
   {/if}
 

@@ -94,9 +94,9 @@
         <source>Access for HubAsYou</source>
         <target>Accès de HubAsYou</target>
       </trans-unit>
-      <trans-unit id="d94a56066d4b115182d193c8d35a5bd3">
-        <source>The Admin API is disabled: enable it in Advanced Parameters › New &amp; Experimental Features (Admin API).</source>
-        <target>L'API d'administration est désactivée : activez-la dans Paramètres avancés › Fonctionnalités nouvelles et expérimentales (API d'administration).</target>
+      <trans-unit id="05eaabf30a109a8e30009875d5000bea">
+        <source>The Admin API is disabled: enable it in Advanced Parameters › Admin API (Configuration).</source>
+        <target>L'API d'administration est désactivée : activez-la dans Paramètres avancés › API d'administration (carte Paramètres, en bas de page).</target>
       </trans-unit>
       <trans-unit id="2d1ae0c13ff2a5b794b09ef2ce187d16">
         <source>Advanced Parameters › Admin API › Add new API client.</source>

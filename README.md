@@ -30,7 +30,15 @@ Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédi
 
 **Plusieurs boutiques** : les réglages s'enregistrent pour la boutique choisie dans le BO au moment de l'enregistrement (ou pour toutes). Une commande suit toujours les réglages de sa propre boutique. Exemple : si les e-mails sont coupés pour la boutique B, aucune commande de B n'en déclenche, quel que soit l'appel reçu. PrestaShop coupe l'API d'administration en multiboutique tant que « Admin API - Multistore » (fonction en bêta) n'est pas activée dans Paramètres avancés › Fonctionnalités nouvelles et expérimentales ; HubAsYou doit ensuite ajouter `?allShops=1` à ses appels (voir `docs/api.md`).
 
-En développement, après un `git clone` dans `modules/` : `composer dump-autoload` (aucune dépendance), puis installer le module.
+En développement, après un `git clone` dans `modules/` : `composer install`, puis installer le module.
+
+## Tests
+
+`make test` vérifie les règles du module sans base de données ni PrestaShop. Exemple : 3 articles commandés, 2 livrés et le 3e remboursé, la commande doit être considérée comme livrée.
+
+Sont testés : les champs et les lignes d'un colis, les quantités, l'avancement de la commande, les dates, les états d'un colis et le découpage des fichiers SQL d'installation. Ce qui touche la base, les e-mails ou le BO n'est pas couvert par ces tests.
+
+PHPUnit sert seulement au développement. `make package` le retire de `vendor/` pour construire l'archive, et n'y met pas les tests : après une archive, relancer `composer install` avant `make test`.
 
 ## Personnalisation
 
@@ -47,6 +55,7 @@ En développement, après un `git clone` dans `modules/` : `composer dump-autolo
 - `src/Domain/` : règles métier sans accès à la base : identifiant et états du colis, avancement de la commande (`OrderShippingProgress`), règles des champs (`ShipmentRules`, vérifiées par les commandes : mêmes règles pour l'API et le BO), des quantités (`ShipmentQuantities`) et des dates (`ShipmentDates`), exceptions (422 / 404 ; codes pour les messages traduits du BO).
 - `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), verrou par commande (`Lock/OrderLock`, `GET_LOCK` de la base : les colis d'une même commande sont traités une requête à la fois), journal (`Log/ShipmentJournal`), réglages, installation.
 - `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
+- `tests/Unit/` : tests des règles (voir Tests), absents de l'archive.
 
 **Désinstaller** supprime les colis reçus. **Réinitialiser** les conserve : seuls les réglages reviennent à leurs valeurs par défaut, et les droits de l'onglet Colis HubAsYou sont à redonner aux profils autres que SuperAdmin.
 

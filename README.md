@@ -36,7 +36,7 @@ En développement, après un `git clone` dans `modules/` : `composer install`, p
 
 `make test` vérifie les règles du module sans base de données ni PrestaShop. Exemple : 3 articles commandés, 2 livrés et le 3e remboursé, la commande doit être considérée comme livrée.
 
-Sont testés : les champs et les lignes d'un colis, les quantités, l'avancement de la commande, les dates, les états d'un colis et le découpage des fichiers SQL d'installation. Ce qui touche la base, les e-mails ou le BO n'est pas couvert par ces tests.
+Sont testés : les champs et les lignes d'un colis, les quantités, l'avancement de la commande, les dates, les états d'un colis, les paramètres de la liste des colis et le découpage des fichiers SQL d'installation. Ce qui touche la base, les e-mails ou le BO n'est pas couvert par ces tests.
 
 PHPUnit sert seulement au développement. `make package` le retire de `vendor/` pour construire l'archive, et n'y met pas les tests : après une archive, relancer `composer install` avant `make test`.
 

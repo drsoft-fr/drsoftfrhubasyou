@@ -9,6 +9,9 @@ namespace DrSoftFr\Module\HubAsYou\Application\Query;
  *
  * The Admin API passes the pagination (offset, limit) and the GET parameters
  * (?orderId=…&externalReference=…), the latter as strings.
+ *
+ * Without ?limit, PrestaShop passes its own default (10): DEFAULT_LIMIT only applies to
+ * a limit that is not a positive number (the value PrestaShop announces for ?limit=0 too).
  */
 final class ListShipments
 {
@@ -32,6 +35,6 @@ final class ListShipments
         $this->orderId = $orderId !== null && (int) $orderId > 0 ? (int) $orderId : null;
         $this->externalReference = $externalReference !== null && trim($externalReference) !== '' ? trim($externalReference) : null;
         $this->offset = max(0, (int) $offset);
-        $this->limit = min(self::MAX_LIMIT, max(1, (int) ($limit ?: self::DEFAULT_LIMIT)));
+        $this->limit = (int) $limit > 0 ? min(self::MAX_LIMIT, (int) $limit) : self::DEFAULT_LIMIT;
     }
 }

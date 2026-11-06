@@ -41,7 +41,7 @@ Base : `https://<boutique>/admin-api`. Corps et réponses en JSON (`Content-Type
 | `GET` | `/hubasyou/shipments/{shipmentId}` | `hubasyou_shipment_read` | lire un colis |
 | `GET` | `/hubasyou/shipments` | `hubasyou_shipment_read` | lister les colis, du plus récent au plus ancien |
 
-Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`.
+Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`. **Pour parcourir la liste, avancer `offset` du nombre de colis reçus**, pas de la valeur de `limit` : le champ `limit` répète la valeur demandée (`?limit=500` renvoie 100 colis et annonce `"limit": 500`).
 
 ## 3. Le colis
 

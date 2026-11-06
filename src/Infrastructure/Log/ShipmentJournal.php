@@ -63,6 +63,23 @@ class ShipmentJournal
         $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', self::MODULE_NAME, $orderId, $this->getActor()));
     }
 
+    /**
+     * "Parcel on its way" e-mail sent at the merchant's request.
+     */
+    public function shipmentMailSent(array $shipment): void
+    {
+        $orderId = (int) $shipment['id_order'];
+
+        $this->log($orderId, sprintf(
+            '%s - parcel #%d (%s) of order #%d: "parcel on its way" e-mail sent by %s',
+            self::MODULE_NAME,
+            (int) $shipment['id_shipment'],
+            $shipment['external_reference'],
+            $orderId,
+            $this->getActor()
+        ));
+    }
+
     private function write(array $shipment, string $action, string $details): void
     {
         $orderId = (int) $shipment['id_order'];

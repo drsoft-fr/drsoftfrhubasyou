@@ -24,5 +24,6 @@ services:
   DrSoftFr\Module\HubAsYou\Application\CommandHandler\EditShipmentHandler: ~
   DrSoftFr\Module\HubAsYou\Application\CommandHandler\DeleteShipmentHandler: ~
   DrSoftFr\Module\HubAsYou\Application\CommandHandler\SendDeliveredMailHandler: ~
+  DrSoftFr\Module\HubAsYou\Application\CommandHandler\SendShipmentMailHandler: ~
   DrSoftFr\Module\HubAsYou\Application\QueryHandler\GetShipmentForEditingHandler: ~
   DrSoftFr\Module\HubAsYou\Application\QueryHandler\ListShipmentsHandler: ~

@@ -60,6 +60,17 @@
                   {if $shipment.shipped_at}{l s='Shipped:' d='Modules.Drsoftfrhubasyou.Admin'} {$shipment.shipped_at|escape:'html':'UTF-8'}<br>{/if}
                   {if $shipment.delivered_at}{l s='Delivered:' d='Modules.Drsoftfrhubasyou.Admin'} {$shipment.delivered_at|escape:'html':'UTF-8'}<br>{/if}
                   {if $shipment.mail_sent_at}{l s='E-mail:' d='Modules.Drsoftfrhubasyou.Admin'} {$shipment.mail_sent_at|escape:'html':'UTF-8'}{else}{l s='No e-mail sent' d='Modules.Drsoftfrhubasyou.Admin'}{/if}
+                  {if !empty($shipment.mail_url)}
+                    <form method="post" action="{$shipment.mail_url|escape:'html':'UTF-8'}" class="mt-1 mb-0">
+                      <button type="submit" name="submitHubAsYouShipmentMail" value="1" class="btn btn-sm btn-outline-secondary">
+                        {if $shipment.mail_sent_at}
+                          {l s='Send the e-mail again' d='Modules.Drsoftfrhubasyou.Admin'}
+                        {else}
+                          {l s='Send the e-mail' d='Modules.Drsoftfrhubasyou.Admin'}
+                        {/if}
+                      </button>
+                    </form>
+                  {/if}
                 </td>
               </tr>
             {/foreach}

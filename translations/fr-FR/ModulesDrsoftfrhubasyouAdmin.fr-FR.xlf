@@ -78,6 +78,18 @@
         <source>The order delivered e-mail could not be sent: check the e-mail settings and the logs, then try again.</source>
         <target>L'e-mail « commande livrée » n'a pas pu être envoyé : vérifiez la configuration des e-mails et les journaux, puis réessayez.</target>
       </trans-unit>
+      <trans-unit id="aef68b9d3022d10c296cde3d9b452037">
+        <source>The e-mail of parcel %reference% has been sent.</source>
+        <target>L'e-mail du colis %reference% a été envoyé.</target>
+      </trans-unit>
+      <trans-unit id="7d14b79d4c3b394c6c1fe8f3823d2648">
+        <source>This e-mail cannot be sent: the parcel is no longer on its way, or this e-mail is disabled in the module settings.</source>
+        <target>Cet e-mail ne peut pas être envoyé : le colis n'est plus en route, ou cet e-mail est désactivé dans la configuration du module.</target>
+      </trans-unit>
+      <trans-unit id="1685c26f815097b5d0da170f960176b9">
+        <source>The parcel e-mail could not be sent: check the e-mail settings and the logs, then try again.</source>
+        <target>L'e-mail du colis n'a pas pu être envoyé : vérifiez la configuration des e-mails et les journaux, puis réessayez.</target>
+      </trans-unit>
       <trans-unit id="ee2e89d0972548df48041879af61b60c">
         <source>Access for HubAsYou</source>
         <target>Accès de HubAsYou</target>

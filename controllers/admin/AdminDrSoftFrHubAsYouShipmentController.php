@@ -5,6 +5,7 @@ declare(strict_types=1);
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\SendDeliveredMailCommand;
+use DrSoftFr\Module\HubAsYou\Application\Command\SendShipmentMailCommand;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
@@ -17,7 +18,7 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 /**
  * Back office › order page › HubAsYou parcels: edit the tracking of a parcel
  * (?hubasyou_view=edit) or delete it after a confirmation page (?hubasyou_view=delete);
- * send the "order delivered" e-mail again (button of the order page).
+ * send the "parcel on its way" or "order delivered" e-mail again (buttons of the order page).
  *
  * Same CQRS commands as the Admin API, so the same rules apply.
  */
@@ -72,6 +73,16 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             }
 
             $this->redirectToOrder($this->trans('The order delivered e-mail has been sent.', [], self::DOMAIN));
+        }
+
+        if (Tools::isSubmit('submitHubAsYouShipmentMail') && $this->checkPermission('edit')) {
+            try {
+                $this->getCommandBus()->handle(new SendShipmentMailCommand($shipmentId));
+            } catch (ShipmentException $e) {
+                $this->redirectToOrder($this->getErrorMessage($e), 'error');
+            }
+
+            $this->redirectToOrder($this->trans('The e-mail of parcel %reference% has been sent.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
         }
 
         try {
@@ -330,6 +341,8 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             ShipmentConstraintException::INVALID_STATUS => $this->trans('Unknown status.', [], self::DOMAIN),
             ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED => $this->trans('This e-mail cannot be sent: the order is not entirely delivered, or this e-mail is disabled in the module settings.', [], self::DOMAIN),
             ShipmentConstraintException::DELIVERED_MAIL_FAILED => $this->trans('The order delivered e-mail could not be sent: check the e-mail settings and the logs, then try again.', [], self::DOMAIN),
+            ShipmentConstraintException::SHIPMENT_MAIL_NOT_ALLOWED => $this->trans('This e-mail cannot be sent: the parcel is no longer on its way, or this e-mail is disabled in the module settings.', [], self::DOMAIN),
+            ShipmentConstraintException::SHIPMENT_MAIL_FAILED => $this->trans('The parcel e-mail could not be sent: check the e-mail settings and the logs, then try again.', [], self::DOMAIN),
             default => $e->getMessage(),
         };
     }

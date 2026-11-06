@@ -78,6 +78,18 @@ class OrderStatePolicy
     }
 
     /**
+     * The "parcel on its way" e-mail is enabled for the shop of the order, and the parcel
+     * is travelling (a parcel already delivered has arrived).
+     *
+     * @param array $shipment Row with the state of the parcel ('status')
+     */
+    public function mayShipmentMailBeSent(Order $order, array $shipment): bool
+    {
+        return Settings::isMailEnabled($order)
+            && ShipmentStatus::tryFrom((string) $shipment['status'])?->isTravelling();
+    }
+
+    /**
      * The module changes the state of an order only from one of the states chosen in
      * its settings (never, for example, from "Cancelled" or "Awaiting payment").
      */

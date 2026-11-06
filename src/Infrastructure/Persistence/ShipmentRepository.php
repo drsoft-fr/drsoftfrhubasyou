@@ -230,6 +230,14 @@ class ShipmentRepository
     }
 
     /**
+     * Date of the "parcel on its way" e-mail sent at the merchant's request.
+     */
+    public function saveMailDate(int $shipmentId): void
+    {
+        Db::getInstance()->update(self::TABLE, ['mail_sent_at' => date(self::DATE_FORMAT)], 'id_shipment = ' . $shipmentId);
+    }
+
+    /**
      * Quantity of each order line put in parcels.
      *
      * @param bool $deliveredOnly Count only the delivered parcels

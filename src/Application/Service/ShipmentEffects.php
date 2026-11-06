@@ -6,7 +6,6 @@ namespace DrSoftFr\Module\HubAsYou\Application\Service;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\OrderShippingProgress;
-use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
@@ -102,17 +101,54 @@ class ShipmentEffects
             throw new ShipmentConstraintException('The order is not entirely delivered, or this e-mail is disabled.', ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED);
         }
 
+        $this->sendOrReport(
+            fn (): bool => $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId)),
+            ShipmentConstraintException::DELIVERED_MAIL_FAILED
+        );
+
+        $this->orderMails->saveDeliveredMailDate($orderId);
+    }
+
+    /**
+     * "Parcel on its way" e-mail at the merchant's request, even if already sent; its date
+     * becomes the date of this sending. Unlike the automatic e-mail, a failure is reported.
+     *
+     * @param array $shipment Row of ShipmentRepository::find()
+     *
+     * @throws ShipmentConstraintException The e-mail is not allowed for this parcel, or could not be sent
+     */
+    public function sendShipmentMailNow(array $shipment): void
+    {
+        $order = new Order((int) $shipment['id_order']);
+
+        if (!Validate::isLoadedObject($order) || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment)) {
+            throw new ShipmentConstraintException('The parcel is no longer on its way, or this e-mail is disabled.', ShipmentConstraintException::SHIPMENT_MAIL_NOT_ALLOWED);
+        }
+
+        $this->sendOrReport(
+            fn (): bool => $this->mailer->sendShipmentMail($order, $shipment),
+            ShipmentConstraintException::SHIPMENT_MAIL_FAILED
+        );
+
+        $this->shipments->saveMailDate((int) $shipment['id_shipment']);
+    }
+
+    /**
+     * @param callable(): bool $send
+     *
+     * @throws ShipmentConstraintException
+     */
+    private function sendOrReport(callable $send, int $failureCode): void
+    {
         try {
-            $sent = $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId));
+            $sent = $send();
         } catch (Throwable $t) {
-            throw new ShipmentConstraintException('The e-mail could not be sent.', ShipmentConstraintException::DELIVERED_MAIL_FAILED, $t);
+            throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode, $t);
         }
 
         if (!$sent) {
-            throw new ShipmentConstraintException('The e-mail could not be sent.', ShipmentConstraintException::DELIVERED_MAIL_FAILED);
+            throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode);
         }
-
-        $this->orderMails->saveDeliveredMailDate($orderId);
     }
 
     /**
@@ -161,9 +197,7 @@ class ShipmentEffects
 
     private function sendShipmentMailOnce(Order $order, array $shipment): void
     {
-        $status = ShipmentStatus::tryFrom((string) $shipment['status']);
-
-        if (!Settings::isMailEnabled($order) || !empty($shipment['mail_sent_at']) || !$status?->isTravelling()) {
+        if (!empty($shipment['mail_sent_at']) || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment)) {
             return;
         }
 

@@ -337,12 +337,20 @@ class drsoftfrhubasyou extends Module
                 ['edit', 'delete'],
                 static fn (string $action): bool => $employee && $employee->can($action, self::TAB_SHIPMENT)
             );
+            $order = new Order((int) ($params['id_order'] ?? 0));
+            $policy = new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
 
             foreach ($shipments as &$shipment) {
                 foreach ($actions as $action) {
                     $shipment[$action . '_url'] = $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
                         'id_shipment' => $shipment['id'],
                         'hubasyou_view' => $action,
+                    ]);
+                }
+
+                if (in_array('edit', $actions, true) && $policy->mayShipmentMailBeSent($order, $shipment)) {
+                    $shipment['mail_url'] = $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
+                        'id_shipment' => $shipment['id'],
                     ]);
                 }
             }

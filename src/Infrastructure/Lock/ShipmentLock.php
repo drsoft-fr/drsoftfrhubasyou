@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Lock;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 
 /**
@@ -23,7 +24,7 @@ class ShipmentLock
     /**
      * @template T
      *
-     * @param callable(array): T $work Receives the parcel as read under the lock
+     * @param callable(Shipment): T $work Receives the parcel as read under the lock
      *
      * @return T
      *
@@ -31,15 +32,16 @@ class ShipmentLock
      */
     public function synchronized(int $shipmentId, callable $work): mixed
     {
-        $orderId = (int) $this->find($shipmentId)['id_order'];
-
-        return $this->orderLock->synchronized($orderId, fn (): mixed => $work($this->find($shipmentId)));
+        return $this->orderLock->synchronized(
+            $this->find($shipmentId)->orderId,
+            fn (): mixed => $work($this->find($shipmentId))
+        );
     }
 
     /**
      * @throws ShipmentNotFoundException
      */
-    private function find(int $shipmentId): array
+    private function find(int $shipmentId): Shipment
     {
         return $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
@@ -26,10 +27,8 @@ final class DeleteShipmentHandler
      */
     public function handle(DeleteShipmentCommand $command): void
     {
-        $shipmentId = $command->shipmentId->getValue();
-
-        $this->lock->synchronized($shipmentId, function (array $shipment) use ($shipmentId): void {
-            $this->shipments->delete($shipmentId);
+        $this->lock->synchronized($command->shipmentId->getValue(), function (Shipment $shipment): void {
+            $this->shipments->delete($shipment->id);
             $this->journal->deleted($shipment);
         });
     }

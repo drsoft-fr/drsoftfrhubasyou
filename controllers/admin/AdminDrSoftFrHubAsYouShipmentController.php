@@ -10,6 +10,8 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
@@ -33,7 +35,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
      */
     public $module;
 
-    private ?array $shipment = null;
+    private ?Shipment $shipment = null;
 
     /** After a conflict: the form shows the saved values, not the ones sent */
     private bool $showCurrentValues = false;
@@ -68,12 +70,12 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             return;
         }
 
-        $shipmentId = (int) $this->shipment['id_shipment'];
+        $shipmentId = $this->shipment->id;
 
         // Button of the order page (sent with a parcel of the order): the answer is shown there
         if (Tools::isSubmit('submitHubAsYouDeliveredMail') && $this->checkPermission('edit')) {
             try {
-                $this->getCommandBus()->handle(new SendDeliveredMailCommand((int) $this->shipment['id_order']));
+                $this->getCommandBus()->handle(new SendDeliveredMailCommand($this->shipment->orderId));
             } catch (ShipmentException $e) {
                 $this->redirectToOrder($this->getErrorMessage($e), 'error');
             }
@@ -88,7 +90,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                 $this->redirectToOrder($this->getErrorMessage($e), 'error');
             }
 
-            $this->redirectToOrder($this->trans('The e-mail of parcel %reference% has been sent.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
+            $this->redirectToOrder($this->trans('The e-mail of parcel %reference% has been sent.', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN));
         }
 
         try {
@@ -104,13 +106,13 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                     (string) Tools::getValue('hubasyou_version'),
                 ));
 
-                $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
+                $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN));
             }
 
             if (Tools::isSubmit('submitHubAsYouShipmentDelete') && $this->checkPermission('delete')) {
                 $this->getCommandBus()->handle(new DeleteShipmentCommand($shipmentId));
 
-                $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN));
+                $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN));
             }
         } catch (ShipmentConflictException) {
             // Changed meanwhile (HubAsYou, another employee): show its current values and version
@@ -172,7 +174,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         parent::initToolbarTitle();
 
         if ($this->shipment) {
-            $this->toolbar_title[] = $this->trans('Parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN);
+            $this->toolbar_title[] = $this->trans('Parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN);
         }
     }
 
@@ -188,7 +190,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             'form' => [
                 'legend' => [
                     // HelperForm prints the legend and the description as they are: values escaped here
-                    'title' => $this->trans('Edit the tracking of parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment['external_reference'])], self::DOMAIN),
+                    'title' => $this->trans('Edit the tracking of parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN),
                     'icon' => 'icon-truck',
                 ],
                 'description' => $this->trans('Products: %products%. The content of a parcel cannot be changed: to fix it, delete the parcel and ask HubAsYou to send it again.', ['%products%' => $this->escapeHtml($this->getProductsSummary())], self::DOMAIN),
@@ -247,16 +249,16 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $helper->identifier = 'id_shipment';
         $helper->submit_action = '';
         $helper->currentIndex = $this->context->link->getAdminLink(self::TAB_CLASS_NAME, false)
-            . '&id_shipment=' . (int) $this->shipment['id_shipment'];
+            . '&id_shipment=' . $this->shipment->id;
         $helper->token = Tools::getAdminTokenLite(self::TAB_CLASS_NAME);
         $helper->tpl_vars = [
             'fields_value' => [
-                'carrier_name' => $this->getFormValue('carrier_name', $this->shipment['carrier_name']),
-                'tracking_number' => $this->getFormValue('tracking_number', $this->shipment['tracking_number']),
-                'tracking_url' => $this->getFormValue('tracking_url', (string) $this->shipment['tracking_url']),
-                'status' => $this->getFormValue('status', $this->shipment['status']),
+                'carrier_name' => $this->getFormValue('carrier_name', $this->shipment->carrierName),
+                'tracking_number' => $this->getFormValue('tracking_number', $this->shipment->trackingNumber),
+                'tracking_url' => $this->getFormValue('tracking_url', (string) $this->shipment->trackingUrl),
+                'status' => $this->getFormValue('status', $this->shipment->status->value),
                 // Version the employee is working from: kept after a refused save, renewed after a conflict
-                'hubasyou_version' => $this->getFormValue('hubasyou_version', ShipmentRepository::version($this->shipment)),
+                'hubasyou_version' => $this->getFormValue('hubasyou_version', $this->shipment->version()),
             ],
             'languages' => $this->getLanguages(),
             'id_language' => $this->context->language->id,
@@ -268,10 +270,14 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     private function renderDeleteConfirmation(): string
     {
         $this->context->smarty->assign([
-            'hubasyou_shipment' => $this->shipment,
+            'hubasyou_shipment' => [
+                'external_reference' => $this->shipment->externalReference,
+                'carrier_name' => $this->shipment->carrierName,
+                'tracking_number' => $this->shipment->trackingNumber,
+            ],
             'hubasyou_products' => $this->getProductsSummary(),
             'hubasyou_action_url' => $this->context->link->getAdminLink(self::TAB_CLASS_NAME, true, [], [
-                'id_shipment' => (int) $this->shipment['id_shipment'],
+                'id_shipment' => $this->shipment->id,
                 'hubasyou_view' => 'delete',
             ]),
             'hubasyou_order_url' => $this->getOrderUrl(),
@@ -300,8 +306,8 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     private function getProductsSummary(): string
     {
         return implode(', ', array_map(
-            static fn (array $line): string => $line['quantity'] . ' × ' . $line['product_name'],
-            $this->shipment['lines']
+            static fn (ShipmentLine $line): string => $line->quantity . ' × ' . $line->productName,
+            $this->shipment->lines
         ));
     }
 
@@ -309,7 +315,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     {
         return $this->context->link->getAdminLink('AdminOrders', true, [
             'route' => 'admin_orders_view',
-            'orderId' => (int) $this->shipment['id_order'],
+            'orderId' => $this->shipment->orderId,
         ]);
     }
 

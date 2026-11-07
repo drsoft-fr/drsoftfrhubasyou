@@ -6,6 +6,8 @@ services:
     autoconfigure: true
 
   # Infrastructure
+  DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentEffectsLog: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository: ~

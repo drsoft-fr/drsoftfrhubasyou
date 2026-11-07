@@ -20,13 +20,13 @@ final class ListShipmentsHandler
 
     public function handle(ListShipments $query): ShipmentList
     {
-        [$rows, $count] = $this->repository->findPaginated(
+        [$shipments, $count] = $this->repository->findPaginated(
             $query->orderId,
             $query->externalReference,
             $query->offset,
             $query->limit
         );
 
-        return new ShipmentList(array_map([ShipmentForEditing::class, 'fromRow'], $rows), $count);
+        return new ShipmentList(array_map([ShipmentForEditing::class, 'fromShipment'], $shipments), $count);
     }
 }

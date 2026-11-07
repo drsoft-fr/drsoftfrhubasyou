@@ -6,6 +6,7 @@ namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
 use DrSoftFr\Module\HubAsYou\Application\Command\SendShipmentMailCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
@@ -25,7 +26,7 @@ final class SendShipmentMailHandler
      */
     public function handle(SendShipmentMailCommand $command): void
     {
-        $this->lock->synchronized($command->shipmentId, function (array $shipment): void {
+        $this->lock->synchronized($command->shipmentId->getValue(), function (Shipment $shipment): void {
             $this->effects->sendShipmentMailNow($shipment);
             $this->journal->shipmentMailSent($shipment);
         });

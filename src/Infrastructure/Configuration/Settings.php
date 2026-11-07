@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Configuration;
 
 use Configuration;
-use Order;
+use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
 
 /**
  * Module settings (Modules › drSoft.fr HubAsYou › Configure), saved for the shop chosen
  * in the back office (Configuration::updateValue follows the shop context).
  */
-final class Settings
+class Settings
 {
     /** Technical name of the module (logs, path of the e-mail templates) */
     public const MODULE_NAME = 'drsoftfrhubasyou';
@@ -51,16 +51,16 @@ final class Settings
         self::SEND_DELIVERED_MAIL,
     ];
 
-    public static function install(): bool
+    public function install(): bool
     {
         return Configuration::updateValue(self::ORDER_STATE_SHIPPED, (int) Configuration::get('PS_OS_SHIPPING'))
             && Configuration::updateValue(self::ORDER_STATE_DELIVERED, (int) Configuration::get('PS_OS_DELIVERED'))
             && Configuration::updateValue(self::SEND_MAIL, 1)
             && Configuration::updateValue(self::SEND_DELIVERED_MAIL, 1)
-            && self::setChangeableStates(self::getDefaultChangeableStates());
+            && $this->setChangeableStates($this->getDefaultChangeableStates());
     }
 
-    public static function uninstall(): bool
+    public function uninstall(): bool
     {
         $result = true;
 
@@ -71,28 +71,28 @@ final class Settings
         return $result;
     }
 
-    public static function getShippedState(?Order $order = null): int
+    public function getShippedState(?ShopOrder $order = null): int
     {
-        return (int) self::get(self::ORDER_STATE_SHIPPED, $order);
+        return (int) $this->get(self::ORDER_STATE_SHIPPED, $order);
     }
 
-    public static function getDeliveredState(?Order $order = null): int
+    public function getDeliveredState(?ShopOrder $order = null): int
     {
-        return (int) self::get(self::ORDER_STATE_DELIVERED, $order);
+        return (int) $this->get(self::ORDER_STATE_DELIVERED, $order);
     }
 
     /**
      * @return int[]
      */
-    public static function getChangeableStates(?Order $order = null): array
+    public function getChangeableStates(?ShopOrder $order = null): array
     {
-        return array_values(array_filter(array_map('intval', explode(',', (string) self::get(self::CHANGEABLE_STATES, $order)))));
+        return array_values(array_filter(array_map('intval', explode(',', (string) $this->get(self::CHANGEABLE_STATES, $order)))));
     }
 
     /**
      * @param int[] $stateIds
      */
-    public static function setChangeableStates(array $stateIds): bool
+    public function setChangeableStates(array $stateIds): bool
     {
         $stateIds = array_values(array_unique(array_filter(array_map('intval', $stateIds))));
         sort($stateIds);
@@ -103,19 +103,19 @@ final class Settings
     /**
      * @return int[]
      */
-    public static function getDefaultChangeableStates(): array
+    public function getDefaultChangeableStates(): array
     {
         return array_map(static fn (string $key): int => (int) Configuration::get($key), self::DEFAULT_CHANGEABLE_STATE_KEYS);
     }
 
-    public static function isMailEnabled(?Order $order = null): bool
+    public function isMailEnabled(?ShopOrder $order = null): bool
     {
-        return (bool) self::get(self::SEND_MAIL, $order);
+        return (bool) $this->get(self::SEND_MAIL, $order);
     }
 
-    public static function isDeliveredMailEnabled(?Order $order = null): bool
+    public function isDeliveredMailEnabled(?ShopOrder $order = null): bool
     {
-        return (bool) self::get(self::SEND_DELIVERED_MAIL, $order);
+        return (bool) $this->get(self::SEND_DELIVERED_MAIL, $order);
     }
 
     /**
@@ -125,8 +125,8 @@ final class Settings
      * value for the shop chosen in the back office. Not always a string: right after a
      * save, PrestaShop returns the value as it was given.
      */
-    private static function get(string $key, ?Order $order): mixed
+    private function get(string $key, ?ShopOrder $order): mixed
     {
-        return Configuration::get($key, null, $order ? (int) $order->id_shop_group : null, $order ? (int) $order->id_shop : null);
+        return Configuration::get($key, null, $order?->shopGroupId, $order?->shopId);
     }
 }

@@ -13,8 +13,10 @@ use OrderHistory;
  */
 class OrderStateWriter
 {
-    public function change(Order $order, int $stateId): void
+    public function change(int $orderId, int $stateId): void
     {
+        $order = new Order($orderId);
+
         if ((int) $order->getCurrentState() === $stateId) {
             return;
         }

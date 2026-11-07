@@ -5,12 +5,26 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
 use DbQuery;
+use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
+use Order;
+use Validate;
 
 /**
- * Reads the PrestaShop orders (lines, state history).
+ * Reads the PrestaShop orders (the order itself, lines, state history).
  */
 class OrderRepository
 {
+    public function find(int $orderId): ?ShopOrder
+    {
+        $order = new Order($orderId);
+
+        if (!Validate::isLoadedObject($order)) {
+            return null;
+        }
+
+        return new ShopOrder((int) $order->id, (int) $order->getCurrentState(), (int) $order->id_shop, (int) $order->id_shop_group);
+    }
+
     /**
      * Lines of an order, with what PrestaShop records on them: a product cancelled on an
      * unpaid order lowers product_quantity, a refund or a return only adds to its own

@@ -22,7 +22,7 @@ final class GetShipmentForEditingHandler
     {
         $shipmentId = $query->shipmentId->getValue();
 
-        return ShipmentForEditing::fromRow(
+        return ShipmentForEditing::fromShipment(
             $this->repository->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId)
         );
     }

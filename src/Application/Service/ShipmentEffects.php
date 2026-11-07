@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\Service;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\OrderShippingProgress;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentEffectsLog;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
-use Order;
-use PrestaShopLogger;
 use Throwable;
-use Validate;
 
 /**
  * What happens after a parcel is saved (Admin API or back office):
@@ -36,10 +36,12 @@ class ShipmentEffects
 
     public function __construct(
         private readonly ShipmentRepository $shipments,
+        private readonly OrderRepository $orders,
         private readonly OrderStatePolicy $statePolicy,
         private readonly OrderMailRepository $orderMails,
         private readonly ShipmentMailer $mailer,
         private readonly OrderStateWriter $stateWriter,
+        private readonly ShipmentEffectsLog $log,
     ) {
     }
 
@@ -54,17 +56,17 @@ class ShipmentEffects
                 return;
             }
 
-            $orderId = (int) $shipment['id_order'];
-            $order = new Order($orderId);
+            $orderId = $shipment->orderId;
+            $order = $this->orders->find($orderId);
 
-            if (!Validate::isLoadedObject($order)) {
+            if (!$order) {
                 return;
             }
 
             $this->sendShipmentMailOnce($order, $shipment);
             $this->applyProgress($order);
         }, function (Throwable $t) use ($shipmentId, &$orderId): void {
-            $this->logFailure(sprintf('parcel #%d', $shipmentId), $t, $orderId);
+            $this->log->failure(sprintf('parcel #%d', $shipmentId), $t, $orderId);
         });
     }
 
@@ -75,13 +77,13 @@ class ShipmentEffects
     public function onOrderLinesChanged(int $orderId): void
     {
         $this->run(function () use ($orderId): void {
-            $order = new Order($orderId);
+            $order = $this->orders->find($orderId);
 
-            if (Validate::isLoadedObject($order)) {
+            if ($order) {
                 $this->applyProgress($order);
             }
         }, function (Throwable $t) use ($orderId): void {
-            $this->logFailure(sprintf('order #%d', $orderId), $t, $orderId);
+            $this->log->failure(sprintf('order #%d', $orderId), $t, $orderId);
         });
     }
 
@@ -93,14 +95,14 @@ class ShipmentEffects
      */
     public function sendDeliveredMailNow(int $orderId): void
     {
-        $order = new Order($orderId);
+        $order = $this->orders->find($orderId);
 
-        if (!Validate::isLoadedObject($order) || !$this->statePolicy->mayDeliveredMailBeSent($order)) {
+        if (!$order || !$this->statePolicy->mayDeliveredMailBeSent($order)) {
             throw new ShipmentConstraintException('The order is not entirely delivered, or this e-mail is disabled.', ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED);
         }
 
         $this->sendOrReport(
-            fn (): bool => $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId)),
+            fn (): bool => $this->mailer->sendDeliveredMail($orderId, $this->shipments->findByOrder($orderId)),
             ShipmentConstraintException::DELIVERED_MAIL_FAILED
         );
 
@@ -111,24 +113,22 @@ class ShipmentEffects
      * "Parcel on its way" e-mail at the merchant's request, even if already sent; its date
      * becomes the date of this sending. Unlike the automatic e-mail, a failure is reported.
      *
-     * @param array $shipment Row of ShipmentRepository::find()
-     *
      * @throws ShipmentConstraintException The e-mail is not allowed for this parcel, or could not be sent
      */
-    public function sendShipmentMailNow(array $shipment): void
+    public function sendShipmentMailNow(Shipment $shipment): void
     {
-        $order = new Order((int) $shipment['id_order']);
+        $order = $this->orders->find($shipment->orderId);
 
-        if (!Validate::isLoadedObject($order) || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment)) {
+        if (!$order || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment->status)) {
             throw new ShipmentConstraintException('The parcel is no longer on its way, or this e-mail is disabled.', ShipmentConstraintException::SHIPMENT_MAIL_NOT_ALLOWED);
         }
 
         $this->sendOrReport(
-            fn (): bool => $this->mailer->sendShipmentMail($order, $shipment),
+            fn (): bool => $this->mailer->sendShipmentMail($order->id, $shipment),
             ShipmentConstraintException::SHIPMENT_MAIL_FAILED
         );
 
-        $this->shipments->saveMailDate((int) $shipment['id_shipment']);
+        $this->shipments->saveMailDate($shipment->id);
     }
 
     /**
@@ -170,9 +170,9 @@ class ShipmentEffects
         }
     }
 
-    private function applyProgress(Order $order): void
+    private function applyProgress(ShopOrder $order): void
     {
-        $progress = $this->statePolicy->getProgress((int) $order->id);
+        $progress = $this->statePolicy->getProgress($order->id);
 
         $this->updateOrderState($order, $progress);
 
@@ -181,45 +181,29 @@ class ShipmentEffects
         }
     }
 
-    private function logFailure(string $subject, Throwable $t, int $orderId): void
+    private function sendShipmentMailOnce(ShopOrder $order, Shipment $shipment): void
     {
-        PrestaShopLogger::addLog(
-            sprintf('%s - %s - %s', Settings::MODULE_NAME, $subject, $t->getMessage()),
-            3,
-            (int) $t->getCode(),
-            'Order',
-            $orderId,
-            true
-        );
-    }
-
-    private function sendShipmentMailOnce(Order $order, array $shipment): void
-    {
-        if (!empty($shipment['mail_sent_at']) || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment)) {
+        if ($shipment->mailSentAt || !$this->statePolicy->mayShipmentMailBeSent($order, $shipment->status)) {
             return;
         }
 
-        $shipmentId = (int) $shipment['id_shipment'];
-
         $this->sendOnce(
-            fn (): bool => $this->shipments->claimMail($shipmentId),
-            fn (): bool => $this->mailer->sendShipmentMail($order, $shipment),
-            fn () => $this->shipments->releaseMail($shipmentId)
+            fn (): bool => $this->shipments->claimMail($shipment->id),
+            fn (): bool => $this->mailer->sendShipmentMail($order->id, $shipment),
+            fn () => $this->shipments->releaseMail($shipment->id)
         );
     }
 
-    private function sendDeliveredMailOnce(Order $order): void
+    private function sendDeliveredMailOnce(ShopOrder $order): void
     {
-        if (!Settings::isDeliveredMailEnabled($order)) {
+        if (!$this->statePolicy->isDeliveredMailEnabled($order)) {
             return;
         }
 
-        $orderId = (int) $order->id;
-
         $this->sendOnce(
-            fn (): bool => $this->orderMails->claimDeliveredMail($orderId),
-            fn (): bool => $this->mailer->sendDeliveredMail($order, $this->shipments->findByOrder($orderId)),
-            fn () => $this->orderMails->releaseDeliveredMail($orderId)
+            fn (): bool => $this->orderMails->claimDeliveredMail($order->id),
+            fn (): bool => $this->mailer->sendDeliveredMail($order->id, $this->shipments->findByOrder($order->id)),
+            fn () => $this->orderMails->releaseDeliveredMail($order->id)
         );
     }
 
@@ -255,29 +239,20 @@ class ShipmentEffects
      * state the module may change; otherwise the state stays as it is, with a warning
      * in the logs (and on the order page of the back office).
      */
-    private function updateOrderState(Order $order, OrderShippingProgress $progress): void
+    private function updateOrderState(ShopOrder $order, OrderShippingProgress $progress): void
     {
-        $orderId = (int) $order->id;
         $targetState = $this->statePolicy->getTargetState($order, $progress);
-        $currentState = (int) $order->getCurrentState();
 
-        if (!$targetState || $targetState === $currentState) {
+        if (!$targetState || $targetState === $order->currentState) {
             return;
         }
 
         if (!$this->statePolicy->mayChangeCurrentState($order)) {
-            PrestaShopLogger::addLog(
-                sprintf('%s - order #%d: state not changed to %d, the current state %d is not one the module may change (module settings)', Settings::MODULE_NAME, $orderId, $targetState, $currentState),
-                2,
-                null,
-                'Order',
-                $orderId,
-                true
-            );
+            $this->log->stateNotChanged($order->id, $targetState, $order->currentState);
 
             return;
         }
 
-        $this->stateWriter->change($order, $targetState);
+        $this->stateWriter->change($order->id, $targetState);
     }
 }

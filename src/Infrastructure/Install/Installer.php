@@ -33,7 +33,7 @@ final class Installer
             throw new Exception('An error occurred when registering the hooks of the module.');
         }
 
-        if (!Settings::install()) {
+        if (!(new Settings())->install()) {
             throw new Exception('An error occurred when saving the settings of the module.');
         }
     }
@@ -50,7 +50,7 @@ final class Installer
             $this->executeSqlFile(self::SQL_DIR . 'uninstall.sql');
         }
 
-        if (!Settings::uninstall()) {
+        if (!(new Settings())->uninstall()) {
             throw new Exception('An error occurred when deleting the settings of the module.');
         }
     }

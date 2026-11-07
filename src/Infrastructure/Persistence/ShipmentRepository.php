@@ -11,29 +11,26 @@ use Db;
 use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use Throwable;
 
 /**
  * Reads and writes the parcels and their lines.
- *
- * Rows are returned with the table column names (id_shipment, id_order…) and the
- * lines as [['id_order_detail' => int, 'quantity' => int, …], …].
  */
 class ShipmentRepository
 {
     public const TABLE = 'drsoft_fr_hubasyou_shipment';
     public const TABLE_LINE = 'drsoft_fr_hubasyou_shipment_line';
 
-    /** The values that can change after the creation of a parcel */
-    public const VERSIONED_COLUMNS = ['carrier_name', 'tracking_number', 'tracking_url', 'status', 'shipped_at', 'delivered_at'];
-
     /** Format of the DATETIME columns of the module */
     public const DATE_FORMAT = 'Y-m-d H:i:s';
 
     private const MYSQL_DUPLICATE_KEY = 1062;
 
-    public function find(int $shipmentId): ?array
+    public function find(int $shipmentId): ?Shipment
     {
         $query = (new DbQuery())
             ->select('s.*')
@@ -45,19 +42,7 @@ class ShipmentRepository
             return null;
         }
 
-        return $this->withLines([$row])[0];
-    }
-
-    /**
-     * Version of a parcel: fingerprint of the values a change can overwrite (tracking,
-     * state, dates). Unlike date_upd (precise to the second), it changes with any
-     * change of these values.
-     *
-     * @param array $row Row of find()
-     */
-    public static function version(array $row): string
-    {
-        return sha1(json_encode(array_map(static fn (string $column) => $row[$column], self::VERSIONED_COLUMNS)));
+        return $this->hydrate([$row])[0];
     }
 
     public function existsByExternalReference(string $externalReference): bool
@@ -72,6 +57,8 @@ class ShipmentRepository
 
     /**
      * Parcels of an order, oldest first.
+     *
+     * @return Shipment[]
      */
     public function findByOrder(int $orderId): array
     {
@@ -81,13 +68,13 @@ class ShipmentRepository
             ->where('s.id_order = ' . $orderId)
             ->orderBy('s.id_shipment ASC');
 
-        return $this->withLines(DatabaseReader::rows($query));
+        return $this->hydrate(DatabaseReader::rows($query));
     }
 
     /**
      * Paginated list, newest first.
      *
-     * @return array{0: array, 1: int} [rows, total]
+     * @return array{0: Shipment[], 1: int} [parcels, total]
      */
     public function findPaginated(?int $orderId, ?string $externalReference, int $offset, int $limit): array
     {
@@ -111,39 +98,41 @@ class ShipmentRepository
             ->orderBy('s.id_shipment DESC')
             ->limit(max(1, $limit), max(0, $offset));
 
-        return [$this->withLines(DatabaseReader::rows($query)), $count];
+        return [$this->hydrate(DatabaseReader::rows($query)), $count];
     }
 
     /**
-     * Inserts a parcel and its lines, together (transaction).
-     *
-     * @param array $data Column => value (dates as DateTimeInterface or null)
-     * @param array<int, int> $lines id_order_detail => quantity
+     * Inserts a new parcel and its lines, together (transaction).
      *
      * @return int The new id_shipment
      *
      * @throws ShipmentConstraintException External reference already used (unique key)
      * @throws ShipmentException Database error
      */
-    public function add(array $data, array $lines): int
+    public function add(Shipment $shipment): int
     {
         $db = Db::getInstance();
         $now = date(self::DATE_FORMAT);
         $db->execute('START TRANSACTION', false);
 
         try {
-            if (!$db->insert(self::TABLE, $this->escape($data) + ['date_add' => $now, 'date_upd' => $now], true)) {
+            $columns = [
+                'external_reference' => $shipment->externalReference,
+                'id_order' => $shipment->orderId,
+            ] + $this->changeableColumns($shipment);
+
+            if (!$db->insert(self::TABLE, $this->escape($columns) + ['date_add' => $now, 'date_upd' => $now], true)) {
                 throw new ShipmentException('The parcel could not be saved.');
             }
 
             $shipmentId = (int) $db->Insert_ID();
             $rows = [];
 
-            foreach ($lines as $orderDetailId => $quantity) {
+            foreach ($shipment->lines as $line) {
                 $rows[] = [
                     'id_shipment' => $shipmentId,
-                    'id_order_detail' => (int) $orderDetailId,
-                    'quantity' => (int) $quantity,
+                    'id_order_detail' => $line->orderDetailId,
+                    'quantity' => $line->quantity,
                 ];
             }
 
@@ -160,7 +149,7 @@ class ShipmentRepository
             $db->execute('ROLLBACK', false);
 
             if ($duplicate) {
-                throw ShipmentConstraintException::duplicateReference((string) $data['external_reference']);
+                throw ShipmentConstraintException::duplicateReference($shipment->externalReference);
             }
 
             throw $t instanceof ShipmentException ? $t : new ShipmentException('The parcel could not be saved.', 0, $t);
@@ -168,18 +157,14 @@ class ShipmentRepository
     }
 
     /**
-     * @param array $data Column => value (dates as DateTimeInterface or null)
+     * Saves the tracking, state and dates of a parcel.
      */
-    public function update(int $shipmentId, array $data): bool
+    public function update(Shipment $shipment): bool
     {
-        if (!$data) {
-            return true;
-        }
-
         return Db::getInstance()->update(
             self::TABLE,
-            $this->escape($data) + ['date_upd' => date(self::DATE_FORMAT)],
-            'id_shipment = ' . $shipmentId,
+            $this->escape($this->changeableColumns($shipment)) + ['date_upd' => date(self::DATE_FORMAT)],
+            'id_shipment = ' . $shipment->id,
             0,
             true
         );
@@ -268,9 +253,11 @@ class ShipmentRepository
     }
 
     /**
-     * Adds the lines (with the product name of the order line) to each parcel row.
+     * Parcels of the rows, with their lines (and the product name of the order line).
+     *
+     * @return Shipment[]
      */
-    private function withLines(array $rows): array
+    private function hydrate(array $rows): array
     {
         if (!$rows) {
             return [];
@@ -286,19 +273,42 @@ class ShipmentRepository
         $lines = [];
 
         foreach (DatabaseReader::rows($query) as $line) {
-            $lines[(int) $line['id_shipment']][] = [
-                'id_order_detail' => (int) $line['id_order_detail'],
-                'quantity' => (int) $line['quantity'],
-                'product_name' => (string) $line['product_name'],
-                'product_reference' => (string) $line['product_reference'],
-            ];
+            $lines[(int) $line['id_shipment']][] = new ShipmentLine(
+                (int) $line['id_order_detail'],
+                (int) $line['quantity'],
+                (string) $line['product_name'],
+                (string) $line['product_reference'],
+            );
         }
 
-        foreach ($rows as &$row) {
-            $row['lines'] = $lines[(int) $row['id_shipment']] ?? [];
-        }
+        return array_map(static fn (array $row): Shipment => new Shipment(
+            (int) $row['id_shipment'],
+            (string) $row['external_reference'],
+            (int) $row['id_order'],
+            (string) $row['carrier_name'],
+            (string) $row['tracking_number'],
+            $row['tracking_url'] !== null && $row['tracking_url'] !== '' ? (string) $row['tracking_url'] : null,
+            ShipmentStatus::from((string) $row['status']),
+            ShipmentDates::fromSaved($row['shipped_at']),
+            ShipmentDates::fromSaved($row['delivered_at']),
+            ShipmentDates::fromSaved($row['mail_sent_at']),
+            $lines[(int) $row['id_shipment']] ?? [],
+        ), $rows);
+    }
 
-        return $rows;
+    /**
+     * @return array<string, mixed> Column => value
+     */
+    private function changeableColumns(Shipment $shipment): array
+    {
+        return [
+            'carrier_name' => $shipment->carrierName,
+            'tracking_number' => $shipment->trackingNumber,
+            'tracking_url' => $shipment->trackingUrl,
+            'status' => $shipment->status->value,
+            'shipped_at' => $shipment->shippedAt,
+            'delivered_at' => $shipment->deliveredAt,
+        ];
     }
 
     /**

@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
-use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentQuantities;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentId;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
@@ -51,21 +51,18 @@ final class AddShipmentHandler
                 $command->lines
             );
 
-            [$shippedAt, $deliveredAt] = ShipmentDates::resolve($command->status, $command->shippedAt, $command->deliveredAt, null, null, new DateTimeImmutable());
-
-            $shipmentId = $this->shipments->add(
-                [
-                    'external_reference' => $command->externalReference,
-                    'id_order' => $command->orderId,
-                    'carrier_name' => $command->carrierName,
-                    'tracking_number' => $command->trackingNumber,
-                    'tracking_url' => $command->trackingUrl,
-                    'status' => $command->status->value,
-                    'shipped_at' => $shippedAt,
-                    'delivered_at' => $deliveredAt,
-                ],
-                $command->lines
-            );
+            $shipmentId = $this->shipments->add(Shipment::declare(
+                $command->externalReference,
+                $command->orderId,
+                $command->carrierName,
+                $command->trackingNumber,
+                $command->trackingUrl,
+                $command->status,
+                $command->shippedAt,
+                $command->deliveredAt,
+                $command->lines,
+                new DateTimeImmutable()
+            ));
 
             if ($shipment = $this->shipments->find($shipmentId)) {
                 $this->journal->added($shipment);

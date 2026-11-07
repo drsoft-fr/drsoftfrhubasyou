@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use DrSoftFr\Module\HubAsYou\Application\Service\OrderStatePolicy;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Install\Installer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentEffectsLog;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
@@ -164,7 +167,7 @@ class drsoftfrhubasyou extends Module
                 Configuration::updateValue(Settings::ORDER_STATE_DELIVERED, (int) Tools::getValue('order_state_delivered', 0));
                 Configuration::updateValue(Settings::SEND_MAIL, (int) (bool) Tools::getValue('send_mail', 0));
                 Configuration::updateValue(Settings::SEND_DELIVERED_MAIL, (int) (bool) Tools::getValue('send_delivered_mail', 0));
-                Settings::setChangeableStates(array_filter(
+                (new Settings())->setChangeableStates(array_filter(
                     array_column(OrderState::getOrderStates((int) $this->context->language->id), 'id_order_state'),
                     static fn ($stateId): bool => (bool) Tools::getValue('changeable_state_' . (int) $stateId)
                 ));
@@ -272,13 +275,14 @@ class drsoftfrhubasyou extends Module
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $settings = new Settings();
         $fieldsValue = [
-            'order_state_shipped' => Settings::getShippedState(),
-            'order_state_delivered' => Settings::getDeliveredState(),
-            'send_mail' => (int) Settings::isMailEnabled(),
-            'send_delivered_mail' => (int) Settings::isDeliveredMailEnabled(),
+            'order_state_shipped' => $settings->getShippedState(),
+            'order_state_delivered' => $settings->getDeliveredState(),
+            'send_mail' => (int) $settings->isMailEnabled(),
+            'send_delivered_mail' => (int) $settings->isDeliveredMailEnabled(),
         ];
-        $changeableStates = Settings::getChangeableStates();
+        $changeableStates = $settings->getChangeableStates();
 
         foreach ($orderStates as $state) {
             $fieldsValue['changeable_state_' . $state['id']] = in_array($state['id'], $changeableStates, true);
@@ -338,7 +342,7 @@ class drsoftfrhubasyou extends Module
                 ['edit', 'delete'],
                 static fn (string $action): bool => $employee && $employee->can($action, self::TAB_SHIPMENT)
             );
-            $order = new Order($orderId);
+            $order = (new OrderRepository())->find($orderId);
             $policy = $this->getStatePolicy();
 
             foreach ($shipments as &$shipment) {
@@ -349,7 +353,7 @@ class drsoftfrhubasyou extends Module
                     ]);
                 }
 
-                if (in_array('edit', $actions, true) && $policy->mayShipmentMailBeSent($order, $shipment)) {
+                if ($order && in_array('edit', $actions, true) && $policy->mayShipmentMailBeSent($order, ShipmentStatus::from($shipment['status']))) {
                     $shipment['mail_url'] = $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
                         'id_shipment' => $shipment['id'],
                     ]);
@@ -401,10 +405,12 @@ class drsoftfrhubasyou extends Module
 
             $effects = new ShipmentEffects(
                 $shipments,
+                new OrderRepository(),
                 $this->getStatePolicy(),
                 new OrderMailRepository(),
                 new ShipmentMailer(),
-                new OrderStateWriter()
+                new OrderStateWriter(),
+                new ShipmentEffectsLog()
             );
 
             (new OrderLock())->synchronized($orderId, static fn () => $effects->onOrderLinesChanged($orderId));
@@ -415,10 +421,9 @@ class drsoftfrhubasyou extends Module
 
     private function mayDeliveredMailBeSent(int $orderId): bool
     {
-        $order = new Order($orderId);
+        $order = (new OrderRepository())->find($orderId);
 
-        return Validate::isLoadedObject($order)
-            && $this->getStatePolicy()->mayDeliveredMailBeSent($order);
+        return $order && $this->getStatePolicy()->mayDeliveredMailBeSent($order);
     }
 
     /**
@@ -426,7 +431,7 @@ class drsoftfrhubasyou extends Module
      */
     private function getStatePolicy(): OrderStatePolicy
     {
-        return new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
+        return new OrderStatePolicy(new ShipmentRepository(), new OrderRepository(), new Settings());
     }
 
     /**
@@ -435,17 +440,16 @@ class drsoftfrhubasyou extends Module
      */
     private function getBlockedStateWarning(int $orderId): string
     {
-        $order = new Order($orderId);
+        $order = (new OrderRepository())->find($orderId);
 
-        if (!Validate::isLoadedObject($order)) {
+        if (!$order) {
             return '';
         }
 
         $policy = $this->getStatePolicy();
         $targetState = $policy->getTargetState($order, $policy->getProgress($orderId));
-        $currentState = (int) $order->getCurrentState();
 
-        if (!$targetState || $targetState === $currentState || $policy->mayChangeCurrentState($order)) {
+        if (!$targetState || $targetState === $order->currentState || $policy->mayChangeCurrentState($order)) {
             return '';
         }
 
@@ -455,35 +459,41 @@ class drsoftfrhubasyou extends Module
             'According to its parcels, this order should be in the state "%target%", but the module did not change it: its current state "%current%" is not one the module may change (module settings).',
             [
                 '%target%' => (new OrderState($targetState, $languageId))->name,
-                '%current%' => (new OrderState($currentState, $languageId))->name,
+                '%current%' => (new OrderState($order->currentState, $languageId))->name,
             ],
             'Modules.Drsoftfrhubasyou.Admin'
         );
     }
 
     /**
-     * Rows of the repository → data for the templates (labels and dates in the context language).
+     * Parcels → data for the templates (labels and dates in the context language).
+     *
+     * @param Shipment[] $shipments
      */
-    private function presentShipments(array $rows): array
+    private function presentShipments(array $shipments): array
     {
         $labels = $this->getStatusLabels();
-        $date = static fn (?string $value): string => $value ? Tools::displayDate($value) : '';
+        $date = static fn (?DateTimeImmutable $value): string => $value ? Tools::displayDate($value->format(ShipmentRepository::DATE_FORMAT)) : '';
 
-        return array_map(static fn (array $row): array => [
-            'id' => (int) $row['id_shipment'],
-            'external_reference' => (string) $row['external_reference'],
-            'carrier_name' => (string) $row['carrier_name'],
-            'tracking_number' => (string) $row['tracking_number'],
+        return array_map(static fn (Shipment $shipment): array => [
+            'id' => $shipment->id,
+            'external_reference' => $shipment->externalReference,
+            'carrier_name' => $shipment->carrierName,
+            'tracking_number' => $shipment->trackingNumber,
             // For {l} sprintf values, which are never escaped (and the front office |escape is a no-op)
-            'tracking_number_html' => htmlspecialchars((string) $row['tracking_number'], ENT_QUOTES, 'UTF-8'),
-            'tracking_url' => (string) ($row['tracking_url'] ?? ''),
-            'status' => (string) $row['status'],
-            'status_label' => $labels[$row['status']] ?? (string) $row['status'],
-            'shipped_at' => $date($row['shipped_at']),
-            'delivered_at' => $date($row['delivered_at']),
-            'mail_sent_at' => $date($row['mail_sent_at']),
-            'lines' => $row['lines'],
-        ], $rows);
+            'tracking_number_html' => htmlspecialchars($shipment->trackingNumber, ENT_QUOTES, 'UTF-8'),
+            'tracking_url' => (string) $shipment->trackingUrl,
+            'status' => $shipment->status->value,
+            'status_label' => $labels[$shipment->status->value],
+            'shipped_at' => $date($shipment->shippedAt),
+            'delivered_at' => $date($shipment->deliveredAt),
+            'mail_sent_at' => $date($shipment->mailSentAt),
+            'lines' => array_map(static fn (ShipmentLine $line): array => [
+                'quantity' => $line->quantity,
+                'product_name' => $line->productName,
+                'product_reference' => $line->productReference,
+            ], $shipment->lines),
+        ], $shipments);
     }
 
     /**

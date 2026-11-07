@@ -6,6 +6,8 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Mail;
 
 use Context;
 use Customer;
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use Language;
 use Link;
@@ -30,46 +32,42 @@ class ShipmentMailer
     /**
      * "Your parcel is on its way": one parcel, its content and its tracking.
      *
-     * @param array $shipment Row of ShipmentRepository (with its lines)
-     *
      * @return bool False when not sent (no valid customer, mail error)
      */
-    public function sendShipmentMail(Order $order, array $shipment): bool
+    public function sendShipmentMail(int $orderId, Shipment $shipment): bool
     {
-        return $this->send($order, self::TEMPLATE_SHIPMENT, 'Your parcel is on its way', $this->getShipmentMailVars($shipment));
+        return $this->send($orderId, self::TEMPLATE_SHIPMENT, 'Your parcel is on its way', $this->getShipmentMailVars($shipment));
     }
 
     /**
      * "Your order has been delivered": summary of every parcel of the order.
      *
-     * @param array[] $shipments Rows of ShipmentRepository (with their lines)
+     * @param Shipment[] $shipments
      *
      * @return bool False when not sent (no valid customer, mail error)
      */
-    public function sendDeliveredMail(Order $order, array $shipments): bool
+    public function sendDeliveredMail(int $orderId, array $shipments): bool
     {
-        return $this->send($order, self::TEMPLATE_DELIVERED, 'Your order has been delivered', $this->getDeliveredMailVars($shipments));
+        return $this->send($orderId, self::TEMPLATE_DELIVERED, 'Your order has been delivered', $this->getDeliveredMailVars($shipments));
     }
 
     /**
      * Variables of the "parcel on its way" template (without those of the customer and the order).
      *
-     * @param array $shipment Row of ShipmentRepository (with its lines)
-     *
      * @return array<string, string>
      */
-    public function getShipmentMailVars(array $shipment): array
+    public function getShipmentMailVars(Shipment $shipment): array
     {
         return $this->getTrackingVars($shipment) + [
-            '{products_html}' => $this->getProductsHtml($shipment['lines']),
-            '{products_txt}' => $this->getProductsTxt($shipment['lines']),
+            '{products_html}' => $this->getProductsHtml($shipment->lines),
+            '{products_txt}' => $this->getProductsTxt($shipment->lines),
         ];
     }
 
     /**
      * Variables of the "order delivered" template (without those of the customer and the order).
      *
-     * @param array[] $shipments Rows of ShipmentRepository (with their lines)
+     * @param Shipment[] $shipments
      *
      * @return array<string, string>
      */
@@ -82,10 +80,10 @@ class ShipmentMailer
             $vars = $this->getTrackingVars($shipment);
             $html .= '<tr><td style="padding:12px 0;border-top:1px solid #e5e5e5;">'
                 . $vars['{carrier_name_html}'] . ' · ' . $vars['{tracking_link_html}']
-                . $this->getProductsHtml($shipment['lines'], 'margin:8px 0 0;padding-left:18px;')
+                . $this->getProductsHtml($shipment->lines, 'margin:8px 0 0;padding-left:18px;')
                 . '</td></tr>';
             $txt .= $vars['{carrier_name}'] . ' · ' . $vars['{tracking_number}'] . "\n"
-                . $this->getProductsTxt($shipment['lines']) . "\n\n";
+                . $this->getProductsTxt($shipment->lines) . "\n\n";
         }
 
         return [
@@ -94,8 +92,9 @@ class ShipmentMailer
         ];
     }
 
-    private function send(Order $order, string $template, string $subject, array $vars): bool
+    private function send(int $orderId, string $template, string $subject, array $vars): bool
     {
+        $order = new Order($orderId);
         $customer = new Customer((int) $order->id_customer);
 
         if (!Validate::isLoadedObject($customer) || !Validate::isEmail($customer->email)) {
@@ -136,17 +135,15 @@ class ShipmentMailer
      *
      * @return array<string, string>
      */
-    private function getTrackingVars(array $shipment): array
+    private function getTrackingVars(Shipment $shipment): array
     {
-        $carrierName = (string) $shipment['carrier_name'];
-        $trackingNumber = (string) $shipment['tracking_number'];
-        $trackingUrl = (string) ($shipment['tracking_url'] ?? '');
-        $trackingNumberHtml = $this->escape($trackingNumber);
+        $trackingUrl = (string) $shipment->trackingUrl;
+        $trackingNumberHtml = $this->escape($shipment->trackingNumber);
 
         return [
-            '{carrier_name}' => $carrierName,
-            '{carrier_name_html}' => $this->escape($carrierName),
-            '{tracking_number}' => $trackingNumber,
+            '{carrier_name}' => $shipment->carrierName,
+            '{carrier_name_html}' => $this->escape($shipment->carrierName),
+            '{tracking_number}' => $shipment->trackingNumber,
             '{tracking_number_html}' => $trackingNumberHtml,
             '{tracking_url}' => $trackingUrl,
             '{tracking_link_html}' => $trackingUrl !== ''
@@ -155,23 +152,29 @@ class ShipmentMailer
         ];
     }
 
+    /**
+     * @param ShipmentLine[] $lines
+     */
     private function getProductsHtml(array $lines, string $style = 'margin:0;padding-left:18px;'): string
     {
         $items = '';
 
         foreach ($lines as $line) {
-            $items .= '<li>' . (int) $line['quantity'] . ' × ' . $this->escape((string) $line['product_name']) . '</li>';
+            $items .= '<li>' . $line->quantity . ' × ' . $this->escape($line->productName) . '</li>';
         }
 
         return '<ul style="' . $style . '">' . $items . '</ul>';
     }
 
+    /**
+     * @param ShipmentLine[] $lines
+     */
     private function getProductsTxt(array $lines): string
     {
         $text = '';
 
         foreach ($lines as $line) {
-            $text .= '- ' . (int) $line['quantity'] . ' x ' . $line['product_name'] . "\n";
+            $text .= '- ' . $line->quantity . ' x ' . $line->productName . "\n";
         }
 
         return rtrim($text);

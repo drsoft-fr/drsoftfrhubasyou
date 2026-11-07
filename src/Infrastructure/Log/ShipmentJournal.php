@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
+use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\Context\ApiClientContext;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
 use PrestaShopLogger;
@@ -14,8 +15,6 @@ use Throwable;
 /**
  * Who did what on a parcel, in the PrestaShop logs (Advanced parameters › Logs), attached
  * to the order. A failure here never refuses the action.
- *
- * Rows are those of ShipmentRepository::find(), with their lines.
  */
 class ShipmentJournal
 {
@@ -27,7 +26,7 @@ class ShipmentJournal
     ) {
     }
 
-    public function added(array $shipment): void
+    public function added(Shipment $shipment): void
     {
         $this->write($shipment, 'added', $this->describe($shipment));
     }
@@ -35,13 +34,14 @@ class ShipmentJournal
     /**
      * Only the values that changed; nothing is written when none did.
      */
-    public function edited(array $before, array $after): void
+    public function edited(Shipment $before, Shipment $after): void
     {
         $changes = [];
+        $newValues = $after->changeableValues();
 
-        foreach (ShipmentRepository::VERSIONED_COLUMNS as $column) {
-            if ((string) $before[$column] !== (string) $after[$column]) {
-                $changes[] = sprintf('%s: "%s" -> "%s"', $column, $before[$column], $after[$column]);
+        foreach ($before->changeableValues() as $name => $oldValue) {
+            if ((string) $oldValue !== (string) $newValues[$name]) {
+                $changes[] = sprintf('%s: "%s" -> "%s"', $name, $oldValue, $newValues[$name]);
             }
         }
 
@@ -50,7 +50,7 @@ class ShipmentJournal
         }
     }
 
-    public function deleted(array $shipment): void
+    public function deleted(Shipment $shipment): void
     {
         $this->write($shipment, 'deleted', $this->describe($shipment));
     }
@@ -66,30 +66,26 @@ class ShipmentJournal
     /**
      * "Parcel on its way" e-mail sent at the merchant's request.
      */
-    public function shipmentMailSent(array $shipment): void
+    public function shipmentMailSent(Shipment $shipment): void
     {
-        $orderId = (int) $shipment['id_order'];
-
-        $this->log($orderId, sprintf(
+        $this->log($shipment->orderId, sprintf(
             '%s - parcel #%d (%s) of order #%d: "parcel on its way" e-mail sent by %s',
             Settings::MODULE_NAME,
-            (int) $shipment['id_shipment'],
-            $shipment['external_reference'],
-            $orderId,
+            $shipment->id,
+            $shipment->externalReference,
+            $shipment->orderId,
             $this->getActor()
         ));
     }
 
-    private function write(array $shipment, string $action, string $details): void
+    private function write(Shipment $shipment, string $action, string $details): void
     {
-        $orderId = (int) $shipment['id_order'];
-
-        $this->log($orderId, sprintf(
+        $this->log($shipment->orderId, sprintf(
             '%s - parcel #%d (%s) of order #%d %s by %s: %s',
             Settings::MODULE_NAME,
-            (int) $shipment['id_shipment'],
-            $shipment['external_reference'],
-            $orderId,
+            $shipment->id,
+            $shipment->externalReference,
+            $shipment->orderId,
             $action,
             $this->getActor(),
             $details
@@ -126,18 +122,18 @@ class ShipmentJournal
         return $employee ? sprintf('employee #%d', $employee->getId()) : 'unknown';
     }
 
-    private function describe(array $shipment): string
+    private function describe(Shipment $shipment): string
     {
         $lines = array_map(
-            static fn (array $line): string => sprintf('%d x line %d', (int) $line['quantity'], (int) $line['id_order_detail']),
-            $shipment['lines']
+            static fn (ShipmentLine $line): string => sprintf('%d x line %d', $line->quantity, $line->orderDetailId),
+            $shipment->lines
         );
 
         return sprintf(
             'status "%s", carrier "%s", tracking "%s", %s',
-            $shipment['status'],
-            $shipment['carrier_name'],
-            $shipment['tracking_number'],
+            $shipment->status->value,
+            $shipment->carrierName,
+            $shipment->trackingNumber,
             implode(', ', $lines)
         );
     }

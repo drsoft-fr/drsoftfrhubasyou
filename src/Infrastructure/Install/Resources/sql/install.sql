@@ -18,7 +18,14 @@ CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment`
     PRIMARY KEY (`id_shipment`),
     UNIQUE KEY `uniq_dfhays_external_reference` (`external_reference`),
     KEY `idx_dfhays_order` (`id_order`),
-    CHECK (`status` IN ('shipped', 'in_transit', 'delivered', 'exception'))
+    CHECK (`status` IN ('shipped', 'in_transit', 'delivered', 'exception')),
+    CHECK (`external_reference` <> ''),
+    CHECK (`carrier_name` <> ''),
+    CHECK (`tracking_number` <> ''),
+    -- A delivery date if and only if the parcel is delivered. "Delivered after shipped" is left to
+    -- ShipmentDates: these columns hold local time, and the end of summer time can reverse two
+    -- dates that are in the right order
+    CHECK ((`status` = 'delivered') = (`delivered_at` IS NOT NULL))
 ) ENGINE = _MYSQL_ENGINE_
   DEFAULT CHARSET = utf8mb4;
 

@@ -35,7 +35,8 @@ final class ShipmentErrorMessages
         Refusal::INVALID_LINE => 'Each line needs a positive orderDetailId and quantity.',
         Refusal::NO_LINE => 'A parcel needs at least one line.',
         Refusal::INVALID_ID => 'Invalid shipment id %id%.',
-        Refusal::INVALID_DATE => '%fields% is not a valid date.',
+        Refusal::INVALID_DATE => '%fields% must be an ISO 8601 date with its time offset, for example 2026-11-05T10:12:00+01:00.',
+        Refusal::DATE_OUT_OF_RANGE => '%fields% cannot be before the year 2000, nor more than one day in the future.',
     ];
 
     private const BY_CLASS = [

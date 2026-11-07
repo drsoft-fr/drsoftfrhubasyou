@@ -14,15 +14,25 @@ use Exception;
  *   - a delivery date exists only for a delivered parcel (it goes when the parcel leaves
  *     the delivered state; sending one for a parcel that is not delivered is refused);
  *   - the delivery cannot come before the shipping;
+ *   - a date sent cannot be before 2000, nor more than a day in the future;
  *   - missing dates that the state implies default to now (shipping: to the delivery
  *     date when that is earlier, for a parcel declared delivered in the past).
  * The state itself can change freely: HubAsYou must be able to correct it.
  */
 final class ShipmentDates
 {
+    private const INPUT_FORMAT = '/^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})$/D';
+
+    /** Earliest date accepted: an earlier one is a mistake, and may not fit the database */
+    private const EARLIEST = '2000-01-01T00:00:00+00:00';
+
+    /** How far in the future a date is accepted: the clocks of two servers can differ */
+    private const LATEST_MARGIN = '+1 day';
+
     /**
-     * Date received from outside the module, null when it was not sent. An empty value is
-     * refused: PHP would read it as "now".
+     * Date received from outside the module, null when it was not sent. Only ISO 8601 with
+     * its time offset: PHP alone reads "" and "tomorrow" as dates, February 31 as March 3,
+     * and a date without an offset in the time zone of the shop, whatever the sender meant.
      *
      * @param 'shippedAt'|'deliveredAt' $field
      *
@@ -35,13 +45,13 @@ final class ShipmentDates
         }
 
         try {
-            if (trim($value) === '') {
-                throw new Exception('Empty date.');
+            if (!preg_match(self::INPUT_FORMAT, $value, $parts) || !checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])) {
+                throw new Exception('Not an ISO 8601 date with an offset.');
             }
 
             return new DateTimeImmutable($value);
         } catch (Exception $e) {
-            throw new ShipmentConstraintException(sprintf('%s is not a valid date.', $field), ShipmentConstraintException::INVALID_DATE, $e, ['fields' => [$field]]);
+            throw new ShipmentConstraintException(sprintf('%s must be an ISO 8601 date with its time offset.', $field), ShipmentConstraintException::INVALID_DATE, $e, ['fields' => [$field]]);
         }
     }
 
@@ -72,6 +82,9 @@ final class ShipmentDates
         ?DateTimeImmutable $savedDeliveredAt,
         DateTimeImmutable $now,
     ): array {
+        self::assertInRange('shippedAt', $sentShippedAt, $now);
+        self::assertInRange('deliveredAt', $sentDeliveredAt, $now);
+
         $delivered = $status === ShipmentStatus::Delivered;
 
         if ($sentDeliveredAt && !$delivered) {
@@ -90,5 +103,19 @@ final class ShipmentDates
         }
 
         return [$shippedAt, $deliveredAt];
+    }
+
+    /**
+     * Only for a date being sent: a parcel with an old saved date stays editable.
+     *
+     * @param 'shippedAt'|'deliveredAt' $field
+     *
+     * @throws ShipmentConstraintException
+     */
+    private static function assertInRange(string $field, ?DateTimeImmutable $date, DateTimeImmutable $now): void
+    {
+        if ($date && ($date < new DateTimeImmutable(self::EARLIEST) || $date > $now->modify(self::LATEST_MARGIN))) {
+            throw new ShipmentConstraintException(sprintf('%s is too old or too far in the future.', $field), ShipmentConstraintException::DATE_OUT_OF_RANGE, parameters: ['fields' => [$field]]);
+        }
     }
 }

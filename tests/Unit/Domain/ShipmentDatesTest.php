@@ -48,7 +48,77 @@ final class ShipmentDatesTest extends TestCase
             'spaces' => ['   '],
             'month 13' => ['2026-13-45'],
             'hour 25' => ['2026-11-05T25:00:00+01:00'],
+            'a word PHP understands' => ['tomorrow'],
+            'no offset' => ['2026-11-05T10:00:00'],
+            'no offset, with a space' => ['2026-11-05 10:00:00'],
+            'date only' => ['2026-11-05'],
+            'February 31: PHP would read March 3' => ['2026-02-31T10:00:00+01:00'],
+            'February 29 of a common year' => ['2026-02-29T10:00:00+01:00'],
+            'line break after a valid date' => ["2026-11-05T10:00:00+01:00\n"],
         ];
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function validDateProvider(): array
+    {
+        return [
+            'offset' => ['2026-11-05T10:12:00+01:00'],
+            'Z' => ['2026-11-05T09:12:00Z'],
+            'offset without a colon' => ['2026-11-05T10:12:00+0100'],
+            'negative offset' => ['2026-11-05T04:12:00-05:00'],
+            'milliseconds' => ['2026-11-05T09:12:00.123Z'],
+            'February 29 of a leap year' => ['2024-02-29T10:00:00+01:00'],
+        ];
+    }
+
+    #[DataProvider('validDateProvider')]
+    public function testAValidFormatIsAccepted(string $value): void
+    {
+        self::assertInstanceOf(DateTimeImmutable::class, ShipmentDates::fromInput('shippedAt', $value));
+    }
+
+    public function testADateCanBeOneDayAheadAtMost(): void
+    {
+        $limit = $this->now->modify('+1 day');
+
+        self::assertEquals([$limit, null], ShipmentDates::resolve(ShipmentStatus::Shipped, $limit, null, null, null, $this->now));
+
+        $this->expectException(ShipmentConstraintException::class);
+        $this->expectExceptionCode(ShipmentConstraintException::DATE_OUT_OF_RANGE);
+
+        ShipmentDates::resolve(ShipmentStatus::Shipped, $limit->modify('+1 second'), null, null, null, $this->now);
+    }
+
+    public function testADateBefore2000IsRefused(): void
+    {
+        $first = new DateTimeImmutable('2000-01-01T00:00:00+00:00');
+
+        self::assertEquals([$first, null], ShipmentDates::resolve(ShipmentStatus::Shipped, $first, null, null, null, $this->now));
+
+        $this->expectException(ShipmentConstraintException::class);
+        $this->expectExceptionCode(ShipmentConstraintException::DATE_OUT_OF_RANGE);
+
+        ShipmentDates::resolve(ShipmentStatus::Shipped, $first->modify('-1 second'), null, null, null, $this->now);
+    }
+
+    public function testADeliveryDateOutOfRangeIsRefusedAndNamed(): void
+    {
+        try {
+            ShipmentDates::resolve(ShipmentStatus::Delivered, null, new DateTimeImmutable('2099-01-01T10:00:00+01:00'), null, null, $this->now);
+            self::fail('Refusal expected');
+        } catch (ShipmentConstraintException $e) {
+            self::assertSame(ShipmentConstraintException::DATE_OUT_OF_RANGE, $e->getCode());
+            self::assertStringStartsWith('deliveredAt cannot be', ShipmentErrorMessages::for($e));
+        }
+    }
+
+    public function testAnOldSavedDateDoesNotBlockAChange(): void
+    {
+        $old = new DateTimeImmutable('1995-01-01 00:00:00');
+
+        self::assertEquals([$old, null], ShipmentDates::resolve(ShipmentStatus::InTransit, null, null, $old, null, $this->now));
     }
 
     #[DataProvider('invalidDateProvider')]
@@ -59,7 +129,7 @@ final class ShipmentDatesTest extends TestCase
             self::fail('Refusal expected');
         } catch (ShipmentConstraintException $e) {
             self::assertSame(ShipmentConstraintException::INVALID_DATE, $e->getCode());
-            self::assertSame('deliveredAt is not a valid date.', ShipmentErrorMessages::for($e));
+            self::assertSame('deliveredAt must be an ISO 8601 date with its time offset, for example 2026-11-05T10:12:00+01:00.', ShipmentErrorMessages::for($e));
         }
     }
 

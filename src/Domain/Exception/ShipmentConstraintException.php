@@ -31,6 +31,7 @@ class ShipmentConstraintException extends ShipmentException
     public const NO_LINE = 17;
     public const INVALID_ID = 18;
     public const INVALID_DATE = 19;
+    public const DATE_OUT_OF_RANGE = 20;
 
     public static function duplicateReference(string $externalReference): self
     {

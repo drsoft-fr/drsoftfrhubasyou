@@ -155,6 +155,15 @@ class drsoftfrhubasyou extends Module
     }
 
     /**
+     * True when a form of the back office was really sent. Tools::isSubmit() alone also
+     * accepts a GET: a mere link with the tokens would change or delete data.
+     */
+    public function isPosted(string $submit): bool
+    {
+        return Tools::isSubmit($submit) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
+    }
+
+    /**
      * Configuration page: order states and e-mail, plus the steps to give HubAsYou its access.
      */
     public function getContent(): string
@@ -162,7 +171,7 @@ class drsoftfrhubasyou extends Module
         $output = '';
 
         try {
-            if (Tools::isSubmit('submitDrSoftFrHubAsYouConfig')) {
+            if ($this->isPosted('submitDrSoftFrHubAsYouConfig')) {
                 Configuration::updateValue(Settings::ORDER_STATE_SHIPPED, (int) Tools::getValue('order_state_shipped', 0));
                 Configuration::updateValue(Settings::ORDER_STATE_DELIVERED, (int) Tools::getValue('order_state_delivered', 0));
                 Configuration::updateValue(Settings::SEND_MAIL, (int) (bool) Tools::getValue('send_mail', 0));

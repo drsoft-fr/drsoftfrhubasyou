@@ -73,7 +73,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         $shipmentId = $this->shipment->id;
 
         // Button of the order page (sent with a parcel of the order): the answer is shown there
-        if (Tools::isSubmit('submitHubAsYouDeliveredMail') && $this->checkPermission('edit')) {
+        if ($this->module->isPosted('submitHubAsYouDeliveredMail') && $this->checkPermission('edit')) {
             try {
                 $this->getCommandBus()->handle(new SendDeliveredMailCommand($this->shipment->orderId));
             } catch (ShipmentException $e) {
@@ -83,7 +83,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             $this->redirectToOrder($this->trans('The order delivered e-mail has been sent.', [], self::DOMAIN));
         }
 
-        if (Tools::isSubmit('submitHubAsYouShipmentMail') && $this->checkPermission('edit')) {
+        if ($this->module->isPosted('submitHubAsYouShipmentMail') && $this->checkPermission('edit')) {
             try {
                 $this->getCommandBus()->handle(new SendShipmentMailCommand($shipmentId));
             } catch (ShipmentException $e) {
@@ -94,7 +94,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         }
 
         try {
-            if (Tools::isSubmit('submitHubAsYouShipmentEdit') && $this->checkPermission('edit')) {
+            if ($this->module->isPosted('submitHubAsYouShipmentEdit') && $this->checkPermission('edit')) {
                 $this->getCommandBus()->handle(new EditShipmentCommand(
                     $shipmentId,
                     (string) Tools::getValue('carrier_name'),
@@ -109,7 +109,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                 $this->redirectToOrder($this->trans('Parcel %reference% updated.', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN));
             }
 
-            if (Tools::isSubmit('submitHubAsYouShipmentDelete') && $this->checkPermission('delete')) {
+            if ($this->module->isPosted('submitHubAsYouShipmentDelete') && $this->checkPermission('delete')) {
                 $this->getCommandBus()->handle(new DeleteShipmentCommand($shipmentId));
 
                 $this->redirectToOrder($this->trans('Parcel %reference% deleted.', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN));

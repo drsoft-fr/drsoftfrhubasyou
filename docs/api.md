@@ -134,7 +134,7 @@ Réponse `200 OK` : le colis complet.
 | `400` | JSON mal formé, ou champ d'un type incorrect | message |
 | `401` | jeton absent, invalide ou expiré | message |
 | `403` | jeton sans le droit demandé | message |
-| `404` | colis introuvable | `detail` : par exemple `Parcel 12 not found.` |
+| `404` | colis introuvable ; ou identifiant mal écrit dans l'URL (`1.5`, `01`, `abc`…), qui ne désigne aucun colis | `detail` : par exemple `Parcel 12 not found.` ; pour un identifiant mal écrit, seul le code est garanti |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
 | `422` | refus métier : `externalReference` déjà utilisée, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `500` | **temporaire** : erreur technique de la boutique, base de données indisponible par exemple. La réponse ne dit rien de la demande | message générique ; renvoyer la même requête plus tard |

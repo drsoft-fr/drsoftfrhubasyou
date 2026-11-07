@@ -33,6 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new CQRSGet(
             uriTemplate: '/hubasyou/shipments/{shipmentId}',
+            requirements: self::ID_REQUIREMENT,
             CQRSQuery: GetShipmentForEditing::class,
             scopes: ['hubasyou_shipment_read'],
         ),
@@ -45,6 +46,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new CQRSPartialUpdate(
             uriTemplate: '/hubasyou/shipments/{shipmentId}',
+            requirements: self::ID_REQUIREMENT,
             validationContext: ['groups' => ['Default', 'Update']],
             CQRSCommand: EditShipmentCommand::class,
             CQRSQuery: GetShipmentForEditing::class,
@@ -52,7 +54,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new CQRSDelete(
             uriTemplate: '/hubasyou/shipments/{shipmentId}',
-            requirements: ['shipmentId' => '\d+'],
+            requirements: self::ID_REQUIREMENT,
             CQRSCommand: DeleteShipmentCommand::class,
             scopes: ['hubasyou_shipment_write'],
         ),
@@ -67,6 +69,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 class Shipment
 {
+    /**
+     * Only a whole number written the normal way names a parcel. Without it, PHP's conversion
+     * makes "1.5", "1abc" or "01" the parcel 1: a typing mistake would act on another parcel.
+     */
+    private const ID_REQUIREMENT = ['shipmentId' => '[1-9]\d*'];
+
     /** OpenAPI schema of the lines of a parcel (also used by ShipmentList) */
     public const LINES_OPENAPI = [
         'type' => 'array',

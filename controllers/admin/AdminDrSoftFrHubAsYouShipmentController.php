@@ -49,7 +49,13 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     {
         parent::init();
 
-        $this->shipment = (new ShipmentRepository())->find((int) Tools::getValue('id_shipment'));
+        try {
+            $this->shipment = (new ShipmentRepository())->find((int) Tools::getValue('id_shipment'));
+        } catch (ShipmentException $e) {
+            $this->addError($this->getErrorMessage($e));
+
+            return;
+        }
 
         if (!$this->shipment) {
             $this->addError($this->trans('Parcel not found.', [], self::DOMAIN));

@@ -48,7 +48,7 @@ class OrderMailRepository
      */
     public function findDeliveredMailDate(int $orderId): ?string
     {
-        return Db::getInstance()->getValue(
+        return DatabaseReader::value(
             (new DbQuery())
                 ->select('delivered_mail_sent_at')
                 ->from(self::TABLE)

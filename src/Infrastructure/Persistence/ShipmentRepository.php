@@ -37,9 +37,9 @@ class ShipmentRepository
             ->select('s.*')
             ->from(self::TABLE, 's')
             ->where('s.id_shipment = ' . $shipmentId);
-        $row = Db::getInstance()->getRow($query);
+        $row = DatabaseReader::row($query);
 
-        if (!$row) {
+        if ($row === null) {
             return null;
         }
 
@@ -65,7 +65,7 @@ class ShipmentRepository
             ->from(self::TABLE)
             ->where("external_reference = '" . pSQL($externalReference, true) . "'");
 
-        return (bool) Db::getInstance()->getValue($query);
+        return (bool) DatabaseReader::value($query);
     }
 
     /**
@@ -79,7 +79,7 @@ class ShipmentRepository
             ->where('s.id_order = ' . $orderId)
             ->orderBy('s.id_shipment ASC');
 
-        return $this->withLines(Db::getInstance()->executeS($query) ?: []);
+        return $this->withLines(DatabaseReader::rows($query));
     }
 
     /**
@@ -99,8 +99,7 @@ class ShipmentRepository
             $where[] = "s.external_reference = '" . pSQL($externalReference, true) . "'";
         }
 
-        $db = Db::getInstance();
-        $count = (int) $db->getValue(
+        $count = (int) DatabaseReader::value(
             (new DbQuery())->select('COUNT(*)')->from(self::TABLE, 's')->where(implode(' AND ', $where))
         );
         $query = (new DbQuery())
@@ -110,7 +109,7 @@ class ShipmentRepository
             ->orderBy('s.id_shipment DESC')
             ->limit(max(1, $limit), max(0, $offset));
 
-        return [$this->withLines($db->executeS($query) ?: []), $count];
+        return [$this->withLines(DatabaseReader::rows($query)), $count];
     }
 
     /**
@@ -259,7 +258,7 @@ class ShipmentRepository
 
         $quantities = [];
 
-        foreach (Db::getInstance()->executeS($query) ?: [] as $row) {
+        foreach (DatabaseReader::rows($query) as $row) {
             $quantities[(int) $row['id_order_detail']] = (int) $row['quantity'];
         }
 
@@ -284,7 +283,7 @@ class ShipmentRepository
             ->orderBy('l.id_shipment_line ASC');
         $lines = [];
 
-        foreach (Db::getInstance()->executeS($query) ?: [] as $line) {
+        foreach (DatabaseReader::rows($query) as $line) {
             $lines[(int) $line['id_shipment']][] = [
                 'id_order_detail' => (int) $line['id_order_detail'],
                 'quantity' => (int) $line['quantity'],

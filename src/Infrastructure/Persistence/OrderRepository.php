@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use Db;
 use DbQuery;
 
 /**
@@ -21,9 +20,7 @@ class OrderRepository
      */
     public function findLines(int $orderId): ?array
     {
-        $db = Db::getInstance();
-
-        if (!$db->getValue((new DbQuery())->select('1')->from('orders')->where('id_order = ' . $orderId))) {
+        if (!DatabaseReader::value((new DbQuery())->select('1')->from('orders')->where('id_order = ' . $orderId))) {
             return null;
         }
 
@@ -34,7 +31,7 @@ class OrderRepository
             ->where('od.id_order = ' . $orderId);
         $lines = [];
 
-        foreach ($db->executeS($query) ?: [] as $row) {
+        foreach (DatabaseReader::rows($query) as $row) {
             $lines[(int) $row['id_order_detail']] = [
                 'ordered' => (int) $row['product_quantity'],
                 'refunded' => (int) $row['product_quantity_refunded'],
@@ -51,7 +48,7 @@ class OrderRepository
      */
     public function hasHadState(int $orderId, int $stateId): bool
     {
-        return (bool) Db::getInstance()->getValue(
+        return (bool) DatabaseReader::value(
             (new DbQuery())
                 ->select('1')
                 ->from('order_history')

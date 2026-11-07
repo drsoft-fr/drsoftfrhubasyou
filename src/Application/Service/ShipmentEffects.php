@@ -27,8 +27,9 @@ use Throwable;
  * lines of the order change (refund, return) and when a parcel is deleted.
  *
  * Everything is worked out again from the saved parcels each time, so a step that
- * failed is done at the next save. A failure never refuses the parcel: it is logged
- * (Advanced parameters › Logs).
+ * failed is done at the next save. A failure never refuses the parcel and never stops
+ * the other steps: an e-mail that cannot leave does not hold back the order state. It
+ * is logged (Advanced parameters › Logs).
  */
 class ShipmentEffects
 {
@@ -64,7 +65,11 @@ class ShipmentEffects
                 return;
             }
 
-            $this->sendShipmentMailOnce($order, $shipment);
+            $this->attempt(
+                sprintf('parcel #%d, "parcel on its way" e-mail', $shipmentId),
+                $orderId,
+                fn () => $this->sendShipmentMailOnce($order, $shipment)
+            );
             $this->applyProgress($order);
         }, function (Throwable $t) use ($shipmentId, &$orderId): void {
             $this->log->failure(sprintf('parcel #%d', $shipmentId), $t, $orderId);
@@ -175,10 +180,32 @@ class ShipmentEffects
     {
         $progress = $this->statePolicy->getProgress($order->id);
 
-        $this->updateOrderState($order, $progress);
+        $this->attempt(
+            sprintf('order #%d, state', $order->id),
+            $order->id,
+            fn () => $this->updateOrderState($order, $progress)
+        );
 
         if ($progress === OrderShippingProgress::Delivered) {
-            $this->sendDeliveredMailOnce($order);
+            $this->attempt(
+                sprintf('order #%d, "order delivered" e-mail', $order->id),
+                $order->id,
+                fn () => $this->sendDeliveredMailOnce($order)
+            );
+        }
+    }
+
+    /**
+     * One step of the effects: its failure is logged and the next step still runs.
+     *
+     * @param callable(): void $step
+     */
+    private function attempt(string $subject, int $orderId, callable $step): void
+    {
+        try {
+            $step();
+        } catch (Throwable $t) {
+            $this->log->failure($subject, $t, $orderId);
         }
     }
 

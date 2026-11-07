@@ -7,6 +7,7 @@ namespace DrSoftFr\Module\HubAsYou\Domain;
 use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+use Exception;
 
 /**
  * Dates of a parcel and their rules:
@@ -19,6 +20,31 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
  */
 final class ShipmentDates
 {
+    /**
+     * Date received from outside the module, null when it was not sent. An empty value is
+     * refused: PHP would read it as "now".
+     *
+     * @param 'shippedAt'|'deliveredAt' $field
+     *
+     * @throws ShipmentConstraintException
+     */
+    public static function fromInput(string $field, ?string $value): ?DateTimeImmutable
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            if (trim($value) === '') {
+                throw new Exception('Empty date.');
+            }
+
+            return new DateTimeImmutable($value);
+        } catch (Exception $e) {
+            throw new ShipmentConstraintException(sprintf('%s is not a valid date.', $field), ShipmentConstraintException::INVALID_DATE, $e, ['fields' => [$field]]);
+        }
+    }
+
     /**
      * Date saved on a parcel, null when it has none.
      */

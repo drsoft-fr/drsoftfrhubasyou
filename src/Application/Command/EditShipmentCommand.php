@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\Command;
 
 use DateTimeImmutable;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentId;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
@@ -32,6 +33,10 @@ final class EditShipmentCommand
 
     public readonly ?ShipmentStatus $status;
 
+    public readonly ?DateTimeImmutable $shippedAt;
+
+    public readonly ?DateTimeImmutable $deliveredAt;
+
     public readonly ?string $externalReference;
 
     /**
@@ -48,8 +53,8 @@ final class EditShipmentCommand
         ?string $trackingNumber = null,
         ?string $trackingUrl = null,
         ?string $status = null,
-        public readonly ?DateTimeImmutable $shippedAt = null,
-        public readonly ?DateTimeImmutable $deliveredAt = null,
+        ?string $shippedAt = null,
+        ?string $deliveredAt = null,
         public readonly ?string $expectedVersion = null,
         ?string $externalReference = null,
         public readonly ?int $orderId = null,
@@ -62,5 +67,7 @@ final class EditShipmentCommand
         $this->trackingNumber = $trackingNumber === null ? null : ShipmentRules::text('trackingNumber', $trackingNumber);
         $this->trackingUrl = $trackingUrl === null ? null : (ShipmentRules::url($trackingUrl) ?? '');
         $this->status = $status === null ? null : ShipmentStatus::fromInput($status);
+        $this->shippedAt = ShipmentDates::fromInput('shippedAt', $shippedAt);
+        $this->deliveredAt = ShipmentDates::fromInput('deliveredAt', $deliveredAt);
     }
 }

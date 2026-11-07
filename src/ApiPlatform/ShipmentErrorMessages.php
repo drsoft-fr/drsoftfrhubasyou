@@ -35,6 +35,7 @@ final class ShipmentErrorMessages
         Refusal::INVALID_LINE => 'Each line needs a positive orderDetailId and quantity.',
         Refusal::NO_LINE => 'A parcel needs at least one line.',
         Refusal::INVALID_ID => 'Invalid shipment id %id%.',
+        Refusal::INVALID_DATE => '%fields% is not a valid date.',
     ];
 
     private const BY_CLASS = [
@@ -43,7 +44,7 @@ final class ShipmentErrorMessages
         OrderBusyException::class => 'The parcels of order %order% are being updated by another request: send this request again in a moment.',
     ];
 
-    private const FIELD_NAMES = ['externalReference', 'orderId', 'lines', 'carrierName', 'trackingNumber'];
+    private const FIELD_NAMES = ['externalReference', 'orderId', 'lines', 'carrierName', 'trackingNumber', 'shippedAt', 'deliveredAt'];
 
     public static function for(ShipmentException $exception): string
     {

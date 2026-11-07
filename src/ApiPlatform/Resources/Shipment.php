@@ -6,7 +6,6 @@ namespace DrSoftFr\Module\HubAsYou\ApiPlatform\Resources;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
@@ -117,9 +116,15 @@ class Shipment
     #[Assert\Choice(callback: [ShipmentStatus::class, 'values'])]
     public string $status;
 
-    public ?DateTimeImmutable $shippedAt;
+    /**
+     * The dates stay text here and are read by the commands: read as a date here, a wrong
+     * value would stop the request with a 500, which tells the sender to try again.
+     */
+    #[ApiProperty(openapiContext: ['type' => 'string', 'format' => 'date-time'])]
+    public ?string $shippedAt;
 
-    public ?DateTimeImmutable $deliveredAt;
+    #[ApiProperty(openapiContext: ['type' => 'string', 'format' => 'date-time'])]
+    public ?string $deliveredAt;
 
     #[ApiProperty(openapiContext: [...self::LINES_OPENAPI, 'example' => [['orderDetailId' => 101, 'quantity' => 1]]])]
     #[Assert\NotBlank(groups: ['Create'])]

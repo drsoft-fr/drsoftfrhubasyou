@@ -9,11 +9,10 @@ use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
@@ -24,7 +23,7 @@ final class EditShipmentHandler
     public function __construct(
         private readonly ShipmentRepository $shipments,
         private readonly ShipmentEffects $effects,
-        private readonly OrderLock $lock,
+        private readonly ShipmentLock $lock,
         private readonly ShipmentJournal $journal,
     ) {
     }
@@ -35,12 +34,8 @@ final class EditShipmentHandler
     public function handle(EditShipmentCommand $command): void
     {
         $shipmentId = $command->shipmentId->getValue();
-        $orderId = (int) ($this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId))['id_order'];
 
-        $this->lock->synchronized($orderId, function () use ($command, $shipmentId): void {
-            // Read again under the lock: the parcel may have changed or been deleted meanwhile
-            $current = $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
-
+        $this->lock->synchronized($shipmentId, function (array $current) use ($command, $shipmentId): void {
             ShipmentRules::assertContentUnchanged(
                 $command->externalReference,
                 $command->orderId,
@@ -68,14 +63,12 @@ final class EditShipmentHandler
             }
 
             // Dates sent, otherwise the saved ones, made consistent with the state of the parcel
-            $date = static fn (?string $value): ?DateTimeImmutable => $value ? new DateTimeImmutable($value) : null;
-
             [$data['shipped_at'], $data['delivered_at']] = ShipmentDates::resolve(
                 $command->status ?? ShipmentStatus::from((string) $current['status']),
                 $command->shippedAt,
                 $command->deliveredAt,
-                $date($current['shipped_at']),
-                $date($current['delivered_at']),
+                ShipmentDates::fromSaved($current['shipped_at']),
+                ShipmentDates::fromSaved($current['delivered_at']),
                 new DateTimeImmutable()
             );
 

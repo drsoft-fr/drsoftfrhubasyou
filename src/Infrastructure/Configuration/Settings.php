@@ -13,6 +13,9 @@ use Order;
  */
 final class Settings
 {
+    /** Technical name of the module (logs, path of the e-mail templates) */
+    public const MODULE_NAME = 'drsoftfrhubasyou';
+
     /** Order state set when the first parcel leaves (0: unchanged) */
     public const ORDER_STATE_SHIPPED = 'DRSOFT_FR_HUBASYOU_ORDER_STATE_SHIPPED';
 

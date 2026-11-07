@@ -6,13 +6,13 @@ services:
     autoconfigure: true
 
   # Infrastructure
-  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository:
-    public: true
+  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal: ~
 
   # Admin API: must run before the error listener of API Platform (priority -96)

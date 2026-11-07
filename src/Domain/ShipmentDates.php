@@ -20,6 +20,14 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 final class ShipmentDates
 {
     /**
+     * Date saved on a parcel, null when it has none.
+     */
+    public static function fromSaved(?string $value): ?DateTimeImmutable
+    {
+        return $value ? new DateTimeImmutable($value) : null;
+    }
+
+    /**
      * @param ShipmentStatus $status State of the parcel after the change
      * @param ?DateTimeImmutable $sentShippedAt Date sent with the change
      * @param ?DateTimeImmutable $sentDeliveredAt Date sent with the change

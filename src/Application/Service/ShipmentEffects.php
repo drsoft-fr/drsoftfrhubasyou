@@ -31,8 +31,6 @@ use Validate;
  */
 class ShipmentEffects
 {
-    private const MODULE_NAME = 'drsoftfrhubasyou';
-
     /** Changing the state of an order can save its lines: no second run from that hook */
     private static bool $running = false;
 
@@ -186,7 +184,7 @@ class ShipmentEffects
     private function logFailure(string $subject, Throwable $t, int $orderId): void
     {
         PrestaShopLogger::addLog(
-            sprintf('%s - %s - %s', self::MODULE_NAME, $subject, $t->getMessage()),
+            sprintf('%s - %s - %s', Settings::MODULE_NAME, $subject, $t->getMessage()),
             3,
             (int) $t->getCode(),
             'Order',
@@ -269,7 +267,7 @@ class ShipmentEffects
 
         if (!$this->statePolicy->mayChangeCurrentState($order)) {
             PrestaShopLogger::addLog(
-                sprintf('%s - order #%d: state not changed to %d, the current state %d is not one the module may change (module settings)', self::MODULE_NAME, $orderId, $targetState, $currentState),
+                sprintf('%s - order #%d: state not changed to %d, the current state %d is not one the module may change (module settings)', Settings::MODULE_NAME, $orderId, $targetState, $currentState),
                 2,
                 null,
                 'Order',

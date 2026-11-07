@@ -13,7 +13,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
  *
  * Named lock of the database (GET_LOCK), held by the connection: released at the end
  * of the work, or by the database if the PHP process dies. No transaction stays open
- * while the e-mails are sent. One lock per request at most, so no deadlock.
+ * while the e-mails are sent. A request can take the lock of its order again, for example
+ * from the hook of an order line saved by a state change: the database counts the nested
+ * locks, and each one is released in turn. A request works on one order at a time, so no
+ * deadlock between two requests.
  */
 class OrderLock
 {

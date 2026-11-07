@@ -25,6 +25,13 @@ final class ShipmentDatesTest extends TestCase
         $this->tomorrow = new DateTimeImmutable('2026-11-07 12:00:00');
     }
 
+    public function testASavedDateIsRead(): void
+    {
+        self::assertEquals($this->now, ShipmentDates::fromSaved('2026-11-06 12:00:00'));
+        self::assertNull(ShipmentDates::fromSaved(null));
+        self::assertNull(ShipmentDates::fromSaved(''));
+    }
+
     public function testNewShippedParcelLeavesNow(): void
     {
         self::assertEquals(

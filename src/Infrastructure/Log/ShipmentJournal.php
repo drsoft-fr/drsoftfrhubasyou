@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
+use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\Context\ApiClientContext;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
@@ -18,7 +19,6 @@ use Throwable;
  */
 class ShipmentJournal
 {
-    private const MODULE_NAME = 'drsoftfrhubasyou';
     private const SEVERITY_INFORMATIVE = 1;
 
     public function __construct(
@@ -60,7 +60,7 @@ class ShipmentJournal
      */
     public function deliveredMailSent(int $orderId): void
     {
-        $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', self::MODULE_NAME, $orderId, $this->getActor()));
+        $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', Settings::MODULE_NAME, $orderId, $this->getActor()));
     }
 
     /**
@@ -72,7 +72,7 @@ class ShipmentJournal
 
         $this->log($orderId, sprintf(
             '%s - parcel #%d (%s) of order #%d: "parcel on its way" e-mail sent by %s',
-            self::MODULE_NAME,
+            Settings::MODULE_NAME,
             (int) $shipment['id_shipment'],
             $shipment['external_reference'],
             $orderId,
@@ -86,7 +86,7 @@ class ShipmentJournal
 
         $this->log($orderId, sprintf(
             '%s - parcel #%d (%s) of order #%d %s by %s: %s',
-            self::MODULE_NAME,
+            Settings::MODULE_NAME,
             (int) $shipment['id_shipment'],
             $shipment['external_reference'],
             $orderId,

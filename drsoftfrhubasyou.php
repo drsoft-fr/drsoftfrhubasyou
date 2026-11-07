@@ -138,7 +138,7 @@ class drsoftfrhubasyou extends Module
     private function isBeingReset(): bool
     {
         foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-            if (($frame['function'] ?? '') === 'reset' && ($frame['class'] ?? '') === ModuleManager::class) {
+            if ($frame['function'] === 'reset' && ($frame['class'] ?? '') === ModuleManager::class) {
                 return true;
             }
         }
@@ -328,7 +328,8 @@ class drsoftfrhubasyou extends Module
     public function hookDisplayAdminOrderMain(array $params): string
     {
         try {
-            $shipments = $this->presentShipments((new ShipmentRepository())->findByOrder((int) ($params['id_order'] ?? 0)));
+            $orderId = (int) ($params['id_order'] ?? 0);
+            $shipments = $this->presentShipments((new ShipmentRepository())->findByOrder($orderId));
 
             // Buttons only for the permissions of the employee's profile on the parcel tab
             // (the controller checks them again)
@@ -337,8 +338,8 @@ class drsoftfrhubasyou extends Module
                 ['edit', 'delete'],
                 static fn (string $action): bool => $employee && $employee->can($action, self::TAB_SHIPMENT)
             );
-            $order = new Order((int) ($params['id_order'] ?? 0));
-            $policy = new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
+            $order = new Order($orderId);
+            $policy = $this->getStatePolicy();
 
             foreach ($shipments as &$shipment) {
                 foreach ($actions as $action) {
@@ -356,12 +357,15 @@ class drsoftfrhubasyou extends Module
             }
             unset($shipment);
 
+            $deliveredMailDate = (new OrderMailRepository())->findDeliveredMailDate($orderId);
+            $deliveredMailAllowed = $shipments && $this->mayDeliveredMailBeSent($orderId);
+
             $this->context->smarty->assign([
                 'hubasyou_shipments' => $shipments,
-                'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning((int) $params['id_order']) : '',
-                'hubasyou_delivered_mail_at' => ($date = (new OrderMailRepository())->findDeliveredMailDate((int) ($params['id_order'] ?? 0))) ? Tools::displayDate($date) : '',
-                'hubasyou_delivered_mail_allowed' => $mailAllowed = $shipments && $this->mayDeliveredMailBeSent((int) $params['id_order']),
-                'hubasyou_delivered_mail_url' => $mailAllowed && in_array('edit', $actions, true) ? $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
+                'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning($orderId) : '',
+                'hubasyou_delivered_mail_at' => $deliveredMailDate ? Tools::displayDate($deliveredMailDate) : '',
+                'hubasyou_delivered_mail_allowed' => $deliveredMailAllowed,
+                'hubasyou_delivered_mail_url' => $deliveredMailAllowed && in_array('edit', $actions, true) ? $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], [
                     'id_shipment' => $shipments[0]['id'],
                 ]) : '',
             ]);
@@ -397,7 +401,7 @@ class drsoftfrhubasyou extends Module
 
             $effects = new ShipmentEffects(
                 $shipments,
-                new OrderStatePolicy($shipments, new OrderRepository()),
+                $this->getStatePolicy(),
                 new OrderMailRepository(),
                 new ShipmentMailer(),
                 new OrderStateWriter()
@@ -414,7 +418,15 @@ class drsoftfrhubasyou extends Module
         $order = new Order($orderId);
 
         return Validate::isLoadedObject($order)
-            && (new OrderStatePolicy(new ShipmentRepository(), new OrderRepository()))->mayDeliveredMailBeSent($order);
+            && $this->getStatePolicy()->mayDeliveredMailBeSent($order);
+    }
+
+    /**
+     * Hooks run outside the kernels that load config/services.yml (front office): no container.
+     */
+    private function getStatePolicy(): OrderStatePolicy
+    {
+        return new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
     }
 
     /**
@@ -429,7 +441,7 @@ class drsoftfrhubasyou extends Module
             return '';
         }
 
-        $policy = new OrderStatePolicy(new ShipmentRepository(), new OrderRepository());
+        $policy = $this->getStatePolicy();
         $targetState = $policy->getTargetState($order, $policy->getProgress($orderId));
         $currentState = (int) $order->getCurrentState();
 

@@ -52,7 +52,7 @@ final class ShipmentRules
             || !in_array($scheme, ['http', 'https'], true)
             || filter_var($value, FILTER_VALIDATE_URL) === false
         ) {
-            throw new ShipmentConstraintException('trackingUrl must be an http(s) URL of 255 characters at most.', ShipmentConstraintException::INVALID_URL);
+            throw new ShipmentConstraintException(sprintf('trackingUrl must be an http(s) URL of %d characters at most.', self::URL_MAX_LENGTH), ShipmentConstraintException::INVALID_URL, parameters: ['max' => self::URL_MAX_LENGTH]);
         }
 
         return $value;

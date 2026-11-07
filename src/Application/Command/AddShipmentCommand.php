@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\Command;
 
 use DateTimeImmutable;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 
@@ -47,8 +46,7 @@ final class AddShipmentCommand
         $this->carrierName = ShipmentRules::text('carrierName', $carrierName);
         $this->trackingNumber = ShipmentRules::text('trackingNumber', $trackingNumber);
         $this->trackingUrl = ShipmentRules::url($trackingUrl);
-        $this->status = ShipmentStatus::tryFrom($status)
-            ?? throw new ShipmentConstraintException(sprintf('Unknown status "%s".', $status), ShipmentConstraintException::INVALID_STATUS);
+        $this->status = ShipmentStatus::fromInput($status);
         $this->lines = ShipmentRules::lines($lines);
     }
 }

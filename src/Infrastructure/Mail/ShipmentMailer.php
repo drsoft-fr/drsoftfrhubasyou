@@ -6,6 +6,7 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Mail;
 
 use Context;
 use Customer;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use Language;
 use Link;
 use Mail;
@@ -25,8 +26,6 @@ class ShipmentMailer
 {
     public const TEMPLATE_SHIPMENT = 'drsoftfrhubasyou_shipment';
     public const TEMPLATE_DELIVERED = 'drsoftfrhubasyou_delivered';
-
-    private const MODULE_NAME = 'drsoftfrhubasyou';
 
     /**
      * "Your parcel is on its way": one parcel, its content and its tracking.
@@ -126,7 +125,7 @@ class ShipmentMailer
             null,
             null,
             null,
-            _PS_MODULE_DIR_ . self::MODULE_NAME . '/mails/',
+            _PS_MODULE_DIR_ . Settings::MODULE_NAME . '/mails/',
             false,
             (int) $order->id_shop
         );

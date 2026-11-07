@@ -28,7 +28,9 @@ class ShipmentRepository
     /** The values that can change after the creation of a parcel */
     public const VERSIONED_COLUMNS = ['carrier_name', 'tracking_number', 'tracking_url', 'status', 'shipped_at', 'delivered_at'];
 
-    private const DATE_FORMAT = 'Y-m-d H:i:s';
+    /** Format of the DATETIME columns of the module */
+    public const DATE_FORMAT = 'Y-m-d H:i:s';
+
     private const MYSQL_DUPLICATE_KEY = 1062;
 
     public function find(int $shipmentId): ?array

@@ -24,7 +24,7 @@ class OrderMailRepository
 
         return $db->insert(self::TABLE, [
             'id_order' => $orderId,
-            'delivered_mail_sent_at' => date('Y-m-d H:i:s'),
+            'delivered_mail_sent_at' => date(ShipmentRepository::DATE_FORMAT),
         ], false, true, Db::INSERT_IGNORE)
             && (int) $db->Affected_Rows() === 1;
     }
@@ -39,7 +39,7 @@ class OrderMailRepository
             _DB_PREFIX_,
             self::TABLE,
             $orderId,
-            date('Y-m-d H:i:s')
+            date(ShipmentRepository::DATE_FORMAT)
         ));
     }
 

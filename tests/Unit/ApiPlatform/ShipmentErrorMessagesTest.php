@@ -10,6 +10,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentQuantities;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -87,6 +88,16 @@ final class ShipmentErrorMessagesTest extends TestCase
             self::fail('Refusal expected');
         } catch (ShipmentConstraintException $e) {
             self::assertSame('Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.', ShipmentErrorMessages::for($e));
+        }
+    }
+
+    public function testARefusedUrlGivesItsLimit(): void
+    {
+        try {
+            ShipmentRules::url('ftp://example.com');
+            self::fail('Refusal expected');
+        } catch (ShipmentConstraintException $e) {
+            self::assertSame('trackingUrl must be an http(s) URL of 255 characters at most.', ShipmentErrorMessages::for($e));
         }
     }
 

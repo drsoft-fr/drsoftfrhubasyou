@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\QueryResult;
 
 use DateTimeImmutable;
+use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 
 /**
  * A parcel, in the format of the API (normalized through its getters).
@@ -33,8 +34,6 @@ final class ShipmentForEditing
      */
     public static function fromRow(array $row): self
     {
-        $date = static fn (?string $value): ?DateTimeImmutable => $value ? new DateTimeImmutable($value) : null;
-
         return new self(
             (int) $row['id_shipment'],
             (string) $row['external_reference'],
@@ -43,8 +42,8 @@ final class ShipmentForEditing
             (string) $row['tracking_number'],
             $row['tracking_url'] !== null && $row['tracking_url'] !== '' ? (string) $row['tracking_url'] : null,
             (string) $row['status'],
-            $date($row['shipped_at'] ?? null),
-            $date($row['delivered_at'] ?? null),
+            ShipmentDates::fromSaved($row['shipped_at'] ?? null),
+            ShipmentDates::fromSaved($row['delivered_at'] ?? null),
             array_map(
                 static fn (array $line): array => ['orderDetailId' => (int) $line['id_order_detail'], 'quantity' => (int) $line['quantity']],
                 $row['lines'] ?? []

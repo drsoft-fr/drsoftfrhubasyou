@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
@@ -16,7 +15,7 @@ final class DeleteShipmentHandler
 {
     public function __construct(
         private readonly ShipmentRepository $shipments,
-        private readonly OrderLock $lock,
+        private readonly ShipmentLock $lock,
         private readonly ShipmentJournal $journal,
     ) {
     }
@@ -28,11 +27,8 @@ final class DeleteShipmentHandler
     public function handle(DeleteShipmentCommand $command): void
     {
         $shipmentId = $command->shipmentId->getValue();
-        $orderId = (int) ($this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId))['id_order'];
 
-        $this->lock->synchronized($orderId, function () use ($shipmentId): void {
-            $shipment = $this->shipments->find($shipmentId) ?? throw ShipmentNotFoundException::withId($shipmentId);
-
+        $this->lock->synchronized($shipmentId, function (array $shipment) use ($shipmentId): void {
             $this->shipments->delete($shipmentId);
             $this->journal->deleted($shipment);
         });

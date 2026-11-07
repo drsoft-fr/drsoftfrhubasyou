@@ -23,7 +23,7 @@ final class ShipmentErrorMessages
     private const BY_CODE = [
         Refusal::EMPTY_FIELD => '%fields% cannot be empty.',
         Refusal::TOO_LONG => '%fields% cannot exceed %max% characters.',
-        Refusal::INVALID_URL => 'trackingUrl must be an http(s) URL of 255 characters at most.',
+        Refusal::INVALID_URL => 'trackingUrl must be an http(s) URL of %max% characters at most.',
         Refusal::INVALID_STATUS => 'Unknown status.',
         Refusal::DUPLICATE_REFERENCE => 'The externalReference is already used by another parcel.',
         Refusal::INVALID_DATES => 'Inconsistent dates: deliveredAt needs the status "delivered" and cannot be earlier than shippedAt.',

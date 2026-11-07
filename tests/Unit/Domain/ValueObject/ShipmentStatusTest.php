@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Unit\Domain\ValueObject;
 
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -13,6 +14,19 @@ final class ShipmentStatusTest extends TestCase
     public function testValuesOfTheContract(): void
     {
         self::assertSame(['shipped', 'in_transit', 'delivered', 'exception'], ShipmentStatus::values());
+    }
+
+    public function testAKnownStatusIsAccepted(): void
+    {
+        self::assertSame(ShipmentStatus::InTransit, ShipmentStatus::fromInput('in_transit'));
+    }
+
+    public function testAnUnknownStatusIsRefused(): void
+    {
+        $this->expectException(ShipmentConstraintException::class);
+        $this->expectExceptionCode(ShipmentConstraintException::INVALID_STATUS);
+
+        ShipmentStatus::fromInput('lost');
     }
 
     /**

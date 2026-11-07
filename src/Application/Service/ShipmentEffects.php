@@ -23,7 +23,7 @@ use Throwable;
  *   - order state: shipped, then delivered when every unit still due is delivered;
  *   - "order delivered" e-mail, once per order, when every unit still due is delivered.
  * Each e-mail can be disabled in the module settings. The last two also run when the
- * lines of the order change (refund, return).
+ * lines of the order change (refund, return) and when a parcel is deleted.
  *
  * Everything is worked out again from the saved parcels each time, so a step that
  * failed is done at the next save. A failure never refuses the parcel: it is logged
@@ -71,10 +71,10 @@ class ShipmentEffects
     }
 
     /**
-     * A refund or a return can settle the last units an order was waiting for, with no
-     * parcel left to save.
+     * A refund, a return or a deleted parcel can settle the last units an order was
+     * waiting for, with no parcel left to save.
      */
-    public function onOrderLinesChanged(int $orderId): void
+    public function onOrderChanged(int $orderId): void
     {
         $this->run(function () use ($orderId): void {
             $order = $this->orders->find($orderId);

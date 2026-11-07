@@ -413,7 +413,7 @@ class drsoftfrhubasyou extends Module
                 new ShipmentEffectsLog()
             );
 
-            (new OrderLock())->synchronized($orderId, static fn () => $effects->onOrderLinesChanged($orderId));
+            (new OrderLock())->synchronized($orderId, static fn () => $effects->onOrderChanged($orderId));
         } catch (Throwable $t) {
             $this->handleException($t);
         }

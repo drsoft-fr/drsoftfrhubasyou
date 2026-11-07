@@ -8,7 +8,9 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Query\ListShipments;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Paginated list of parcels: GET /hubasyou/shipments?orderId=…&externalReference=…
@@ -36,6 +38,10 @@ use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
             itemsField: 'items',
             countField: 'count',
         ),
+    ],
+    exceptionToStatus: [
+        // A wrong filter or pagination value in the URL
+        ShipmentConstraintException::class => Response::HTTP_BAD_REQUEST,
     ],
 )]
 class ShipmentList

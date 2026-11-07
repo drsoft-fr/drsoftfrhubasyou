@@ -37,6 +37,7 @@ final class ShipmentErrorMessages
         Refusal::INVALID_ID => 'Invalid shipment id %id%.',
         Refusal::INVALID_DATE => '%fields% must be an ISO 8601 date with its time offset, for example 2026-11-05T10:12:00+01:00.',
         Refusal::DATE_OUT_OF_RANGE => '%fields% cannot be before the year 2000, nor more than one day in the future.',
+        Refusal::INVALID_LIST_PARAMETER => 'The value of %fields% is not valid.',
     ];
 
     private const BY_CLASS = [
@@ -45,7 +46,7 @@ final class ShipmentErrorMessages
         OrderBusyException::class => 'The parcels of order %order% are being updated by another request: send this request again in a moment.',
     ];
 
-    private const FIELD_NAMES = ['externalReference', 'orderId', 'lines', 'carrierName', 'trackingNumber', 'shippedAt', 'deliveredAt'];
+    private const FIELD_NAMES = ['externalReference', 'orderId', 'lines', 'carrierName', 'trackingNumber', 'shippedAt', 'deliveredAt', 'limit', 'offset'];
 
     public static function for(ShipmentException $exception): string
     {

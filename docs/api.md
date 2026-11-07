@@ -41,7 +41,7 @@ Base : `https://<boutique>/admin-api`. Corps et réponses en JSON (`Content-Type
 | `GET` | `/hubasyou/shipments/{shipmentId}` | `hubasyou_shipment_read` | lire un colis |
 | `GET` | `/hubasyou/shipments` | `hubasyou_shipment_read` | lister les colis, du plus récent au plus ancien |
 
-Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`. **Pour parcourir la liste, avancer `offset` du nombre de colis reçus**, pas de la valeur de `limit` : le champ `limit` répète la valeur demandée (`?limit=500` renvoie 100 colis et annonce `"limit": 500`).
+Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Une valeur invalide est refusée (`400`, `detail` nomme le paramètre), jamais ignorée : `?orderId=abc` ne renvoie pas les colis de toutes les commandes. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`. **Pour parcourir la liste, avancer `offset` du nombre de colis reçus**, pas de la valeur de `limit` : le champ `limit` répète la valeur demandée (`?limit=500` renvoie 100 colis et annonce `"limit": 500`).
 
 ## 3. Le colis
 
@@ -132,6 +132,7 @@ Réponse `200 OK` : le colis complet.
 | `201` | colis créé, ou le même colis renvoyé (voir « Renvoi sans risque ») | le colis |
 | `204` | colis supprimé | — |
 | `400` | JSON mal formé, ou champ d'un type incorrect | message |
+| `400` | paramètre de la liste invalide (`orderId`, `externalReference`, `limit`, `offset`) | `detail` : par exemple `The value of orderId is not valid.` |
 | `401` | jeton absent, invalide ou expiré | message |
 | `403` | jeton sans le droit demandé | message |
 | `404` | colis introuvable ; ou identifiant mal écrit dans l'URL (`1.5`, `01`, `abc`…), qui ne désigne aucun colis | `detail` : par exemple `Parcel 12 not found.` ; pour un identifiant mal écrit, seul le code est garanti |

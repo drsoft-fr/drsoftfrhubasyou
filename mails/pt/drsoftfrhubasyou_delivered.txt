@@ -2,7 +2,7 @@ O seu pedido foi entregue
 
 Olá {firstname},
 
-Todas as encomendas do seu pedido {order_name} foram entregues:
+O seu pedido {order_name} foi entregue. Eis o que recebeu:
 
 {shipments_txt}
 

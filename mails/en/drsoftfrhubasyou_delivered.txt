@@ -2,7 +2,7 @@ Your order has been delivered
 
 Hello {firstname},
 
-Every parcel of your order {order_name} has been delivered:
+Your order {order_name} has been delivered. Here is what you received:
 
 {shipments_txt}
 

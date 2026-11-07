@@ -2,7 +2,7 @@ Il suo ordine è stato consegnato
 
 Buongiorno {firstname},
 
-Tutti i pacchi del suo ordine {order_name} sono stati consegnati:
+Il suo ordine {order_name} è stato consegnato. Ecco che cosa ha ricevuto:
 
 {shipments_txt}
 

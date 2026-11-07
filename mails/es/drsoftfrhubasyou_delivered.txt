@@ -2,7 +2,7 @@ Su pedido ha sido entregado
 
 Hola, {firstname}:
 
-Todos los paquetes de su pedido {order_name} han sido entregados:
+Su pedido {order_name} ha sido entregado. Esto es lo que ha recibido:
 
 {shipments_txt}
 

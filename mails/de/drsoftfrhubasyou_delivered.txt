@@ -2,7 +2,7 @@ Ihre Bestellung wurde zugestellt
 
 Guten Tag {firstname},
 
-Alle Pakete Ihrer Bestellung {order_name} wurden zugestellt:
+Ihre Bestellung {order_name} wurde zugestellt. Das haben Sie erhalten:
 
 {shipments_txt}
 

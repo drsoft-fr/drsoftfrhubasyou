@@ -2,7 +2,7 @@ Votre commande est livrée
 
 Bonjour {firstname},
 
-Tous les colis de votre commande {order_name} ont été livrés :
+Votre commande {order_name} est livrée. Voici ce que vous avez reçu :
 
 {shipments_txt}
 

@@ -2,7 +2,7 @@ Uw bestelling is bezorgd
 
 Beste {firstname},
 
-Alle pakketten van uw bestelling {order_name} zijn bezorgd:
+Uw bestelling {order_name} is bezorgd. Dit heeft u ontvangen:
 
 {shipments_txt}
 

@@ -8,6 +8,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\OrderShippingProgress;
+use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentEffectsLog;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
@@ -102,7 +103,7 @@ class ShipmentEffects
         }
 
         $this->sendOrReport(
-            fn (): bool => $this->mailer->sendDeliveredMail($orderId, $this->shipments->findByOrder($orderId)),
+            fn (): bool => $this->mailer->sendDeliveredMail($orderId, $this->deliveredShipments($orderId)),
             ShipmentConstraintException::DELIVERED_MAIL_FAILED
         );
 
@@ -194,6 +195,19 @@ class ShipmentEffects
         );
     }
 
+    /**
+     * What the "order delivered" e-mail lists: a lost parcel did not reach the customer.
+     *
+     * @return Shipment[]
+     */
+    private function deliveredShipments(int $orderId): array
+    {
+        return array_values(array_filter(
+            $this->shipments->findByOrder($orderId),
+            static fn (Shipment $shipment): bool => $shipment->status === ShipmentStatus::Delivered
+        ));
+    }
+
     private function sendDeliveredMailOnce(ShopOrder $order): void
     {
         if (!$this->statePolicy->isDeliveredMailEnabled($order)) {
@@ -202,7 +216,7 @@ class ShipmentEffects
 
         $this->sendOnce(
             fn (): bool => $this->orderMails->claimDeliveredMail($order->id),
-            fn (): bool => $this->mailer->sendDeliveredMail($order->id, $this->shipments->findByOrder($order->id)),
+            fn (): bool => $this->mailer->sendDeliveredMail($order->id, $this->deliveredShipments($order->id)),
             fn () => $this->orderMails->releaseDeliveredMail($order->id)
         );
     }

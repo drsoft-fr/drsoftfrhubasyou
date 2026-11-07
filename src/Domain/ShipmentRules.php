@@ -23,11 +23,11 @@ final class ShipmentRules
         $value = trim($value);
 
         if ($value === '') {
-            throw new ShipmentConstraintException(sprintf('%s cannot be empty.', $field), ShipmentConstraintException::EMPTY_FIELD);
+            throw new ShipmentConstraintException(sprintf('%s cannot be empty.', $field), ShipmentConstraintException::EMPTY_FIELD, parameters: ['fields' => [$field]]);
         }
 
         if (mb_strlen($value) > self::TEXT_MAX_LENGTH) {
-            throw new ShipmentConstraintException(sprintf('%s cannot exceed %d characters.', $field, self::TEXT_MAX_LENGTH), ShipmentConstraintException::TOO_LONG);
+            throw new ShipmentConstraintException(sprintf('%s cannot exceed %d characters.', $field, self::TEXT_MAX_LENGTH), ShipmentConstraintException::TOO_LONG, parameters: ['fields' => [$field], 'max' => self::TEXT_MAX_LENGTH]);
         }
 
         return $value;
@@ -76,14 +76,14 @@ final class ShipmentRules
             $quantity = (int) ($line['quantity'] ?? 0);
 
             if ($orderDetailId <= 0 || $quantity <= 0) {
-                throw new ShipmentConstraintException('Each line needs a positive orderDetailId and quantity.');
+                throw new ShipmentConstraintException('Each line needs a positive orderDetailId and quantity.', ShipmentConstraintException::INVALID_LINE);
             }
 
             $quantities[$orderDetailId] = ($quantities[$orderDetailId] ?? 0) + $quantity;
         }
 
         if (!$quantities) {
-            throw new ShipmentConstraintException('A parcel needs at least one line.');
+            throw new ShipmentConstraintException('A parcel needs at least one line.', ShipmentConstraintException::NO_LINE);
         }
 
         return $quantities;
@@ -117,7 +117,7 @@ final class ShipmentRules
             throw new ShipmentConstraintException(sprintf(
                 'The content of a parcel cannot be changed (%s): delete the parcel and declare it again.',
                 implode(', ', $changed)
-            ));
+            ), ShipmentConstraintException::CONTENT_CHANGED, parameters: ['fields' => $changed]);
         }
     }
 }

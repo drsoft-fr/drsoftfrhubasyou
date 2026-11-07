@@ -7,8 +7,8 @@ namespace DrSoftFr\Module\HubAsYou\Domain\Exception;
 /**
  * Data refused (unknown order, line of another order, quantity exceeded, duplicate reference…): HTTP 422.
  *
- * The message (English) is the one of the Admin API; the code lets the back
- * office show its own translated message for the fields it edits.
+ * The code selects the message: in the table of the API (ApiPlatform\ShipmentErrorMessages)
+ * and in the translated messages of the back office for the fields it edits.
  */
 class ShipmentConstraintException extends ShipmentException
 {
@@ -22,6 +22,14 @@ class ShipmentConstraintException extends ShipmentException
     public const DELIVERED_MAIL_FAILED = 8;
     public const SHIPMENT_MAIL_NOT_ALLOWED = 9;
     public const SHIPMENT_MAIL_FAILED = 10;
+    public const UNKNOWN_ORDER = 11;
+    public const LINE_NOT_IN_ORDER = 12;
+    public const VIRTUAL_LINE = 13;
+    public const QUANTITY_EXCEEDED = 14;
+    public const CONTENT_CHANGED = 15;
+    public const INVALID_LINE = 16;
+    public const NO_LINE = 17;
+    public const INVALID_ID = 18;
 
     public static function duplicateReference(string $externalReference): self
     {

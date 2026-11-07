@@ -42,7 +42,7 @@ final class AddShipmentHandler
             }
 
             $orderLines = $this->orders->findLines($command->orderId)
-                ?? throw new ShipmentConstraintException(sprintf('Order %d does not exist.', $command->orderId));
+                ?? throw new ShipmentConstraintException(sprintf('Order %d does not exist.', $command->orderId), ShipmentConstraintException::UNKNOWN_ORDER, parameters: ['order' => $command->orderId]);
 
             ShipmentQuantities::assertFit(
                 $command->orderId,

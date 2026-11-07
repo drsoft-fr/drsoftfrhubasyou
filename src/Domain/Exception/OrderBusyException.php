@@ -12,6 +12,6 @@ class OrderBusyException extends ShipmentException
 {
     public static function forOrder(int $orderId): self
     {
-        return new self(sprintf('The parcels of order %d are being updated by another request: send this request again in a moment.', $orderId));
+        return new self(sprintf('The parcels of order %d are being updated by another request: send this request again in a moment.', $orderId), parameters: ['order' => $orderId]);
     }
 }

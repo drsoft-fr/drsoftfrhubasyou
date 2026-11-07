@@ -17,7 +17,7 @@ final class ShipmentId
     public function __construct(int $value)
     {
         if ($value <= 0) {
-            throw new ShipmentConstraintException(sprintf('Invalid shipment id %d.', $value));
+            throw new ShipmentConstraintException(sprintf('Invalid shipment id %d.', $value), ShipmentConstraintException::INVALID_ID, parameters: ['id' => $value]);
         }
 
         $this->value = $value;

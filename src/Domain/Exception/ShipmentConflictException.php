@@ -12,6 +12,6 @@ class ShipmentConflictException extends ShipmentException
 {
     public static function forShipment(int $shipmentId): self
     {
-        return new self(sprintf('Parcel %d has changed since it was read: read it again before changing it.', $shipmentId));
+        return new self(sprintf('Parcel %d has changed since it was read: read it again before changing it.', $shipmentId), parameters: ['id' => $shipmentId]);
     }
 }

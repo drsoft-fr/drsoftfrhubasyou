@@ -124,16 +124,17 @@ Réponse `200 OK` : le colis complet.
 
 ## 5. Codes de réponse
 
-**Se fier au code HTTP** : dans le corps des erreurs, le champ `status` vaut toujours `500` (format d'erreur de PrestaShop), quel que soit le code réel.
+**Se fier au code HTTP**. Pour les refus du module (`404`, `422` métier, `503`), `detail` donne la raison du refus et `status` répète le code. Ces textes sont fixes et ne reprennent jamais une valeur texte envoyée dans la requête ; seuls des identifiants, des quantités et des noms de champs peuvent y figurer. Pour les réponses de PrestaShop lui-même (`400`, `401`, `403`, `405`, `500`), seul le code est garanti : le texte et le champ `status` du corps dépendent de la configuration de la boutique. Par exemple, un JSON mal formé répond `400` avec `"status": 500` dans le corps.
 
 | Code | Cas | Corps |
 | --- | --- | --- |
 | `200` | lecture ou mise à jour réussie | le colis |
 | `201` | colis créé | le colis |
 | `204` | colis supprimé | — |
+| `400` | JSON mal formé, ou champ d'un type incorrect | message |
 | `401` | jeton absent, invalide ou expiré | message |
-| `403` | jeton sans le droit demandé | `detail` : `Invalid scope.` |
-| `404` | colis introuvable | `detail` |
+| `403` | jeton sans le droit demandé | message |
+| `404` | colis introuvable | `detail` : par exemple `Parcel 12 not found.` |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
 | `422` | refus métier : `externalReference` déjà utilisée, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail` ; renvoyer la même requête un peu plus tard |

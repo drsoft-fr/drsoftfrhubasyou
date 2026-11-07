@@ -32,11 +32,11 @@ final class ShipmentQuantities
     {
         foreach ($lines as $orderDetailId => $quantity) {
             if (!isset($orderLines[$orderDetailId])) {
-                throw new ShipmentConstraintException(sprintf('Order line %d does not belong to order %d.', $orderDetailId, $orderId));
+                throw new ShipmentConstraintException(sprintf('Order line %d does not belong to order %d.', $orderDetailId, $orderId), ShipmentConstraintException::LINE_NOT_IN_ORDER, parameters: ['line' => $orderDetailId, 'order' => $orderId]);
             }
 
             if ($orderLines[$orderDetailId]['virtual']) {
-                throw new ShipmentConstraintException(sprintf('Order line %d is a virtual product: it cannot be in a parcel.', $orderDetailId));
+                throw new ShipmentConstraintException(sprintf('Order line %d is a virtual product: it cannot be in a parcel.', $orderDetailId), ShipmentConstraintException::VIRTUAL_LINE, parameters: ['line' => $orderDetailId]);
             }
 
             $already = $inParcels[$orderDetailId] ?? 0;
@@ -48,7 +48,7 @@ final class ShipmentQuantities
                     $orderLines[$orderDetailId]['ordered'],
                     $already,
                     $quantity
-                ));
+                ), ShipmentConstraintException::QUANTITY_EXCEEDED, parameters: ['line' => $orderDetailId, 'ordered' => $orderLines[$orderDetailId]['ordered'], 'already' => $already, 'sent' => $quantity]);
             }
         }
     }

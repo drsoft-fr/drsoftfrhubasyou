@@ -11,6 +11,6 @@ class ShipmentNotFoundException extends ShipmentException
 {
     public static function withId(int $shipmentId): self
     {
-        return new self(sprintf('Parcel %d not found.', $shipmentId));
+        return new self(sprintf('Parcel %d not found.', $shipmentId), parameters: ['id' => $shipmentId]);
     }
 }

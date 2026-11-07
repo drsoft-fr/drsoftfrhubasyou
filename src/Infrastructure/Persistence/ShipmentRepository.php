@@ -45,14 +45,15 @@ class ShipmentRepository
         return $this->hydrate([$row])[0];
     }
 
-    public function existsByExternalReference(string $externalReference): bool
+    public function findByExternalReference(string $externalReference): ?Shipment
     {
         $query = (new DbQuery())
-            ->select('1')
-            ->from(self::TABLE)
-            ->where("external_reference = '" . pSQL($externalReference, true) . "'");
+            ->select('s.*')
+            ->from(self::TABLE, 's')
+            ->where("s.external_reference = '" . pSQL($externalReference, true) . "'");
+        $row = DatabaseReader::row($query);
 
-        return (bool) DatabaseReader::value($query);
+        return $row === null ? null : $this->hydrate([$row])[0];
     }
 
     /**

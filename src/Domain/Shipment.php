@@ -112,6 +112,21 @@ final class Shipment
     }
 
     /**
+     * True when a declaration describes this parcel: same order, lines and tracking. Its
+     * state and dates are not compared, they may have moved on since the first declaration.
+     *
+     * @param array<int, int> $quantities id_order_detail => quantity
+     */
+    public function isSameDeclaration(int $orderId, string $carrierName, string $trackingNumber, ?string $trackingUrl, array $quantities): bool
+    {
+        return $orderId === $this->orderId
+            && $carrierName === $this->carrierName
+            && $trackingNumber === $this->trackingNumber
+            && $trackingUrl === $this->trackingUrl
+            && $quantities == $this->quantities();
+    }
+
+    /**
      * @return array<int, int> id_order_detail => quantity
      */
     public function quantities(): array

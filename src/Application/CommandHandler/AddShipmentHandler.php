@@ -32,13 +32,26 @@ final class AddShipmentHandler
     /**
      * Checks, saves and runs the effects with the order locked: two parcels of the same
      * order are handled one after the other.
+     *
+     * The same parcel sent again is not an error: the first request may have stopped right
+     * after the save, before the e-mail and the order state. Its effects are run again (each
+     * one happens once) and nothing is overwritten: a late request cannot move a parcel back.
      */
     public function handle(AddShipmentCommand $command): ShipmentId
     {
         return $this->lock->synchronized($command->orderId, function () use ($command): ShipmentId {
-            // Fast refusal; the unique key still decides between two orders saved at the same time
-            if ($this->shipments->existsByExternalReference($command->externalReference)) {
-                throw ShipmentConstraintException::duplicateReference($command->externalReference);
+            $existing = $this->shipments->findByExternalReference($command->externalReference);
+
+            if ($existing) {
+                // Fast refusal; the unique key still decides between two orders saved at the same time
+                if (!$existing->isSameDeclaration($command->orderId, $command->carrierName, $command->trackingNumber, $command->trackingUrl, $command->lines)) {
+                    throw ShipmentConstraintException::duplicateReference($command->externalReference);
+                }
+
+                $this->journal->declaredAgain($existing);
+                $this->effects->onShipmentSaved($existing->id);
+
+                return new ShipmentId($existing->id);
             }
 
             $orderLines = $this->orders->findLines($command->orderId)

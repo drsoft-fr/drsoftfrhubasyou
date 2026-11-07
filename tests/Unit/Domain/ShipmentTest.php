@@ -92,6 +92,30 @@ final class ShipmentTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    public function testTheSameDeclarationIsRecognized(): void
+    {
+        self::assertTrue($this->parcel()->isSameDeclaration(45, 'DPD', 'TN1', 'https://example.com/1', [102 => 2, 101 => 1]));
+    }
+
+    public function testTheStateIsNotPartOfTheDeclaration(): void
+    {
+        $moved = $this->parcel()->withChanges(null, null, null, ShipmentStatus::Delivered, null, null, $this->now);
+
+        self::assertTrue($moved->isSameDeclaration(45, 'DPD', 'TN1', 'https://example.com/1', [101 => 1, 102 => 2]));
+    }
+
+    public function testADifferentDeclarationIsNotTheSame(): void
+    {
+        $parcel = $this->parcel();
+
+        self::assertFalse($parcel->isSameDeclaration(46, 'DPD', 'TN1', 'https://example.com/1', [101 => 1, 102 => 2]));
+        self::assertFalse($parcel->isSameDeclaration(45, 'UPS', 'TN1', 'https://example.com/1', [101 => 1, 102 => 2]));
+        self::assertFalse($parcel->isSameDeclaration(45, 'DPD', 'TN2', 'https://example.com/1', [101 => 1, 102 => 2]));
+        self::assertFalse($parcel->isSameDeclaration(45, 'DPD', 'TN1', null, [101 => 1, 102 => 2]));
+        self::assertFalse($parcel->isSameDeclaration(45, 'DPD', 'TN1', 'https://example.com/1', [101 => 1]));
+        self::assertFalse($parcel->isSameDeclaration(45, 'DPD', 'TN1', 'https://example.com/1', [101 => 2, 102 => 2]));
+    }
+
     public function testTheVersionFollowsEveryChangeableValue(): void
     {
         $parcel = $this->parcel();

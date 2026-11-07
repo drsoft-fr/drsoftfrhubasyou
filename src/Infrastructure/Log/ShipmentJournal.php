@@ -32,6 +32,14 @@ class ShipmentJournal
     }
 
     /**
+     * The same parcel received again: nothing changes, the effects are run again.
+     */
+    public function declaredAgain(Shipment $shipment): void
+    {
+        $this->write($shipment, 'received again', $this->describe($shipment));
+    }
+
+    /**
      * Only the values that changed; nothing is written when none did.
      */
     public function edited(Shipment $before, Shipment $after): void

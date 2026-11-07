@@ -129,20 +129,24 @@ Réponse `200 OK` : le colis complet.
 | Code | Cas | Corps |
 | --- | --- | --- |
 | `200` | lecture ou mise à jour réussie | le colis |
-| `201` | colis créé | le colis |
+| `201` | colis créé, ou le même colis renvoyé (voir « Renvoi sans risque ») | le colis |
 | `204` | colis supprimé | — |
 | `400` | JSON mal formé, ou champ d'un type incorrect | message |
 | `401` | jeton absent, invalide ou expiré | message |
 | `403` | jeton sans le droit demandé | message |
 | `404` | colis introuvable ; ou identifiant mal écrit dans l'URL (`1.5`, `01`, `abc`…), qui ne désigne aucun colis | `detail` : par exemple `Parcel 12 not found.` ; pour un identifiant mal écrit, seul le code est garanti |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
-| `422` | refus métier : `externalReference` déjà utilisée, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
+| `422` | refus métier : `externalReference` déjà utilisée par un colis au contenu différent, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `500` | **temporaire** : erreur technique de la boutique, base de données indisponible par exemple. La réponse ne dit rien de la demande | message générique ; renvoyer la même requête plus tard |
 | `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail` ; renvoyer la même requête un peu plus tard |
 
 **Requêtes simultanées** : les requêtes qui touchent les colis d'une même commande sont traitées l'une après l'autre (une requête attend la précédente jusqu'à 15 secondes, puis répond `503`). HubAsYou peut donc envoyer en parallèle les colis d'une commande : les quantités, l'état de la commande et les e-mails restent justes.
 
-**Renvoi sans risque** : en cas de doute (délai dépassé, coupure, `500`, `503`), HubAsYou peut renvoyer la même requête. Pour un `503`, attendre quelques secondes, en allongeant l'attente à chaque nouvel essai. Si le colis avait déjà été enregistré, la réponse est un `422` sur `externalReference` : retrouver alors le colis avec `GET /hubasyou/shipments?externalReference=HAY-000981`.
+**Renvoi sans risque** : en cas de doute (délai dépassé, coupure, `500`, `503`), HubAsYou peut renvoyer la même requête. Pour un `503`, attendre quelques secondes, en allongeant l'attente à chaque nouvel essai.
+
+Un `POST` renvoyé pour un colis déjà enregistré répond `201` avec le colis existant. Il suffit que la commande, les lignes, le transporteur, le numéro et l'URL de suivi soient les mêmes. Exemple : la boutique s'arrête juste après avoir enregistré le colis, avant l'e-mail ; le renvoi fait partir l'e-mail et change l'état de la commande, sans doublon. Rien n'est écrasé : si le colis est déjà `delivered`, un `POST` en retard qui dit `shipped` ne le fait pas reculer, et la réponse montre l'état réel.
+
+Si le contenu diffère, la réponse est un `422` sur `externalReference` : soit la référence sert déjà à un autre colis, soit le colis a été corrigé depuis par un `PATCH`. Retrouver alors le colis avec `GET /hubasyou/shipments?externalReference=HAY-000981`.
 
 ## 6. Ce qui se passe dans la boutique
 

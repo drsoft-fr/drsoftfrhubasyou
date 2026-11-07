@@ -127,6 +127,7 @@ class ShipmentRepository
             }
 
             $shipmentId = (int) $db->Insert_ID();
+            $products = $this->findProducts($shipment->lines);
             $rows = [];
 
             foreach ($shipment->lines as $line) {
@@ -134,6 +135,8 @@ class ShipmentRepository
                     'id_shipment' => $shipmentId,
                     'id_order_detail' => $line->orderDetailId,
                     'quantity' => $line->quantity,
+                    'product_name' => pSQL((string) ($products[$line->orderDetailId]['product_name'] ?? ''), true),
+                    'product_reference' => pSQL((string) ($products[$line->orderDetailId]['product_reference'] ?? ''), true),
                 ];
             }
 
@@ -254,7 +257,30 @@ class ShipmentRepository
     }
 
     /**
-     * Parcels of the rows, with their lines (and the product name of the order line).
+     * Product of each order line of a parcel, as PrestaShop recorded it on the order.
+     *
+     * @param ShipmentLine[] $lines
+     *
+     * @return array<int, array{product_name: string, product_reference: string}> by id_order_detail
+     */
+    private function findProducts(array $lines): array
+    {
+        $ids = array_map(static fn (ShipmentLine $line): int => $line->orderDetailId, $lines);
+        $query = (new DbQuery())
+            ->select('id_order_detail, product_name, product_reference')
+            ->from('order_detail')
+            ->where('id_order_detail IN (' . implode(',', $ids) . ')');
+        $products = [];
+
+        foreach (DatabaseReader::rows($query) as $row) {
+            $products[(int) $row['id_order_detail']] = $row;
+        }
+
+        return $products;
+    }
+
+    /**
+     * Parcels of the rows, with their lines.
      *
      * @return Shipment[]
      */
@@ -266,9 +292,8 @@ class ShipmentRepository
 
         $ids = array_map(static fn (array $row): int => (int) $row['id_shipment'], $rows);
         $query = (new DbQuery())
-            ->select('l.id_shipment, l.id_order_detail, l.quantity, od.product_name, od.product_reference')
+            ->select('l.id_shipment, l.id_order_detail, l.quantity, l.product_name, l.product_reference')
             ->from(self::TABLE_LINE, 'l')
-            ->leftJoin('order_detail', 'od', 'od.id_order_detail = l.id_order_detail')
             ->where('l.id_shipment IN (' . implode(',', $ids) . ')')
             ->orderBy('l.id_shipment_line ASC');
         $lines = [];

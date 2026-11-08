@@ -176,6 +176,7 @@ class drsoftfrhubasyou extends Module
                 $output .= $this->saveSettings()
                     ? $this->displayConfirmation($this->trans('Settings updated', [], 'Modules.Drsoftfrhubasyou.Admin'))
                     : $this->displayError($this->trans('The settings could not all be saved: check them below and save again. The error is in Advanced parameters > Logs.', [], 'Modules.Drsoftfrhubasyou.Admin'));
+                $output .= $this->getShippedStateNotice();
             }
 
             return $output . $this->renderSetupHelp() . $this->renderForm();
@@ -217,6 +218,27 @@ class drsoftfrhubasyou extends Module
         }
 
         return $saved;
+    }
+
+    /**
+     * The merchant unticked the state set when the first parcel leaves: it stays changeable
+     * (Settings::getChangeableStates) and its box ticked; the notice says why.
+     */
+    private function getShippedStateNotice(): string
+    {
+        $shippedState = (int) Tools::getValue('order_state_shipped', 0);
+
+        if (!$shippedState || Tools::getValue('changeable_state_' . $shippedState)) {
+            return '';
+        }
+
+        $state = new OrderState($shippedState, (int) $this->context->language->id);
+
+        return $this->displayWarning($this->trans(
+            'The state "%state%" stays ticked: it is the state set when the first parcel leaves, and the module must be able to change it to set the order as delivered.',
+            ['%state%' => htmlspecialchars((string) $state->name, ENT_QUOTES, 'UTF-8')],
+            'Modules.Drsoftfrhubasyou.Admin'
+        ));
     }
 
     private function renderSetupHelp(): string
@@ -271,7 +293,7 @@ class drsoftfrhubasyou extends Module
                         'label' => $this->trans('Order states the module may change', [], 'Modules.Drsoftfrhubasyou.Admin'),
                         'name' => 'changeable_state',
                         'values' => ['query' => $orderStates, 'id' => 'id', 'name' => 'name'],
-                        'desc' => $this->trans('The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. Tick the state set when the first parcel leaves, so that the order can then be set as delivered.', [], 'Modules.Drsoftfrhubasyou.Admin'),
+                        'desc' => $this->trans('The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. The state set when the first parcel leaves is always changeable, so that the order can then be set as delivered.', [], 'Modules.Drsoftfrhubasyou.Admin'),
                     ],
                     [
                         'type' => 'switch',

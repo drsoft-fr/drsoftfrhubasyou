@@ -82,11 +82,18 @@ class Settings
     }
 
     /**
+     * The states ticked in the settings, plus, always, the state set when the first parcel
+     * leaves: the module must be able to move the order on from it to the delivered state.
+     * Without it, unticking that state would leave every order "Shipped" for ever.
+     *
      * @return int[]
      */
     public function getChangeableStates(?ShopOrder $order = null): array
     {
-        return array_values(array_filter(array_map('intval', explode(',', (string) $this->get(self::CHANGEABLE_STATES, $order)))));
+        $states = array_map('intval', explode(',', (string) $this->get(self::CHANGEABLE_STATES, $order)));
+        $states[] = $this->getShippedState($order);
+
+        return array_values(array_unique(array_filter($states)));
     }
 
     /**

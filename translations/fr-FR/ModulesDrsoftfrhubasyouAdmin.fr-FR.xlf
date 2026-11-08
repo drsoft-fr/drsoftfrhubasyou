@@ -266,9 +266,13 @@
         <source>Order states the module may change</source>
         <target>États de commande que le module peut changer</target>
       </trans-unit>
-      <trans-unit id="aa36e141ee25535b9f036510c9788d92">
-        <source>The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. Tick the state set when the first parcel leaves, so that the order can then be set as delivered.</source>
-        <target>Le module ne change l'état d'une commande que si son état actuel est coché ici (jamais, par exemple, depuis « Annulé » ou « En attente de paiement »). Sinon, l'état reste tel quel et un avertissement s'affiche sur la fiche de la commande. Cochez l'état appliqué au départ du premier colis, pour que la commande puisse ensuite passer en livrée.</target>
+      <trans-unit id="9bea6d2677bafd0a3fd3cab6a70891ff">
+        <source>The module changes the state of an order only when its current state is ticked here (for example, never from "Canceled" or "Awaiting payment"). Otherwise the state stays as it is and a warning is shown on the order page. The state set when the first parcel leaves is always changeable, so that the order can then be set as delivered.</source>
+        <target>Le module ne change l'état d'une commande que si son état actuel est coché ici (jamais, par exemple, depuis « Annulé » ou « En attente de paiement »). Sinon, l'état reste tel quel et un avertissement s'affiche sur la fiche de la commande. L'état appliqué au départ du premier colis est toujours modifiable, pour que la commande puisse ensuite passer en livrée.</target>
+      </trans-unit>
+      <trans-unit id="b91fb319f79213a07b965de2914e3ad8">
+        <source>The state "%state%" stays ticked: it is the state set when the first parcel leaves, and the module must be able to change it to set the order as delivered.</source>
+        <target>L'état « %state% » reste coché : c'est l'état appliqué au départ du premier colis, et le module doit pouvoir le changer pour passer la commande en livrée.</target>
       </trans-unit>
       <trans-unit id="12c85d1895a833beb75d4a6f5832648a">
         <source>According to its parcels, this order should be in the state "%target%", but the module did not change it: its current state "%current%" is not one the module may change (module settings).</source>

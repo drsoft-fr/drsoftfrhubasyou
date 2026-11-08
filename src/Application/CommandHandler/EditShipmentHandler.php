@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
@@ -51,9 +50,7 @@ final class EditShipmentHandler
                 new DateTimeImmutable()
             );
 
-            if (!$this->shipments->update($changed)) {
-                throw new ShipmentException('The parcel could not be saved.');
-            }
+            $this->shipments->update($changed);
 
             if ($saved = $this->shipments->find($shipmentId)) {
                 $this->journal->edited($current, $saved);

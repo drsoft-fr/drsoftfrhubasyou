@@ -7,9 +7,11 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 use Db;
 use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
+use Throwable;
 
 /**
- * Every read of the module's repositories: a failed read is an error, never "nothing found".
+ * Every read of the module's repositories: a failed read is an error, never "nothing found",
+ * and the error of the database is in the logs (DatabaseError).
  *
  * With debug disabled, PrestaShop's Db reports a failed read as false, which getRow() and
  * getValue() also return for "no row". Without this class, an order could be refused as
@@ -26,10 +28,14 @@ final class DatabaseReader
      */
     public static function rows(DbQuery $query): array
     {
-        $rows = Db::getInstance()->executeS($query, true, false);
+        try {
+            $rows = Db::getInstance()->executeS($query, true, false);
+        } catch (Throwable $t) {
+            throw DatabaseError::exception('The database could not be read.', $t);
+        }
 
         if (!is_array($rows)) {
-            throw new ShipmentException('The database could not be read.');
+            throw DatabaseError::exception('The database could not be read.');
         }
 
         return $rows;

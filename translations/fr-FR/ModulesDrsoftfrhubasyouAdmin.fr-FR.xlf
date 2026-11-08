@@ -18,6 +18,10 @@
         <source>Settings updated</source>
         <target>Réglages enregistrés</target>
       </trans-unit>
+      <trans-unit id="79052debf0c102d3ee4e4b3b3b4bd7f0">
+        <source>The settings could not all be saved: check them below and save again. The error is in Advanced parameters &gt; Logs.</source>
+        <target>Les réglages n'ont pas tous été enregistrés : vérifiez-les ci-dessous et enregistrez à nouveau. L'erreur est dans Paramètres avancés &gt; Logs.</target>
+      </trans-unit>
       <trans-unit id="8980f0d3cb6c20afff217282c2d8aebc">
         <source>-- Do not change the order state --</source>
         <target>-- Ne pas changer l'état de la commande --</target>

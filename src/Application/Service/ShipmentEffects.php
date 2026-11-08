@@ -108,7 +108,9 @@ class ShipmentEffects
         }
 
         $this->sendOrReport(
-            fn (): bool => $this->mailer->sendDeliveredMail($orderId, $this->deliveredShipments($orderId)),
+            sprintf('order #%d, "order delivered" e-mail sent from the back office', $orderId),
+            $orderId,
+            fn () => $this->mailer->sendDeliveredMail($orderId, $this->deliveredShipments($orderId)),
             ShipmentConstraintException::DELIVERED_MAIL_FAILED
         );
 
@@ -130,7 +132,9 @@ class ShipmentEffects
         }
 
         $this->sendOrReport(
-            fn (): bool => $this->mailer->sendShipmentMail($order->id, $shipment),
+            sprintf('parcel #%d, "parcel on its way" e-mail sent from the back office', $shipment->id),
+            $order->id,
+            fn () => $this->mailer->sendShipmentMail($order->id, $shipment),
             ShipmentConstraintException::SHIPMENT_MAIL_FAILED
         );
 
@@ -138,20 +142,20 @@ class ShipmentEffects
     }
 
     /**
-     * @param callable(): bool $send
+     * The merchant reads the failure in the back office; its reason is in the logs.
+     *
+     * @param callable(): void $send
      *
      * @throws ShipmentConstraintException
      */
-    private function sendOrReport(callable $send, int $failureCode): void
+    private function sendOrReport(string $subject, int $orderId, callable $send, int $failureCode): void
     {
         try {
-            $sent = $send();
+            $send();
         } catch (Throwable $t) {
-            throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode, $t);
-        }
+            $this->log->failure($subject, $t, $orderId);
 
-        if (!$sent) {
-            throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode);
+            throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode, $t);
         }
     }
 
@@ -217,7 +221,7 @@ class ShipmentEffects
 
         $this->sendOnce(
             fn (): bool => $this->shipments->claimMail($shipment->id),
-            fn (): bool => $this->mailer->sendShipmentMail($order->id, $shipment),
+            fn () => $this->mailer->sendShipmentMail($order->id, $shipment),
             fn () => $this->shipments->releaseMail($shipment->id)
         );
     }
@@ -243,17 +247,18 @@ class ShipmentEffects
 
         $this->sendOnce(
             fn (): bool => $this->orderMails->claimDeliveredMail($order->id),
-            fn (): bool => $this->mailer->sendDeliveredMail($order->id, $this->deliveredShipments($order->id)),
+            fn () => $this->mailer->sendDeliveredMail($order->id, $this->deliveredShipments($order->id)),
             fn () => $this->orderMails->releaseDeliveredMail($order->id)
         );
     }
 
     /**
      * The e-mail is reserved in the database (atomic) before it is sent, so two requests
-     * cannot both send it; the reservation is given back if sending fails.
+     * cannot both send it; the reservation is given back if sending fails. Every failure
+     * reaches attempt(), which logs it.
      *
-     * @param callable(): bool $claim
-     * @param callable(): bool $send
+     * @param callable(): bool $claim False: already sent or being sent
+     * @param callable(): void $send
      * @param callable(): void $release
      */
     private function sendOnce(callable $claim, callable $send, callable $release): void
@@ -263,15 +268,16 @@ class ShipmentEffects
         }
 
         try {
-            $sent = $send();
+            $send();
         } catch (Throwable $t) {
-            $release();
+            try {
+                $release();
+            } catch (Throwable) {
+                // Already in the logs (DatabaseError): the e-mail stays reserved, the merchant
+                // can send it from the back office. The failure to report is the sending.
+            }
 
             throw $t;
-        }
-
-        if (!$sent) {
-            $release();
         }
     }
 

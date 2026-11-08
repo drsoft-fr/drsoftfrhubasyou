@@ -15,7 +15,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
-use Throwable;
+use RuntimeException;
 
 /**
  * Reads and writes the parcels and their lines.
@@ -112,18 +112,15 @@ class ShipmentRepository
      */
     public function add(Shipment $shipment): int
     {
-        $db = Db::getInstance();
-        $now = date(self::DATE_FORMAT);
-        $db->execute('START TRANSACTION', false);
-
-        try {
+        return DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($shipment): int {
+            $now = date(self::DATE_FORMAT);
             $columns = [
                 'external_reference' => $shipment->externalReference,
                 'id_order' => $shipment->orderId,
             ] + $this->changeableColumns($shipment);
 
             if (!$db->insert(self::TABLE, $this->escape($columns) + ['date_add' => $now, 'date_upd' => $now], true)) {
-                throw new ShipmentException('The parcel could not be saved.');
+                throw new RuntimeException('The parcel row was not inserted.');
             }
 
             $shipmentId = (int) $db->Insert_ID();
@@ -141,37 +138,29 @@ class ShipmentRepository
             }
 
             if (!$db->insert(self::TABLE_LINE, $rows)) {
-                throw new ShipmentException('The lines of the parcel could not be saved.');
+                throw new RuntimeException('The lines of the parcel were not inserted.');
             }
-
-            $db->execute('COMMIT', false);
 
             return $shipmentId;
-        } catch (Throwable $t) {
-            // In debug mode PrestaShop throws on a database error, otherwise insert() returns false
-            $duplicate = (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY;
-            $db->execute('ROLLBACK', false);
-
-            if ($duplicate) {
-                throw ShipmentConstraintException::duplicateReference($shipment->externalReference);
-            }
-
-            throw $t instanceof ShipmentException ? $t : new ShipmentException('The parcel could not be saved.', 0, $t);
-        }
+        }, static fn (Db $db): ?ShipmentException => (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY
+            ? ShipmentConstraintException::duplicateReference($shipment->externalReference)
+            : null);
     }
 
     /**
      * Saves the tracking, state and dates of a parcel.
+     *
+     * @throws ShipmentException Database error
      */
-    public function update(Shipment $shipment): bool
+    public function update(Shipment $shipment): void
     {
-        return Db::getInstance()->update(
+        DatabaseError::write('The parcel could not be saved.', fn (Db $db): bool => $db->update(
             self::TABLE,
             $this->escape($this->changeableColumns($shipment)) + ['date_upd' => date(self::DATE_FORMAT)],
             'id_shipment = ' . $shipment->id,
             0,
             true
-        );
+        ));
     }
 
     /**
@@ -181,50 +170,60 @@ class ShipmentRepository
      */
     public function delete(int $shipmentId): void
     {
-        $db = Db::getInstance();
-        $db->execute('START TRANSACTION', false);
-
-        try {
+        DatabaseError::transaction('The parcel could not be deleted.', static function (Db $db) use ($shipmentId): void {
             if (!$db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipmentId)
                 || !$db->delete(self::TABLE, 'id_shipment = ' . $shipmentId)
             ) {
-                throw new ShipmentException('The parcel could not be deleted.');
+                throw new RuntimeException('The parcel rows were not deleted.');
             }
-
-            $db->execute('COMMIT', false);
-        } catch (Throwable $t) {
-            $db->execute('ROLLBACK', false);
-
-            throw $t instanceof ShipmentException ? $t : new ShipmentException('The parcel could not be deleted.', 0, $t);
-        }
+        });
     }
 
     /**
      * Reserves the "parcel on its way" e-mail of a parcel: true for the one request
      * that sets the date, false if it was already set (sent or being sent).
+     *
+     * @throws ShipmentException Database error: not mistaken for "already sent"
      */
     public function claimMail(int $shipmentId): bool
     {
-        $db = Db::getInstance();
+        DatabaseError::write('The "parcel on its way" e-mail could not be reserved.', static fn (Db $db): bool => $db->update(
+            self::TABLE,
+            ['mail_sent_at' => date(self::DATE_FORMAT)],
+            'id_shipment = ' . $shipmentId . ' AND mail_sent_at IS NULL'
+        ));
 
-        return $db->update(self::TABLE, ['mail_sent_at' => date(self::DATE_FORMAT)], 'id_shipment = ' . $shipmentId . ' AND mail_sent_at IS NULL')
-            && (int) $db->Affected_Rows() === 1;
+        return (int) Db::getInstance()->Affected_Rows() === 1;
     }
 
     /**
      * Gives the reservation back when the e-mail could not be sent: tried again at the next save.
+     *
+     * @throws ShipmentException Database error
      */
     public function releaseMail(int $shipmentId): void
     {
-        Db::getInstance()->update(self::TABLE, ['mail_sent_at' => null], 'id_shipment = ' . $shipmentId, 0, true);
+        DatabaseError::write('The reservation of the "parcel on its way" e-mail could not be given back.', static fn (Db $db): bool => $db->update(
+            self::TABLE,
+            ['mail_sent_at' => null],
+            'id_shipment = ' . $shipmentId,
+            0,
+            true
+        ));
     }
 
     /**
      * Date of the "parcel on its way" e-mail sent at the merchant's request.
+     *
+     * @throws ShipmentException Database error
      */
     public function saveMailDate(int $shipmentId): void
     {
-        Db::getInstance()->update(self::TABLE, ['mail_sent_at' => date(self::DATE_FORMAT)], 'id_shipment = ' . $shipmentId);
+        DatabaseError::write('The date of the "parcel on its way" e-mail could not be saved.', static fn (Db $db): bool => $db->update(
+            self::TABLE,
+            ['mail_sent_at' => date(self::DATE_FORMAT)],
+            'id_shipment = ' . $shipmentId
+        ));
     }
 
     /**

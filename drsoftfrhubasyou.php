@@ -13,6 +13,7 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentEffectsLog;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\DatabaseError;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
@@ -172,22 +173,50 @@ class drsoftfrhubasyou extends Module
 
         try {
             if ($this->isPosted('submitDrSoftFrHubAsYouConfig')) {
-                Configuration::updateValue(Settings::ORDER_STATE_SHIPPED, (int) Tools::getValue('order_state_shipped', 0));
-                Configuration::updateValue(Settings::ORDER_STATE_DELIVERED, (int) Tools::getValue('order_state_delivered', 0));
-                Configuration::updateValue(Settings::SEND_MAIL, (int) (bool) Tools::getValue('send_mail', 0));
-                Configuration::updateValue(Settings::SEND_DELIVERED_MAIL, (int) (bool) Tools::getValue('send_delivered_mail', 0));
-                (new Settings())->setChangeableStates(array_filter(
-                    array_column(OrderState::getOrderStates((int) $this->context->language->id), 'id_order_state'),
-                    static fn ($stateId): bool => (bool) Tools::getValue('changeable_state_' . (int) $stateId)
-                ));
-
-                $output .= $this->displayConfirmation($this->trans('Settings updated', [], 'Modules.Drsoftfrhubasyou.Admin'));
+                $output .= $this->saveSettings()
+                    ? $this->displayConfirmation($this->trans('Settings updated', [], 'Modules.Drsoftfrhubasyou.Admin'))
+                    : $this->displayError($this->trans('The settings could not all be saved: check them below and save again. The error is in Advanced parameters > Logs.', [], 'Modules.Drsoftfrhubasyou.Admin'));
             }
 
             return $output . $this->renderSetupHelp() . $this->renderForm();
         } catch (Throwable $t) {
             return $output . $this->displayError($t->getMessage());
         }
+    }
+
+    /**
+     * Every setting is written, even after a failure. Each failure is logged at once, with
+     * the error of the database (the next query would clear it).
+     */
+    private function saveSettings(): bool
+    {
+        $writes = [
+            Settings::ORDER_STATE_SHIPPED => static fn (): bool => Configuration::updateValue(Settings::ORDER_STATE_SHIPPED, (int) Tools::getValue('order_state_shipped', 0)),
+            Settings::ORDER_STATE_DELIVERED => static fn (): bool => Configuration::updateValue(Settings::ORDER_STATE_DELIVERED, (int) Tools::getValue('order_state_delivered', 0)),
+            Settings::SEND_MAIL => static fn (): bool => Configuration::updateValue(Settings::SEND_MAIL, (int) (bool) Tools::getValue('send_mail', 0)),
+            Settings::SEND_DELIVERED_MAIL => static fn (): bool => Configuration::updateValue(Settings::SEND_DELIVERED_MAIL, (int) (bool) Tools::getValue('send_delivered_mail', 0)),
+            Settings::CHANGEABLE_STATES => fn (): bool => (new Settings())->setChangeableStates(array_filter(
+                array_column(OrderState::getOrderStates((int) $this->context->language->id), 'id_order_state'),
+                static fn ($stateId): bool => (bool) Tools::getValue('changeable_state_' . (int) $stateId)
+            )),
+        ];
+        $saved = true;
+
+        foreach ($writes as $key => $write) {
+            $failure = sprintf('The module setting %s could not be saved.', $key);
+
+            try {
+                if (!$write()) {
+                    DatabaseError::log($failure);
+                    $saved = false;
+                }
+            } catch (Throwable $t) {
+                DatabaseError::log($failure, $t);
+                $saved = false;
+            }
+        }
+
+        return $saved;
     }
 
     private function renderSetupHelp(): string

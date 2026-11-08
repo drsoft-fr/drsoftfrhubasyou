@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
+use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use PrestaShop\PrestaShop\Core\Context\ApiClientContext;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
 use PrestaShopLogger;
 use Throwable;
 
 /**
- * Who did what on a parcel, in the PrestaShop logs (Advanced parameters › Logs), attached
- * to the order. A failure here never refuses the action.
+ * Who did what on a parcel: in the module's own journal (shown on the order page, kept
+ * whatever the settings of PrestaShop's logs), and in PrestaShop's logs (Advanced
+ * parameters › Logs) as before, when their minimum level allows it.
+ *
+ * added(), edited() and deleted() are called by ShipmentRepository, which requires the journal
+ * for every write, inside the transaction of the change: if the journal line cannot be
+ * written, the change is not saved either. A
+ * parcel never changes without its line. The other lines describe something already done
+ * (an e-mail sent): a failure is logged, never turned into an error.
  */
 class ShipmentJournal
 {
@@ -23,12 +32,47 @@ class ShipmentJournal
     public function __construct(
         private readonly ApiClientContext $apiClientContext,
         private readonly EmployeeContext $employeeContext,
+        private readonly ShipmentLogRepository $journal,
     ) {
     }
 
+    /**
+     * @throws ShipmentException The line could not be written: the parcel is not saved
+     */
     public function added(Shipment $shipment): void
     {
-        $this->write($shipment, 'added', $this->describe($shipment));
+        $this->write($shipment, ShipmentLogRepository::ADDED, $this->snapshot($shipment), $this->describe($shipment));
+    }
+
+    /**
+     * Only the values that changed; nothing is written when none did.
+     *
+     * @throws ShipmentException The line could not be written: the change is not saved
+     */
+    public function edited(Shipment $before, Shipment $after): void
+    {
+        $changes = [];
+        $texts = [];
+        $newValues = $after->changeableValues();
+
+        foreach ($before->changeableValues() as $name => $oldValue) {
+            if ((string) $oldValue !== (string) $newValues[$name]) {
+                $changes[$name] = [$oldValue, $newValues[$name]];
+                $texts[] = sprintf('%s: "%s" -> "%s"', $name, $oldValue, $newValues[$name]);
+            }
+        }
+
+        if ($changes) {
+            $this->write($after, ShipmentLogRepository::EDITED, ['changes' => $changes], implode(', ', $texts));
+        }
+    }
+
+    /**
+     * @throws ShipmentException The line could not be written: the parcel is not deleted
+     */
+    public function deleted(Shipment $shipment): void
+    {
+        $this->write($shipment, ShipmentLogRepository::DELETED, $this->snapshot($shipment), $this->describe($shipment));
     }
 
     /**
@@ -36,31 +80,7 @@ class ShipmentJournal
      */
     public function declaredAgain(Shipment $shipment): void
     {
-        $this->write($shipment, 'received again', $this->describe($shipment));
-    }
-
-    /**
-     * Only the values that changed; nothing is written when none did.
-     */
-    public function edited(Shipment $before, Shipment $after): void
-    {
-        $changes = [];
-        $newValues = $after->changeableValues();
-
-        foreach ($before->changeableValues() as $name => $oldValue) {
-            if ((string) $oldValue !== (string) $newValues[$name]) {
-                $changes[] = sprintf('%s: "%s" -> "%s"', $name, $oldValue, $newValues[$name]);
-            }
-        }
-
-        if ($changes) {
-            $this->write($after, 'edited', implode(', ', $changes));
-        }
-    }
-
-    public function deleted(Shipment $shipment): void
-    {
-        $this->write($shipment, 'deleted', $this->describe($shipment));
+        $this->writeDone(fn () => $this->write($shipment, ShipmentLogRepository::RECEIVED_AGAIN, [], $this->describe($shipment)));
     }
 
     /**
@@ -68,7 +88,10 @@ class ShipmentJournal
      */
     public function deliveredMailSent(int $orderId): void
     {
-        $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', Settings::MODULE_NAME, $orderId, $this->getActor()));
+        $this->writeDone(function () use ($orderId): void {
+            $this->journal->add($orderId, null, null, ShipmentLogRepository::DELIVERED_MAIL_SENT, $this->getApiClient(), $this->getEmployeeId(), []);
+            $this->log($orderId, sprintf('%s - order #%d: "order delivered" e-mail sent by %s', Settings::MODULE_NAME, $orderId, $this->getActor()));
+        });
     }
 
     /**
@@ -76,58 +99,103 @@ class ShipmentJournal
      */
     public function shipmentMailSent(Shipment $shipment): void
     {
-        $this->log($shipment->orderId, sprintf(
-            '%s - parcel #%d (%s) of order #%d: "parcel on its way" e-mail sent by %s',
-            Settings::MODULE_NAME,
-            $shipment->id,
-            $shipment->externalReference,
-            $shipment->orderId,
-            $this->getActor()
-        ));
+        $this->writeDone(function () use ($shipment): void {
+            $this->journal->add($shipment->orderId, $shipment->id, $shipment->externalReference, ShipmentLogRepository::SHIPMENT_MAIL_SENT, $this->getApiClient(), $this->getEmployeeId(), []);
+            $this->log($shipment->orderId, sprintf(
+                '%s - parcel #%d (%s) of order #%d: "parcel on its way" e-mail sent by %s',
+                Settings::MODULE_NAME,
+                $shipment->id,
+                $shipment->externalReference,
+                $shipment->orderId,
+                $this->getActor()
+            ));
+        });
     }
 
-    private function write(Shipment $shipment, string $action, string $details): void
+    /**
+     * @param array<string, mixed> $details
+     *
+     * @throws ShipmentException
+     */
+    private function write(Shipment $shipment, string $action, array $details, string $text): void
     {
+        $this->journal->add($shipment->orderId, $shipment->id, $shipment->externalReference, $action, $this->getApiClient(), $this->getEmployeeId(), $details);
         $this->log($shipment->orderId, sprintf(
             '%s - parcel #%d (%s) of order #%d %s by %s: %s',
             Settings::MODULE_NAME,
             $shipment->id,
             $shipment->externalReference,
             $shipment->orderId,
-            $action,
+            str_replace('_', ' ', $action),
             $this->getActor(),
-            $details
+            $text
         ));
     }
 
+    /**
+     * A line about something already done: its failure is in the logs (DatabaseError), the
+     * action stays done.
+     */
+    private function writeDone(callable $write): void
+    {
+        try {
+            $write();
+        } catch (ShipmentException) {
+            // Already logged where the database failed
+        }
+    }
+
+    /**
+     * PrestaShop's logs: kept only if their minimum level allows it, a failure is ignored.
+     */
     private function log(int $orderId, string $message): void
     {
         try {
-            PrestaShopLogger::addLog(
-                $message,
-                self::SEVERITY_INFORMATIVE,
-                null,
-                'Order',
-                $orderId,
-                true,
-                $this->employeeContext->getEmployee()?->getId()
-            );
+            PrestaShopLogger::addLog($message, self::SEVERITY_INFORMATIVE, null, 'Order', $orderId, true, $this->getEmployeeId());
         } catch (Throwable) {
-            // The parcel is saved: a missing log line must not turn it into an error
+            // The module's own journal has the line
         }
+    }
+
+    private function getApiClient(): ?string
+    {
+        return $this->apiClientContext->getApiClient()?->getClientId();
+    }
+
+    private function getEmployeeId(): ?int
+    {
+        // An API client acts alone, even if PrestaShop knows an employee in the same process
+        return $this->getApiClient() === null ? $this->employeeContext->getEmployee()?->getId() : null;
     }
 
     private function getActor(): string
     {
-        $apiClient = $this->apiClientContext->getApiClient();
+        $apiClient = $this->getApiClient();
 
-        if ($apiClient) {
-            return sprintf('API client "%s"', $apiClient->getClientId());
+        if ($apiClient !== null) {
+            return sprintf('API client "%s"', $apiClient);
         }
 
-        $employee = $this->employeeContext->getEmployee();
+        $employeeId = $this->getEmployeeId();
 
-        return $employee ? sprintf('employee #%d', $employee->getId()) : 'unknown';
+        return $employeeId ? sprintf('employee #%d', $employeeId) : 'unknown';
+    }
+
+    /**
+     * The whole parcel, as it is (added) or was (deleted).
+     *
+     * @return array<string, mixed>
+     */
+    private function snapshot(Shipment $shipment): array
+    {
+        return $shipment->changeableValues() + [
+            'lines' => array_map(static fn (ShipmentLine $line): array => [
+                'id_order_detail' => $line->orderDetailId,
+                'quantity' => $line->quantity,
+                'product_name' => $line->productName,
+                'product_reference' => $line->productReference,
+            ], $shipment->lines),
+        ];
     }
 
     private function describe(Shipment $shipment): string

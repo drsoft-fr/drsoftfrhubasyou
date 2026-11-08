@@ -38,6 +38,27 @@ CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_order_mail`
 ) ENGINE = _MYSQL_ENGINE_
   DEFAULT CHARSET = utf8mb4;
 
+-- Who did what on the parcels of an order, written with the change it describes (same transaction).
+-- Independent of the minimum level and of the "erase" button of PrestaShop's logs; never emptied by
+-- the module. No foreign key: the row of a deleted parcel stays. Details: JSON, without customer data
+CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment_log`
+(
+    `id_shipment_log`    INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_order`           INT(10) UNSIGNED NOT NULL,
+    `id_shipment`        INT(10) UNSIGNED          DEFAULT NULL,
+    `external_reference` VARCHAR(64) COLLATE utf8mb4_bin DEFAULT NULL,
+    `action`             VARCHAR(32)      NOT NULL,
+    `api_client`         VARCHAR(255)              DEFAULT NULL,
+    `id_employee`        INT(10) UNSIGNED          DEFAULT NULL,
+    `details`            TEXT             NOT NULL,
+    `date_add`           DATETIME         NOT NULL,
+    PRIMARY KEY (`id_shipment_log`),
+    KEY `idx_dfhaysg_order` (`id_order`, `id_shipment_log`),
+    CHECK (`action` IN ('added', 'received_again', 'edited', 'deleted', 'shipment_mail_sent', 'delivered_mail_sent')),
+    CHECK (JSON_VALID(`details`))
+) ENGINE = _MYSQL_ENGINE_
+  DEFAULT CHARSET = utf8mb4;
+
 -- The product is copied from the order line: the parcel still says what it held if the
 -- line is removed from the order afterwards
 CREATE TABLE IF NOT EXISTS `_DB_PREFIX_drsoft_fr_hubasyou_shipment_line`

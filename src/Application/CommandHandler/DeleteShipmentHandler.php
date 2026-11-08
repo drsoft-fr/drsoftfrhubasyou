@@ -32,8 +32,7 @@ final class DeleteShipmentHandler
     public function handle(DeleteShipmentCommand $command): void
     {
         $this->lock->synchronized($command->shipmentId->getValue(), function (Shipment $shipment): void {
-            $this->shipments->delete($shipment->id);
-            $this->journal->deleted($shipment);
+            $this->shipments->delete($shipment, $this->journal);
             $this->effects->onOrderChanged($shipment->orderId);
         });
     }

@@ -61,7 +61,7 @@ final class InstallerTest extends TestCase
     {
         $statements = Installer::splitStatements((string) file_get_contents(self::SQL_DIR . 'install.sql'));
 
-        self::assertCount(3, $statements);
+        self::assertCount(4, $statements);
 
         foreach ($statements as $statement) {
             self::assertStringStartsWith('CREATE TABLE IF NOT EXISTS', $statement);
@@ -73,7 +73,7 @@ final class InstallerTest extends TestCase
     {
         $statements = Installer::splitStatements((string) file_get_contents(self::SQL_DIR . 'uninstall.sql'));
 
-        self::assertCount(3, $statements);
+        self::assertCount(4, $statements);
 
         foreach ($statements as $statement) {
             self::assertStringStartsWith('DROP TABLE IF EXISTS', $statement);

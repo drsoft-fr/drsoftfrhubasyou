@@ -282,6 +282,78 @@
         <source>This parcel was changed (by HubAsYou or another employee) while you were editing it. Its current values are shown below: check them and save again if needed.</source>
         <target>Ce colis a été modifié (par HubAsYou ou un autre employé) pendant que vous le modifiiez. Ses valeurs actuelles sont affichées ci-dessous : vérifiez-les et enregistrez de nouveau si besoin.</target>
       </trans-unit>
+      <trans-unit id="41d503a085e13a44a925455f1b4a045b">
+        <source>Parcel declared</source>
+        <target>Colis déclaré</target>
+      </trans-unit>
+      <trans-unit id="6525df50bdca6d4167a3e67bdf2ad731">
+        <source>Parcel received again, unchanged</source>
+        <target>Colis reçu de nouveau, sans changement</target>
+      </trans-unit>
+      <trans-unit id="bef28f4705cd8be480d7afb53a675908">
+        <source>Parcel edited</source>
+        <target>Colis modifié</target>
+      </trans-unit>
+      <trans-unit id="2307ab11437df69c1da6ffaaaab78e9d">
+        <source>Parcel deleted</source>
+        <target>Colis supprimé</target>
+      </trans-unit>
+      <trans-unit id="338760537c7548c41be41c9fc92a9e8d">
+        <source>"Parcel on its way" e-mail sent</source>
+        <target>E-mail « colis en route » envoyé</target>
+      </trans-unit>
+      <trans-unit id="63a1ea8ade30ae752c7582799b4f01bd">
+        <source>"Order delivered" e-mail sent</source>
+        <target>E-mail « commande livrée » envoyé</target>
+      </trans-unit>
+      <trans-unit id="55ed2eb9684fd10b8e708ff6f49d0047">
+        <source>Shipped on</source>
+        <target>Expédié le</target>
+      </trans-unit>
+      <trans-unit id="e6ade82b16a10d3b47c48426a22070af">
+        <source>Delivered on</source>
+        <target>Livré le</target>
+      </trans-unit>
+      <trans-unit id="04ee8a872cabc1e8286969d2b39be0c1">
+        <source>API client "%name%"</source>
+        <target>Client API « %name% »</target>
+      </trans-unit>
+      <trans-unit id="87f39d06feafc305d35e1acc5fd1f33c">
+        <source>Employee #%id%</source>
+        <target>Employé n° %id%</target>
+      </trans-unit>
+      <trans-unit id="88183b946cc5f0e8c96b2e66e1c74a7e">
+        <source>Unknown</source>
+        <target>Inconnu</target>
+      </trans-unit>
+      <trans-unit id="cb350fcd49a4c757186510f60dc5e90b">
+        <source>%field%: %old% → %new%</source>
+        <target>%field% : %old% → %new%</target>
+      </trans-unit>
+      <trans-unit id="6ef61ce475e00192926e1bd18277450a">
+        <source>%field%: %value%</source>
+        <target>%field% : %value%</target>
+      </trans-unit>
+      <trans-unit id="753a141f0252eba0bde3178c76002f34">
+        <source>History of the parcels</source>
+        <target>Historique des colis</target>
+      </trans-unit>
+      <trans-unit id="44749712dbec183e983dcd78a7736c41">
+        <source>Date</source>
+        <target>Date</target>
+      </trans-unit>
+      <trans-unit id="004bf6c9a40003140292e97330236c53">
+        <source>Action</source>
+        <target>Action</target>
+      </trans-unit>
+      <trans-unit id="53e5aa2c97fef1555d2511de8218c544">
+        <source>By</source>
+        <target>Par</target>
+      </trans-unit>
+      <trans-unit id="3ec365dd533ddb7ef3d1c111186ce872">
+        <source>Details</source>
+        <target>Détails</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

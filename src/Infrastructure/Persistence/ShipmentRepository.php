@@ -15,6 +15,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use RuntimeException;
 
 /**
@@ -103,16 +104,16 @@ class ShipmentRepository
     }
 
     /**
-     * Inserts a new parcel and its lines, together (transaction).
+     * Inserts a new parcel, its lines and its journal line, together (transaction).
      *
      * @return int The new id_shipment
      *
      * @throws ShipmentConstraintException External reference already used (unique key)
      * @throws ShipmentException Database error
      */
-    public function add(Shipment $shipment): int
+    public function add(Shipment $shipment, ShipmentJournal $journal): int
     {
-        return DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($shipment): int {
+        return DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($shipment, $journal): int {
             $now = date(self::DATE_FORMAT);
             $columns = [
                 'external_reference' => $shipment->externalReference,
@@ -141,6 +142,9 @@ class ShipmentRepository
                 throw new RuntimeException('The lines of the parcel were not inserted.');
             }
 
+            // As saved: same connection, the transaction sees its own rows
+            $journal->added($this->find($shipmentId) ?? throw new RuntimeException('The parcel saved could not be read again.'));
+
             return $shipmentId;
         }, static fn (Db $db): ?ShipmentException => (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY
             ? ShipmentConstraintException::duplicateReference($shipment->externalReference)
@@ -148,34 +152,47 @@ class ShipmentRepository
     }
 
     /**
-     * Saves the tracking, state and dates of a parcel.
+     * Saves the tracking, state and dates of a parcel, and the journal line of what changed,
+     * together (transaction).
+     *
+     * @param Shipment $before The parcel as it was read before the change
      *
      * @throws ShipmentException Database error
      */
-    public function update(Shipment $shipment): void
+    public function update(Shipment $before, Shipment $shipment, ShipmentJournal $journal): void
     {
-        DatabaseError::write('The parcel could not be saved.', fn (Db $db): bool => $db->update(
-            self::TABLE,
-            $this->escape($this->changeableColumns($shipment)) + ['date_upd' => date(self::DATE_FORMAT)],
-            'id_shipment = ' . $shipment->id,
-            0,
-            true
-        ));
+        DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($before, $shipment, $journal): void {
+            if (!$db->update(
+                self::TABLE,
+                $this->escape($this->changeableColumns($shipment)) + ['date_upd' => date(self::DATE_FORMAT)],
+                'id_shipment = ' . $shipment->id,
+                0,
+                true
+            )) {
+                throw new RuntimeException('The parcel row was not updated.');
+            }
+
+            // As saved (dates in the shop's time): only what really changed is written
+            $journal->edited($before, $this->find($shipment->id) ?? throw new RuntimeException('The parcel saved could not be read again.'));
+        });
     }
 
     /**
-     * Deletes a parcel and its lines, together (transaction).
+     * Deletes a parcel and its lines, and writes its journal line with its content,
+     * together (transaction).
      *
      * @throws ShipmentException Database error
      */
-    public function delete(int $shipmentId): void
+    public function delete(Shipment $shipment, ShipmentJournal $journal): void
     {
-        DatabaseError::transaction('The parcel could not be deleted.', static function (Db $db) use ($shipmentId): void {
-            if (!$db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipmentId)
-                || !$db->delete(self::TABLE, 'id_shipment = ' . $shipmentId)
+        DatabaseError::transaction('The parcel could not be deleted.', static function (Db $db) use ($shipment, $journal): void {
+            if (!$db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipment->id)
+                || !$db->delete(self::TABLE, 'id_shipment = ' . $shipment->id)
             ) {
                 throw new RuntimeException('The parcel rows were not deleted.');
             }
+
+            $journal->deleted($shipment);
         });
     }
 

@@ -16,6 +16,7 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\DatabaseError;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Core\Module\ModuleManager;
 
@@ -426,6 +427,7 @@ class drsoftfrhubasyou extends Module
 
             $this->context->smarty->assign([
                 'hubasyou_shipments' => $shipments,
+                'hubasyou_journal' => $this->presentJournal((new ShipmentLogRepository())->findByOrder($orderId)),
                 'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning($orderId) : '',
                 'hubasyou_delivered_mail_at' => $deliveredMailDate ? Tools::displayDate($deliveredMailDate) : '',
                 'hubasyou_delivered_mail_allowed' => $deliveredMailAllowed,
@@ -554,6 +556,91 @@ class drsoftfrhubasyou extends Module
                 'product_reference' => $line->productReference,
             ], $shipment->lines),
         ], $shipments);
+    }
+
+    /**
+     * Journal rows → data for the order page: who, what and the details, in the context
+     * language. Raw values: the template escapes them.
+     *
+     * @param array<int, array<string, mixed>> $rows ShipmentLogRepository::findByOrder()
+     *
+     * @return array<int, array{date: string, reference: string, action: string, actor: string, details: string[]}>
+     */
+    private function presentJournal(array $rows): array
+    {
+        $domain = 'Modules.Drsoftfrhubasyou.Admin';
+        $actions = [
+            ShipmentLogRepository::ADDED => $this->trans('Parcel declared', [], $domain),
+            ShipmentLogRepository::RECEIVED_AGAIN => $this->trans('Parcel received again, unchanged', [], $domain),
+            ShipmentLogRepository::EDITED => $this->trans('Parcel edited', [], $domain),
+            ShipmentLogRepository::DELETED => $this->trans('Parcel deleted', [], $domain),
+            ShipmentLogRepository::SHIPMENT_MAIL_SENT => $this->trans('"Parcel on its way" e-mail sent', [], $domain),
+            ShipmentLogRepository::DELIVERED_MAIL_SENT => $this->trans('"Order delivered" e-mail sent', [], $domain),
+        ];
+        $fields = [
+            'status' => $this->trans('Status', [], $domain),
+            'carrier_name' => $this->trans('Carrier', [], $domain),
+            'tracking_number' => $this->trans('Tracking number', [], $domain),
+            'tracking_url' => $this->trans('Tracking URL', [], $domain),
+            'shipped_at' => $this->trans('Shipped on', [], $domain),
+            'delivered_at' => $this->trans('Delivered on', [], $domain),
+        ];
+        $statuses = $this->getStatusLabels();
+        $value = static function (string $field, mixed $raw) use ($statuses): string {
+            if ($raw === null || $raw === '') {
+                return '—';
+            }
+
+            return match ($field) {
+                'status' => $statuses[(string) $raw] ?? (string) $raw,
+                'shipped_at', 'delivered_at' => Tools::displayDate((string) $raw, true),
+                default => (string) $raw,
+            };
+        };
+
+        return array_map(function (array $row) use ($actions, $fields, $value, $domain): array {
+            $details = [];
+            $data = $row['details'];
+
+            if (isset($data['changes']) && is_array($data['changes'])) {
+                foreach ($data['changes'] as $field => [$old, $new]) {
+                    $details[] = $this->trans('%field%: %old% → %new%', ['%field%' => $fields[$field] ?? $field, '%old%' => $value($field, $old), '%new%' => $value($field, $new)], $domain);
+                }
+            } else {
+                foreach ($fields as $field => $label) {
+                    if (array_key_exists($field, $data) && $data[$field] !== null && $data[$field] !== '') {
+                        $details[] = $this->trans('%field%: %value%', ['%field%' => $label, '%value%' => $value($field, $data[$field])], $domain);
+                    }
+                }
+
+                foreach ($data['lines'] ?? [] as $line) {
+                    $details[] = sprintf(
+                        '%d × %s%s',
+                        (int) ($line['quantity'] ?? 0),
+                        (string) ($line['product_name'] ?? ''),
+                        !empty($line['product_reference']) ? ' (' . $line['product_reference'] . ')' : ''
+                    );
+                }
+            }
+
+            if ($row['api_client'] !== null) {
+                $actor = $this->trans('API client "%name%"', ['%name%' => $row['api_client']], $domain);
+            } elseif ($row['id_employee'] !== null) {
+                $actor = $row['lastname'] !== null
+                    ? trim($row['firstname'] . ' ' . $row['lastname'])
+                    : $this->trans('Employee #%id%', ['%id%' => (int) $row['id_employee']], $domain);
+            } else {
+                $actor = $this->trans('Unknown', [], $domain);
+            }
+
+            return [
+                'date' => Tools::displayDate((string) $row['date_add'], true),
+                'reference' => (string) $row['external_reference'],
+                'action' => $actions[$row['action']] ?? (string) $row['action'],
+                'actor' => $actor,
+                'details' => $details,
+            ];
+        }, $rows);
     }
 
     /**

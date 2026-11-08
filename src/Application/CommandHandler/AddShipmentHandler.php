@@ -75,11 +75,7 @@ final class AddShipmentHandler
                 $command->deliveredAt,
                 $command->lines,
                 new DateTimeImmutable()
-            ));
-
-            if ($shipment = $this->shipments->find($shipmentId)) {
-                $this->journal->added($shipment);
-            }
+            ), $this->journal);
 
             $this->effects->onShipmentSaved($shipmentId);
 

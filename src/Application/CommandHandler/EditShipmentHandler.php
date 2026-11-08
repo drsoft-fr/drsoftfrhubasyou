@@ -57,11 +57,7 @@ final class EditShipmentHandler
                 new DateTimeImmutable()
             );
 
-            $this->shipments->update($changed);
-
-            if ($saved = $this->shipments->find($shipmentId)) {
-                $this->journal->edited($current, $saved);
-            }
+            $this->shipments->update($current, $changed, $this->journal);
 
             $this->effects->onShipmentSaved($shipmentId);
         });

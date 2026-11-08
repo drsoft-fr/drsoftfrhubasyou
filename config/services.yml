@@ -11,6 +11,7 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~

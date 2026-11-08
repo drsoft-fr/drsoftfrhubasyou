@@ -67,6 +67,22 @@ final class Shipment
     }
 
     /**
+     * HubAsYou may not move a delivered parcel to another state. By then the order is
+     * delivered (it never goes back) and the customer has the "order delivered" e-mail:
+     * a late "in transit" or "delivery problem" would contradict both. Only the merchant
+     * corrects it (back office); HubAsYou deletes the parcel and declares it again.
+     * Its tracking and dates can still be corrected.
+     *
+     * @throws ShipmentConstraintException
+     */
+    public function assertSenderMayChangeStatus(?ShipmentStatus $status): void
+    {
+        if ($this->status === ShipmentStatus::Delivered && $status !== null && $status !== ShipmentStatus::Delivered) {
+            throw new ShipmentConstraintException(sprintf('Parcel %d is delivered: its state can no longer be changed through the API.', $this->id), ShipmentConstraintException::DELIVERED_IS_FINAL, parameters: ['id' => $this->id]);
+        }
+    }
+
+    /**
      * The parcel after a change of its tracking, state or dates. Null: unchanged; an
      * empty tracking URL removes the tracking page.
      *

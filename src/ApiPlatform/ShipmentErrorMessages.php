@@ -39,6 +39,7 @@ final class ShipmentErrorMessages
         Refusal::DATE_OUT_OF_RANGE => '%fields% cannot be before the year 2000, nor more than one day in the future.',
         Refusal::INVALID_LIST_PARAMETER => 'The value of %fields% is not valid.',
         Refusal::FORBIDDEN_CHARACTER => '%fields% cannot contain line breaks, control characters or invisible characters.',
+        Refusal::DELIVERED_IS_FINAL => 'Parcel %id% is delivered: its state can no longer be changed. To correct it, delete the parcel and declare it again.',
     ];
 
     private const BY_CLASS = [

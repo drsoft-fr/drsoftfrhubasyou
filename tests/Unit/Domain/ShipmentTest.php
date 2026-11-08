@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Tests\Unit\Domain;
 
 use DateTimeImmutable;
+use DrSoftFr\Module\HubAsYou\ApiPlatform\ShipmentErrorMessages;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ShipmentTest extends TestCase
@@ -63,6 +65,53 @@ final class ShipmentTest extends TestCase
 
         self::assertEquals($this->now, $delivered->deliveredAt);
         self::assertNull($delivered->withChanges(null, null, null, ShipmentStatus::InTransit, null, null, $this->now)->deliveredAt);
+    }
+
+    private function deliveredParcel(): Shipment
+    {
+        return new Shipment(12, 'HAY-1', 45, 'DPD', 'TN1', null, ShipmentStatus::Delivered, $this->now, $this->now, $this->now, $this->parcel()->lines);
+    }
+
+    /**
+     * @return array<string, array{ShipmentStatus}>
+     */
+    public static function earlierStatusProvider(): array
+    {
+        return [
+            'shipped' => [ShipmentStatus::Shipped],
+            'in transit' => [ShipmentStatus::InTransit],
+            'delivery problem' => [ShipmentStatus::Exception],
+        ];
+    }
+
+    #[DataProvider('earlierStatusProvider')]
+    public function testTheSenderCannotMoveADeliveredParcel(ShipmentStatus $status): void
+    {
+        try {
+            $this->deliveredParcel()->assertSenderMayChangeStatus($status);
+            self::fail('Refusal expected');
+        } catch (ShipmentConstraintException $e) {
+            self::assertSame(ShipmentConstraintException::DELIVERED_IS_FINAL, $e->getCode());
+            self::assertSame('Parcel 12 is delivered: its state can no longer be changed. To correct it, delete the parcel and declare it again.', ShipmentErrorMessages::for($e));
+        }
+    }
+
+    public function testTheSenderMaySendDeliveredAgainOrNoState(): void
+    {
+        $this->deliveredParcel()->assertSenderMayChangeStatus(ShipmentStatus::Delivered);
+        $this->deliveredParcel()->assertSenderMayChangeStatus(null);
+        $this->expectNotToPerformAssertions();
+    }
+
+    #[DataProvider('earlierStatusProvider')]
+    public function testTheSenderMovesAParcelNotDeliveredYet(ShipmentStatus $status): void
+    {
+        foreach ([ShipmentStatus::Shipped, ShipmentStatus::InTransit, ShipmentStatus::Exception] as $current) {
+            $parcel = new Shipment(12, 'HAY-1', 45, 'DPD', 'TN1', null, $current, $this->now, null, null, $this->parcel()->lines);
+            $parcel->assertSenderMayChangeStatus($status);
+            $parcel->assertSenderMayChangeStatus(ShipmentStatus::Delivered);
+        }
+        $this->expectNotToPerformAssertions();
     }
 
     public function testChangesDoNotTouchTheContentOrTheEmailDate(): void

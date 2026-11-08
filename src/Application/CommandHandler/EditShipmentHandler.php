@@ -12,6 +12,7 @@ use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Context\RequestOrigin;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 
 #[AsCommandHandler]
@@ -22,6 +23,7 @@ final class EditShipmentHandler
         private readonly ShipmentEffects $effects,
         private readonly ShipmentLock $lock,
         private readonly ShipmentJournal $journal,
+        private readonly RequestOrigin $origin,
     ) {
     }
 
@@ -34,6 +36,11 @@ final class EditShipmentHandler
 
         $this->lock->synchronized($shipmentId, function (Shipment $current) use ($command, $shipmentId): void {
             $current->assertContentUnchanged($command->externalReference, $command->orderId, $command->lines);
+
+            // Decided by who calls, never by a field of the request: the back office may correct
+            if ($this->origin->isApiClient()) {
+                $current->assertSenderMayChangeStatus($command->status);
+            }
 
             // Optimistic check, under the lock so nothing can change between it and the save
             if ($command->expectedVersion !== null && $command->expectedVersion !== $current->version()) {

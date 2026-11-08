@@ -34,6 +34,7 @@ class ShipmentConstraintException extends ShipmentException
     public const DATE_OUT_OF_RANGE = 20;
     public const INVALID_LIST_PARAMETER = 21;
     public const FORBIDDEN_CHARACTER = 22;
+    public const DELIVERED_IS_FINAL = 23;
 
     public static function duplicateReference(string $externalReference): self
     {

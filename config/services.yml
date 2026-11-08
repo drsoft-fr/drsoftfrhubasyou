@@ -16,6 +16,7 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal: ~
+  DrSoftFr\Module\HubAsYou\Infrastructure\Context\RequestOrigin: ~
 
   # Admin API: must run before the error listener of API Platform (priority -96)
   DrSoftFr\Module\HubAsYou\ApiPlatform\EventListener\ShipmentErrorListener:

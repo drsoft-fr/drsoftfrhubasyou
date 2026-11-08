@@ -87,6 +87,7 @@ Règles de cohérence :
 - la même ligne envoyée deux fois dans un colis est additionnée ;
 - le contenu d'un colis (`externalReference`, `orderId`, `lines`) ne se modifie pas : un `PATCH` avec une autre valeur est refusé en entier (`422`, rien n'est appliqué) ; renvoyer les mêmes valeurs est accepté. En cas d'erreur, **supprimer le colis** (`DELETE`) puis le déclarer à nouveau ; sa `externalReference` redevient libre et ses unités peuvent être remises en colis. Le marchand peut faire de même depuis le BO (fiche de la commande, colis HubAsYou : « Supprimer »), et y corriger le suivi (« Modifier » : transporteur, numéro, URL, état) ;
 - une suppression n'annule ni l'e-mail déjà envoyé au client ni l'état de la commande ;
+- **colis perdu et colis de remplacement** : un colis perdu garde ses articles, quel que soit son état, `exception` compris. Le colis qui le remplace est donc refusé tant que le colis perdu existe (`422`, quantité dépassée). Il faut **supprimer le colis perdu, puis déclarer le nouveau**. La suppression est inscrite au journal de la boutique, avec la référence et le contenu du colis. Cette règle empêche une commande de compter plus d'articles que commandé si le colis perdu réapparaît : il ne peut plus s'ajouter. Exemple complet ci-dessous (§ 4) ;
 - un `PATCH` ne change que les champs envoyés ; une date déjà enregistrée n'est pas écrasée par la date par défaut ;
 - tant qu'un colis n'est pas livré, son état peut changer librement (`shipped`, `in_transit`, `exception`, `delivered`, dans n'importe quel ordre) ;
 - **un colis livré ne change plus d'état** : un `PATCH` qui demande `shipped`, `in_transit` ou `exception` est refusé (`422`, rien n'est appliqué). À ce moment, la commande est déjà livrée et le client a reçu l'e-mail de livraison : un état plus ancien les contredirait. Exemple : `HAY-000981` est `delivered` le 5 novembre ; le 7, le transporteur signale un problème : le `PATCH` vers `exception` est refusé. Pour corriger un `delivered` envoyé par erreur, **supprimer le colis** puis le déclarer à nouveau. Restent permis sur un colis livré : renvoyer `delivered`, corriger le transporteur, le numéro, l'URL ou les dates. Le marchand, lui, peut toujours changer l'état depuis le BO ;
@@ -125,6 +126,24 @@ Content-Type: application/json
 ```
 
 Réponse `200 OK` : le colis complet.
+
+Remplacer un colis perdu. La commande 45 contient une affiche (ligne `101`, 1 unité) et une tasse (ligne `102`, 1 unité), parties dans deux colis : `HAY-000981` (`shipmentId` 12, l'affiche) et `HAY-000982` (`shipmentId` 13, la tasse).
+
+1. L'affiche arrive : `PATCH /hubasyou/shipments/12` avec `{"status": "delivered"}`. La commande reste « Expédié » : la tasse est encore attendue.
+2. Le transporteur perd la tasse : `PATCH /hubasyou/shipments/13` avec `{"status": "exception"}`. La commande reste « Expédié », et le client ne reçoit pas l'e-mail de livraison.
+3. HubAsYou envoie une nouvelle tasse dans `HAY-000990`. Le déclarer tout de suite est refusé, car la tasse est encore dans le colis perdu :
+
+   ```http
+   POST /admin-api/hubasyou/shipments
+   { "externalReference": "HAY-000990", "orderId": 45, "carrierName": "DPD", "trackingNumber": "250123456790", "status": "shipped", "lines": [ { "orderDetailId": 102, "quantity": 1 } ] }
+   ```
+
+   Réponse `422` : `{"detail": "Order line 102: 1 unit(s) ordered, 1 already in parcels, 1 sent.", …}`.
+4. Supprimer le colis perdu : `DELETE /hubasyou/shipments/13`, réponse `204`. Le journal de la boutique garde sa trace : `parcel #13 (HAY-000982) of order #45 deleted by API client "hubasyou": status "exception", …`.
+5. Renvoyer le `POST` de l'étape 3 : réponse `201`, avec le nouveau `shipmentId` (par exemple 14). Le client reçoit l'e-mail « votre colis est en route » avec le nouveau numéro de suivi.
+6. La nouvelle tasse arrive : `PATCH /hubasyou/shipments/14` avec `{"status": "delivered"}`. La commande passe « Livré », et le client reçoit l'e-mail de livraison avec `HAY-000981` et `HAY-000990`, sans le colis perdu.
+
+Si l'ancien colis réapparaît ensuite, un `POST` de `HAY-000982` est refusé (`422`, quantité dépassée) : la tasse est déjà dans `HAY-000990`.
 
 ## 5. Codes de réponse
 

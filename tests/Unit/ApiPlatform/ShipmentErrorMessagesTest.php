@@ -101,6 +101,16 @@ final class ShipmentErrorMessagesTest extends TestCase
         }
     }
 
+    public function testAForbiddenCharacterNamesTheFieldNotTheValue(): void
+    {
+        try {
+            ShipmentRules::text('carrierName', "DPD\nBcc: x@example.com");
+            self::fail('Refusal expected');
+        } catch (ShipmentConstraintException $e) {
+            self::assertSame('carrierName cannot contain line breaks, control characters or invisible characters.', ShipmentErrorMessages::for($e));
+        }
+    }
+
     /**
      * A new refusal code without a message would silently get the fallback.
      */

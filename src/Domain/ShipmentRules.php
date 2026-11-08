@@ -16,6 +16,15 @@ final class ShipmentRules
     public const URL_MAX_LENGTH = 255;
 
     /**
+     * Control characters (line break, tab, NUL, DEL…), invisible format characters
+     * (zero width space, right-to-left override…) and line or paragraph separators.
+     */
+    private const FORBIDDEN_CHARACTERS = '/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u';
+
+    /**
+     * One line of visible text: what the customer reads in the e-mail and in the account
+     * is what was saved. The spaces and line breaks around it are removed.
+     *
      * @throws ShipmentConstraintException
      */
     public static function text(string $field, string $value): string
@@ -24,6 +33,10 @@ final class ShipmentRules
 
         if ($value === '') {
             throw new ShipmentConstraintException(sprintf('%s cannot be empty.', $field), ShipmentConstraintException::EMPTY_FIELD, parameters: ['fields' => [$field]]);
+        }
+
+        if (!mb_check_encoding($value, 'UTF-8') || preg_match(self::FORBIDDEN_CHARACTERS, $value) !== 0) {
+            throw new ShipmentConstraintException(sprintf('%s cannot contain line breaks, control characters or invisible characters.', $field), ShipmentConstraintException::FORBIDDEN_CHARACTER, parameters: ['fields' => [$field]]);
         }
 
         if (mb_strlen($value) > self::TEXT_MAX_LENGTH) {

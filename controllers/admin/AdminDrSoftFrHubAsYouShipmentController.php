@@ -349,6 +349,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         return match ($e->getCode()) {
             ShipmentConstraintException::EMPTY_FIELD => $this->trans('The carrier and the tracking number are required.', [], self::DOMAIN),
             ShipmentConstraintException::TOO_LONG => $this->trans('The carrier and the tracking number cannot exceed %max% characters.', ['%max%' => ShipmentRules::TEXT_MAX_LENGTH], self::DOMAIN),
+            ShipmentConstraintException::FORBIDDEN_CHARACTER => $this->trans('The carrier and the tracking number cannot contain line breaks, control characters or invisible characters.', [], self::DOMAIN),
             ShipmentConstraintException::INVALID_URL => $this->trans('The tracking URL must start with http:// or https:// and cannot exceed %max% characters.', ['%max%' => ShipmentRules::URL_MAX_LENGTH], self::DOMAIN),
             ShipmentConstraintException::INVALID_STATUS => $this->trans('Unknown status.', [], self::DOMAIN),
             ShipmentConstraintException::DELIVERED_MAIL_NOT_ALLOWED => $this->trans('This e-mail cannot be sent: the order is not entirely delivered, or this e-mail is disabled in the module settings.', [], self::DOMAIN),

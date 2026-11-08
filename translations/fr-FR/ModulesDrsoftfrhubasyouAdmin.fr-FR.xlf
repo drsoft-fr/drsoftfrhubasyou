@@ -234,6 +234,10 @@
         <source>The carrier and the tracking number cannot exceed %max% characters.</source>
         <target>Le transporteur et le numéro de suivi ne peuvent pas dépasser %max% caractères.</target>
       </trans-unit>
+      <trans-unit id="4b17c8971013d311e9bb94db93528087">
+        <source>The carrier and the tracking number cannot contain line breaks, control characters or invisible characters.</source>
+        <target>Le transporteur et le numéro de suivi ne peuvent contenir ni retour à la ligne, ni caractères de contrôle, ni caractères invisibles.</target>
+      </trans-unit>
       <trans-unit id="459ee591c28eb967c16ece0501b006f3">
         <source>The tracking URL must start with http:// or https:// and cannot exceed %max% characters.</source>
         <target>L'URL de suivi doit commencer par http:// ou https:// et ne peut pas dépasser %max% caractères.</target>

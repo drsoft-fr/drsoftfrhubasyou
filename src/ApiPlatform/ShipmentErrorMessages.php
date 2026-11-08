@@ -38,6 +38,7 @@ final class ShipmentErrorMessages
         Refusal::INVALID_DATE => '%fields% must be an ISO 8601 date with its time offset, for example 2026-11-05T10:12:00+01:00.',
         Refusal::DATE_OUT_OF_RANGE => '%fields% cannot be before the year 2000, nor more than one day in the future.',
         Refusal::INVALID_LIST_PARAMETER => 'The value of %fields% is not valid.',
+        Refusal::FORBIDDEN_CHARACTER => '%fields% cannot contain line breaks, control characters or invisible characters.',
     ];
 
     private const BY_CLASS = [

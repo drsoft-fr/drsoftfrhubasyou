@@ -30,6 +30,48 @@ final class ShipmentRulesTest extends TestCase
         ShipmentRules::text('carrierName', "  \n ");
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function forbiddenCharacterProvider(): array
+    {
+        return [
+            'line feed' => ["DPD\nBcc: x@example.com"],
+            'carriage return' => ["DPD\rX"],
+            'NUL' => ["DP\0D"],
+            'tab' => ["DPD\tX"],
+            'vertical tab' => ["DPD\vX"],
+            'DEL' => ["DPD\x7FX"],
+            'next line (C1)' => ["DPD\u{85}X"],
+            'right-to-left override' => ["DPD\u{202E}X"],
+            'zero width space' => ["DPD\u{200B}X"],
+            'byte order mark' => ["DPD\u{FEFF}X"],
+            'line separator' => ["DPD\u{2028}X"],
+            'paragraph separator' => ["DPD\u{2029}X"],
+            'invalid UTF-8' => ["DPD\xC3X"],
+        ];
+    }
+
+    #[DataProvider('forbiddenCharacterProvider')]
+    public function testForbiddenCharacterIsRefused(string $value): void
+    {
+        $this->expectException(ShipmentConstraintException::class);
+        $this->expectExceptionCode(ShipmentConstraintException::FORBIDDEN_CHARACTER);
+        $this->expectExceptionMessage('trackingNumber cannot contain line breaks, control characters or invisible characters.');
+
+        ShipmentRules::text('trackingNumber', $value);
+    }
+
+    public function testLineBreaksAroundTextAreRemoved(): void
+    {
+        self::assertSame('DPD Express', ShipmentRules::text('carrierName', "\r\n DPD Express\n"));
+    }
+
+    public function testVisibleUnicodeIsKept(): void
+    {
+        self::assertSame('Société Générale 🚚 №5', ShipmentRules::text('carrierName', 'Société Générale 🚚 №5'));
+    }
+
     public function testTextLengthIsCountedInCharactersNotBytes(): void
     {
         $value = str_repeat('é', ShipmentRules::TEXT_MAX_LENGTH);

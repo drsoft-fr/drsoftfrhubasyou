@@ -77,6 +77,8 @@ Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 
 | `lines[].orderDetailId` | entier | obligatoire | ligne de **cette** commande ; jamais un produit virtuel |
 | `lines[].quantity` | entier ≥ 1 | obligatoire | unités de la ligne dans ce colis |
 
+Textes (`externalReference`, `carrierName`, `trackingNumber`) : une seule ligne de texte visible. Les espaces et retours à la ligne au début et à la fin sont retirés. Ailleurs dans le texte, sont refusés (`422`) : retour à la ligne, tabulation, caractère NUL et autres caractères de contrôle, caractères invisibles (espace sans largeur, inversion du sens d'écriture…). Par exemple, `"DPD\nExpress"` est refusé, `"DPD Express 🚚"` est accepté.
+
 Dates : envoyées en ISO 8601, **décalage horaire obligatoire** (`2026-11-05T10:12:00+01:00` ou `2026-11-05T09:12:00Z`). Sont refusées (`422`) : une date sans décalage, une date qui n'existe pas (31 février), une date avant l'an 2000 ou à plus d'un jour dans le futur. Elles sont enregistrées et renvoyées au format `AAAA-MM-JJ HH:MM:SS`, converties à l'heure de la boutique (heure d'été comprise) : les deux exemples donnent `2026-11-05 10:12:00` pour une boutique à Paris. Un champ vide (`deliveredAt` d'un colis non livré, `trackingUrl` absente) n'apparaît pas dans la réponse.
 
 Règles de cohérence :
@@ -137,7 +139,7 @@ Réponse `200 OK` : le colis complet.
 | `403` | jeton sans le droit demandé | message |
 | `404` | colis introuvable ; ou identifiant mal écrit dans l'URL (`1.5`, `01`, `abc`…), qui ne désigne aucun colis | `detail` : par exemple `Parcel 12 not found.` ; pour un identifiant mal écrit, seul le code est garanti |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
-| `422` | refus métier : date mal écrite, inexistante ou hors limites, `externalReference` déjà utilisée par un colis au contenu différent, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
+| `422` | refus métier : retour à la ligne ou caractère invisible dans un texte, date mal écrite, inexistante ou hors limites, `externalReference` déjà utilisée par un colis au contenu différent, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `500` | **temporaire** : erreur technique de la boutique, base de données indisponible par exemple. La réponse ne dit rien de la demande | message générique ; renvoyer la même requête plus tard |
 | `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail` ; renvoyer la même requête un peu plus tard |
 

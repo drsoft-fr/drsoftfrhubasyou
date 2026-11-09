@@ -56,7 +56,7 @@ Base : `https://<boutique>/admin-api`. Corps et réponses en JSON (`Content-Type
 | `GET` | `/hubasyou/shipments/{shipmentId}` | `hubasyou_shipment_read` | lire un colis |
 | `GET` | `/hubasyou/shipments` | `hubasyou_shipment_read` | lister les colis, du plus récent au plus ancien |
 
-Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Une valeur invalide est refusée (`400`, `detail` nomme le paramètre), jamais ignorée : `?orderId=abc` ne renvoie pas les colis de toutes les commandes. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`. **Pour parcourir la liste, avancer `offset` du nombre de colis reçus**, pas de la valeur de `limit` : le champ `limit` répète la valeur demandée (`?limit=500` renvoie 100 colis et annonce `"limit": 500`).
+Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 par défaut, 100 au plus), `offset`. Une valeur invalide est refusée (`400`, `detail` nomme le paramètre), jamais ignorée : `?orderId=abc` ne renvoie pas les colis de toutes les commandes. Réponse : `{"totalItems": 2, "limit": 10, "items": [<colis>, …], …}`. **Pour parcourir la liste, avancer `offset` du nombre de colis reçus**, pas de la valeur de `limit` : le champ `limit` répète la valeur demandée (`?limit=500` renvoie 100 colis et annonce `"limit": 500`). **Le champ `sortOrder` est à ignorer** : PrestaShop l'ajoute toujours avec la valeur `"asc"`, alors que les colis arrivent du plus récent au plus ancien.
 
 ## 3. Le colis
 

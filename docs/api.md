@@ -2,7 +2,7 @@
 
 Contrat de l'API exposée par le module PrestaShop `drsoftfrhubasyou` pour recevoir, **colis par colis**, le suivi des commandes expédiées par HubAsYou.
 
-Version du contrat : 1.1 (2026-11-09), module 1.0.1, PrestaShop 9.1 ou plus récent.
+Version du contrat : 1.1 (2026-11-09), module 1.0.2, PrestaShop 9.1 ou plus récent.
 
 ### Changements depuis la version 1.0
 

@@ -98,7 +98,7 @@ class drsoftfrhubasyou extends Module
                 'visible' => false,
             ],
         ];
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->authorEmail = 'contact@drsoft.fr';
         $this->moduleGithubRepositoryUrl = 'https://github.com/drsoft-fr/drsoftfrhubasyou';
         $this->moduleGithubIssuesUrl = 'https://github.com/drsoft-fr/drsoftfrhubasyou/issues';

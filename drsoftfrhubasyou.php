@@ -191,10 +191,29 @@ class drsoftfrhubasyou extends Module
                 $output .= $this->getShippedStateNotice();
             }
 
-            return $output . $this->renderSetupHelp() . $this->renderForm();
+            return $output . $this->renderSetupHelp() . $this->renderForm() . $this->renderFooter();
         } catch (Throwable $t) {
-            return $output . $this->displayError($t->getMessage());
+            return $output . $this->displayError($t->getMessage()) . $this->renderFooter();
         }
+    }
+
+    /**
+     * Signature of the author at the bottom of the back-office screens of the module:
+     * name, version, contact, GitHub links and the drSoft.fr logo.
+     */
+    public function renderFooter(): string
+    {
+        $this->context->smarty->assign('hubasyou_footer', [
+            'name' => $this->displayName,
+            'version' => $this->version,
+            'author' => $this->author,
+            'email' => $this->authorEmail,
+            'repository' => $this->moduleGithubRepositoryUrl,
+            'issues' => $this->moduleGithubIssuesUrl,
+            'logo' => $this->getPathUri() . 'views/img/logo-dark-master.png',
+        ]);
+
+        return $this->context->smarty->fetch($this->getLocalPath() . 'views/templates/admin/_footer.tpl');
     }
 
     /**

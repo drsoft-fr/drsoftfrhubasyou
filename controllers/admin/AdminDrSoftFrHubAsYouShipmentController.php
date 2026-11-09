@@ -173,6 +173,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                 }
             }
 
+            $this->content .= $this->module->renderFooter();
             parent::initContent();
 
             return;
@@ -186,6 +187,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
                 : $this->renderEditForm();
         }
 
+        $this->content .= $this->module->renderFooter();
         parent::initContent();
     }
 

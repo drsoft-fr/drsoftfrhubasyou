@@ -2,7 +2,22 @@
 
 Contrat de l'API exposée par le module PrestaShop `drsoftfrhubasyou` pour recevoir, **colis par colis**, le suivi des commandes expédiées par HubAsYou.
 
-Version du contrat : 1.0 (2026-11-03), module 1.0.0, PrestaShop 9.1.
+Version du contrat : 1.1 (2026-11-09), module 1.0.1, PrestaShop 9.1 ou plus récent.
+
+### Changements depuis la version 1.0
+
+Ce qui change pour HubAsYou. Le reste (authentification, points d'entrée, champs, droits) ne change pas.
+
+- **Renvoi d'un `POST`** : le même colis renvoyé (même commande, lignes, transporteur, numéro et URL de suivi) répond `201` avec le colis existant, au lieu de `422`. Les e-mails et l'état de la commande manqués sont rattrapés, sans doublon (§ 5, « Renvoi sans risque »).
+- **Dates** : décalage horaire obligatoire (`2026-11-05T10:12:00+01:00`), date qui existe vraiment, pas avant l'an 2000 ni à plus d'un jour dans le futur. Sinon `422`, au lieu d'un `500` ou d'une date corrigée en silence (§ 3).
+- **Textes** : retour à la ligne, tabulation et caractères invisibles refusés (`422`) dans `externalReference`, `carrierName` et `trackingNumber` (§ 3).
+- **Colis livré** : un `PATCH` qui demande `shipped`, `in_transit` ou `exception` sur un colis `delivered` est refusé (`422`). Pour corriger, supprimer le colis puis le déclarer de nouveau (§ 3).
+- **Colis perdu** : le colis de remplacement est refusé tant que le colis perdu existe ; le supprimer d'abord. Exemple pas à pas au § 4.
+- **`PATCH`** : un `shipmentId` dans le corps doit être celui de l'URL (`422` sinon) ; `null` répond `400`, sauf pour `trackingUrl`, `shippedAt` et `deliveredAt`, où il ne change rien ; `"trackingUrl": ""` retire le lien (§ 3).
+- **Identifiant dans l'URL** : seulement un nombre écrit normalement (`12`). `1.5`, `01`, `12abc` répondent `404`, au lieu de désigner le colis 1 ou 12 (§ 5).
+- **Liste des colis** : un paramètre invalide (`?orderId=abc`, `?limit=-1`, `?externalReference=` vide…) répond `400`, au lieu d'être ignoré. Sans `limit`, 10 colis par page (§ 2 et § 5).
+- **`503`** : l'en-tête `Retry-After` donne le nombre de secondes à attendre (§ 5).
+- **`409`** : n'existe plus dans l'API (il ne pouvait pas être produit).
 
 ## 1. Authentification
 

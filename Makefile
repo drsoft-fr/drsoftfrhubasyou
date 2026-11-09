@@ -1,5 +1,5 @@
 MODULE_NAME := drsoftfrhubasyou
-VERSION := 1.0.0
+VERSION := 1.0.1
 COMPOSER ?= composer
 ARCHIVE := $(CURDIR)/dist/$(MODULE_NAME)-$(VERSION).zip
 

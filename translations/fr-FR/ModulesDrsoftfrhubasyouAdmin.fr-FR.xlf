@@ -402,6 +402,22 @@
         <source>Last</source>
         <target>Dernière</target>
       </trans-unit>
+      <trans-unit id="53b3cae42737979c884275593a01f468">
+        <source>Module:</source>
+        <target>Module :</target>
+      </trans-unit>
+      <trans-unit id="91401f053501b716b4a695b048c9b827">
+        <source>Author:</source>
+        <target>Auteur :</target>
+      </trans-unit>
+      <trans-unit id="4a6c7893abd7ef92fb09d3359e17324d">
+        <source>GitHub repository</source>
+        <target>Dépôt GitHub</target>
+      </trans-unit>
+      <trans-unit id="1ed0e75eff9abebaaab606a416c58707">
+        <source>Report an issue</source>
+        <target>Signaler un problème</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

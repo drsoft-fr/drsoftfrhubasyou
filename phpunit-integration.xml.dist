@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Integration tests: inside a PrestaShop shop where the module is installed, on its real
+  database (see tests/Integration/bootstrap.php). Never on a production shop.
+  Run with: make test-integration
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/Integration/bootstrap.php"
+         cacheResult="false"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnEmptyTestSuite="true">
+    <testsuites>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <!-- Deprecations of the module only: PrestaShop loads other modules, whose code is not ours -->
+    <source restrictDeprecations="true">
+        <include>
+            <directory>src</directory>
+            <directory>controllers</directory>
+            <file>drsoftfrhubasyou.php</file>
+        </include>
+    </source>
+</phpunit>

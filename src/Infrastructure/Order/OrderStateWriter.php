@@ -11,11 +11,11 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Order;
 
-use Context;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\DatabaseError;
 use Order;
 use OrderHistory;
+use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
 use RuntimeException;
 
 if (!defined('_PS_VERSION_')) {
@@ -26,11 +26,22 @@ if (!defined('_PS_VERSION_')) {
  * Changes the state of an order the way the back office does (history, payment,
  * invoice, e-mail of the state if it has one). The history names the employee when the
  * change comes from the back office (parcel edited, refund), as PrestaShop does; 0 from
- * the Admin API. Read from the PrestaShop context: the refund hook builds this class
- * outside the service container.
+ * the Admin API.
  */
 class OrderStateWriter
 {
+    /**
+     * @param EmployeeContext|null $employeeContext Employee of the request, given by the service
+     *                                              container (none for the Admin API)
+     * @param int $employeeId Employee given by a caller built outside the service container
+     *                        (refund hook), used when there is no EmployeeContext
+     */
+    public function __construct(
+        private readonly ?EmployeeContext $employeeContext = null,
+        private readonly int $employeeId = 0,
+    ) {
+    }
+
     /**
      * @throws ShipmentException The history could not be saved (in the logs)
      * @throws RuntimeException The e-mail of the state was not sent
@@ -45,7 +56,9 @@ class OrderStateWriter
 
         $history = new OrderHistory();
         $history->id_order = (int) $order->id;
-        $history->id_employee = (int) (Context::getContext()->employee->id ?? 0);
+        $history->id_employee = $this->employeeContext
+            ? (int) $this->employeeContext->getEmployee()?->getId()
+            : $this->employeeId;
         $history->changeIdOrderState($stateId, $order, true);
 
         // What addWithemail() does, in two steps so that each failure says what it is.

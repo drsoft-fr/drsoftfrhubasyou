@@ -508,7 +508,7 @@ class drsoftfrhubasyou extends Module
                 $this->getStatePolicy(),
                 new OrderMailRepository(),
                 new ShipmentMailer(),
-                new OrderStateWriter(),
+                new OrderStateWriter(null, (int) ($this->context->employee->id ?? 0)),
                 new ShipmentEffectsLog()
             );
 

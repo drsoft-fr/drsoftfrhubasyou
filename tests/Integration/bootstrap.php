@@ -31,7 +31,7 @@ if (!is_file($psRoot . '/config/config.inc.php')) {
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once $psRoot . '/config/config.inc.php';
 
-if (!Module::isInstalled('drsoftfrhubasyou')) {
+if (!Module::getModuleIdByName('drsoftfrhubasyou')) {
     fwrite(STDERR, "The module drsoftfrhubasyou is not installed in this shop.\n");
     exit(1);
 }

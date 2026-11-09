@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -8,6 +15,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ModuleLog;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 final class ModuleLogTest extends TestCase
 {

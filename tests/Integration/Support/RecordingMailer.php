@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -6,6 +13,10 @@ namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Support;
 
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Mail\ShipmentMailer;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Records the e-mails the module asks for instead of sending them.

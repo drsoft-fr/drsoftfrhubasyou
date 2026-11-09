@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -7,6 +14,10 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Lock;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Works on an existing parcel with its order locked (OrderLock). The parcel is read again

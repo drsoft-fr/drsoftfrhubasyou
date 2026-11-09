@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -8,6 +15,10 @@ use Db;
 use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use Throwable;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Every read of the module's repositories: a failed read is an error, never "nothing found",

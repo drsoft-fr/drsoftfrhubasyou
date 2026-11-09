@@ -1,6 +1,6 @@
 # drSoft.fr HubAsYou
 
-Module PrestaShop 9 qui reçoit, colis par colis, le suivi des commandes expédiées par HubAsYou, par l'**API d'administration** de PrestaShop (OAuth2). Contrat de l'API : [`docs/api.md`](docs/api.md).
+Module PrestaShop 9.1 et plus récent qui reçoit, colis par colis, le suivi des commandes expédiées par HubAsYou, par l'**API d'administration** de PrestaShop (OAuth2). Contrat de l'API : [`docs/api.md`](docs/api.md).
 
 - **API** : `POST`, `PATCH`, `GET`, `DELETE /admin-api/hubasyou/shipments…`, droits `hubasyou_shipment_read` / `hubasyou_shipment_write`.
 - **Compte client** : les colis dans le détail de la commande (crochet `displayOrderDetail`).
@@ -73,6 +73,11 @@ PHPUnit sert seulement au développement. `make package` le retire de `vendor/` 
 - `src/Infrastructure/` : tout ce qui touche PrestaShop : tables du module et du cœur (`Persistence/` : `drsoft_fr_hubasyou_shipment`, `…_shipment_line`, `…_order_mail` : envoi de l'e-mail de livraison, `…_shipment_log` : historique des colis, écrit par `ShipmentRepository` dans la même transaction que le colis, qui exige `Log/ShipmentJournal` à chaque écriture ; lignes et historique des commandes), e-mails (`Mail/ShipmentMailer`), changement d'état (`Order/OrderStateWriter`), verrou par commande (`Lock/OrderLock`, `GET_LOCK` de la base : les colis d'une même commande sont traités une requête à la fois), journal (`Log/ShipmentJournal`), réglages, installation. Toutes les lectures des dépôts passent par `Persistence/DatabaseReader` : une lecture qui échoue donne une erreur, jamais « rien trouvé ». Exemple : si la table des commandes est inaccessible, l'API répond `500`, et non « cette commande n'existe pas ». Toutes les écritures passent par `Persistence/DatabaseError` (`write()`, `transaction()`) : `false` ou une exception de la base devient une erreur, inscrite au journal là où elle se produit (`Log/ModuleLog`). Pendant une transaction, les lignes de journal attendent sa fin : le journal est une table de la même base, un `ROLLBACK` les effacerait.
 - `config/services.yml` : services, chargés par tous les noyaux de PrestaShop (BO, API).
 - `tests/Unit/` : tests des règles ; `tests/Integration/` : tests dans une vraie boutique (voir Tests). Les deux sont absents de l'archive.
+- Règles du validateur de modules de PrestaShop, vérifiées sur chaque fichier par `tests/Unit/ModuleFilesTest.php` (`make test`), pour qu'un nouveau fichier ne puisse pas les oublier :
+    - un `index.php` dans chaque dossier, sauf `src/ApiPlatform/Resources/` ;
+    - en tête de chaque fichier PHP, après les `use`, `if (!defined('_PS_VERSION_')) { exit; }` : chargé hors de PrestaShop, le fichier ne fait rien. Les tests unitaires définissent la constante dans `tests/Unit/bootstrap.php` ;
+    - l'en-tête de licence (MIT) en tête des fichiers PHP et des gabarits ;
+    - un `.htaccess` à la racine : le serveur web ne sert que les images (le logo dans le BO). Exemple : `/modules/drsoftfrhubasyou/README.md`, les gabarits d'e-mails ou `install.sql` répondent `403`.
 
 **Désinstaller** supprime les colis reçus. **Réinitialiser** les conserve : seuls les réglages reviennent à leurs valeurs par défaut, et les droits de l'onglet Colis HubAsYou sont à redonner aux profils autres que SuperAdmin.
 

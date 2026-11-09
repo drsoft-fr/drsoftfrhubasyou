@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +18,10 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use RuntimeException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * The lock of an order on the real database (GET_LOCK). Another request is played by a

@@ -1,0 +1,22 @@
+# drSoft.fr HubAsYou
+#
+# Nothing in this module is opened by a browser, except its images (the logo in the back
+# office): PrestaShop reads its files itself. Everything else is refused, folders included,
+# so that sources, settings, templates, translations and SQL files cannot be read or listed.
+
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+    <FilesMatch "\.(png|gif|jpe?g|svg|webp)$">
+        Allow from all
+    </FilesMatch>
+</IfModule>
+
+# Apache 2.4
+<IfModule mod_authz_core.c>
+    Require all denied
+    <FilesMatch "\.(png|gif|jpe?g|svg|webp)$">
+        Require all granted
+    </FilesMatch>
+</IfModule>

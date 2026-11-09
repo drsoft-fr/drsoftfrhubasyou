@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -7,6 +14,10 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 use Db;
 use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * E-mails sent once per order ("order delivered").

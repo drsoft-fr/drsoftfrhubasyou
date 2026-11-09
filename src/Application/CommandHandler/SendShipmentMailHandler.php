@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -10,6 +17,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 #[AsCommandHandler]
 final class SendShipmentMailHandler

@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -7,6 +14,10 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use PrestaShopLogger;
 use Throwable;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Error and warning lines of the module in the PrestaShop logs (Advanced parameters › Logs),

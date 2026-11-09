@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -9,6 +16,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ModuleLog;
 use RuntimeException;
 use Throwable;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Every failed read or write of the module's database goes through here: the error the

@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +18,10 @@ use DrSoftFr\Module\HubAsYou\Application\Query\ListShipments;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
 use Symfony\Component\HttpFoundation\Response;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Paginated list of parcels: GET /hubasyou/shipments?orderId=…&externalReference=…

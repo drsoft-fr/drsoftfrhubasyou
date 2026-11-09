@@ -1,4 +1,10 @@
 {**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ *
  * Back office: confirmation before deleting a parcel.
  *}
 <div class="panel">

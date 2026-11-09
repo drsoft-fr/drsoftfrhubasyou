@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -15,6 +22,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use DrSoftFr\Module\HubAsYou\Tests\Integration\Support\IntegrationTestCase;
 use DrSoftFr\Module\HubAsYou\Tests\Integration\Support\TestOrder;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 final class AddShipmentHandlerTest extends IntegrationTestCase
 {

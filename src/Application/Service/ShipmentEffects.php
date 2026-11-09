@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -16,6 +23,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use Throwable;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * What happens after a parcel is saved (Admin API or back office):

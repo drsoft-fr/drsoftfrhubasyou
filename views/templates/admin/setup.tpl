@@ -1,4 +1,10 @@
 {**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ *
  * Configuration page: how to give HubAsYou its access.
  *}
 <div class="panel">

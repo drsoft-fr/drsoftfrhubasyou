@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -9,6 +16,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Tests\Integration\Support\IntegrationTestCase;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 final class DeleteShipmentHandlerTest extends IntegrationTestCase
 {

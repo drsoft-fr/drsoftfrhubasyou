@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -10,6 +17,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\DatabaseError;
 use Order;
 use OrderHistory;
 use RuntimeException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Changes the state of an order the way the back office does (history, payment,

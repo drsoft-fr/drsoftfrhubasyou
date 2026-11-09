@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -8,6 +15,10 @@ use Db;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use Exception;
 use Module;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Tables, hooks and settings of the module.

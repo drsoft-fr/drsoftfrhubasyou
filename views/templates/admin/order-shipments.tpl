@@ -1,4 +1,10 @@
 {**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ *
  * Back office › order page: parcels received from HubAsYou.
  *}
 <div class="card mt-2" id="drsoftfrhubasyou-shipments">

@@ -1,8 +1,19 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\QueryResult;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * A page of parcels and the total count (fields "items" and "count" read by the Admin API).

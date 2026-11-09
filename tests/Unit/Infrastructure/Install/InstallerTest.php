@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -6,6 +13,10 @@ namespace DrSoftFr\Module\HubAsYou\Tests\Unit\Infrastructure\Install;
 
 use DrSoftFr\Module\HubAsYou\Infrastructure\Install\Installer;
 use PHPUnit\Framework\TestCase;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Only the splitting of the SQL files: the rest of the class needs PrestaShop.

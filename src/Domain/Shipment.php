@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -7,6 +14,10 @@ namespace DrSoftFr\Module\HubAsYou\Domain;
 use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * A parcel of an order. Its content (reference, order, lines) never changes; its tracking,

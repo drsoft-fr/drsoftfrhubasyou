@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +18,10 @@ use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 final class ShipmentDatesTest extends TestCase
 {

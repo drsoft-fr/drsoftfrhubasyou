@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +18,10 @@ use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Which state the parcels call for, and whether the module may set it.

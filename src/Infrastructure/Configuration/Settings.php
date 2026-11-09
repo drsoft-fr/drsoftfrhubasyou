@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -6,6 +13,10 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Configuration;
 
 use Configuration;
 use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Module settings (Modules › drSoft.fr HubAsYou › Configure), saved for the shop chosen

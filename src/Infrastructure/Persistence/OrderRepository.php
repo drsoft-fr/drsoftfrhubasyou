@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -8,6 +15,10 @@ use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
 use Order;
 use Validate;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Reads the PrestaShop orders (the order itself, lines, state history).

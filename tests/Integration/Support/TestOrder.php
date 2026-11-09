@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +18,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use RuntimeException;
 use Shop;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * A fake order written straight to the database: no customer, no cart, no hook, no

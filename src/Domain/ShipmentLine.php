@@ -1,8 +1,19 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Domain;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Units of one order line in a parcel. The product is copied from the order line when the

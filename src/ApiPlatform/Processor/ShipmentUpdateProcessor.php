@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -9,6 +16,10 @@ use ApiPlatform\State\ProcessorInterface;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use PrestaShopBundle\ApiPlatform\Processor\CommandProcessor;
 use Symfony\Component\HttpFoundation\Request;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * PATCH of a parcel: a shipmentId in the body must be the one of the URL, then the

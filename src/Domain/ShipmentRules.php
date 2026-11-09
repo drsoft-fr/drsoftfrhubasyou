@@ -1,10 +1,21 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Domain;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Rules on the fields of a parcel, checked by the commands: the same for the

@@ -1,4 +1,10 @@
 {**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ *
  * Back office: the whole history of an order's parcels, newest first, one page at a time.
  *}
 <div class="panel">

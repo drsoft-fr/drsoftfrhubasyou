@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -6,6 +13,10 @@ namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Support;
 
 use Db;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Records the order states the module sets, and writes only what the module reads back:

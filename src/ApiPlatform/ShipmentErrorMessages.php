@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -8,6 +15,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException as Refusal;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * The only messages the parcel API can send for an error of the module.

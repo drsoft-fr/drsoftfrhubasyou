@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -10,6 +17,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Answers the refusals of the parcel API with a message of ShipmentErrorMessages.

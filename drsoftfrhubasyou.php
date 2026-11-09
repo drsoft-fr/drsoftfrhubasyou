@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -68,7 +75,8 @@ class drsoftfrhubasyou extends Module
         $this->name = 'drsoftfrhubasyou';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
-            'min' => '9.0.0',
+            // The Admin API features the module relies on were only tested on 9.1
+            'min' => '9.1.0',
             'max' => _PS_VERSION_,
         ];
         $this->tab = 'shipping_logistics';

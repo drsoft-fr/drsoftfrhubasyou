@@ -1,4 +1,10 @@
 {**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ *
  * Back office: lines of the parcel history (order page and history page).
  * $hubasyou_journal: drsoftfrhubasyou::presentJournal()
  *}

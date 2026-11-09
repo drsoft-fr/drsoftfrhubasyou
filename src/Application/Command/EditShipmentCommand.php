@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -9,6 +16,10 @@ use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentId;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Updates the tracking of a parcel (Admin API PATCH, back office form).

@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -15,6 +22,10 @@ use Mail;
 use Order;
 use RuntimeException;
 use Validate;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * E-mails of the module to the customer, in the language of the order.
@@ -105,6 +116,8 @@ class ShipmentMailer
             throw new RuntimeException(sprintf('The e-mail was not sent: customer #%d of order #%d does not exist or has no valid e-mail address.', (int) $order->id_customer, $orderId));
         }
 
+        // Mail::send() of PrestaShop reads the context (shop, link to build the URLs of the
+        // template): it has no other way to receive them
         $context = Context::getContext();
 
         if (!$context->link) {

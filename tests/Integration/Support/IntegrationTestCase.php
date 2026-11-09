@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -27,6 +34,10 @@ use PHPUnit\Framework\TestCase;
 use PrestaShop\PrestaShop\Core\Context\ApiClient;
 use PrestaShop\PrestaShop\Core\Context\ApiClientContext;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * The real handlers, repositories and lock on the real database, with the e-mails and

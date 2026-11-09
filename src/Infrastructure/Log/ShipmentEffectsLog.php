@@ -1,10 +1,21 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
 use Throwable;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * What went wrong after a parcel was saved, in the PrestaShop logs (Advanced parameters ›

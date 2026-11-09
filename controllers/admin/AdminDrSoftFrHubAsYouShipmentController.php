@@ -1,4 +1,11 @@
 <?php
+/**
+ * drSoft.fr HubAsYou
+ *
+ * @author    drSoft.fr <contact@drsoft.fr>
+ * @copyright drSoft.fr
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
 
 declare(strict_types=1);
 
@@ -18,6 +25,10 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
 use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Back office › order page › HubAsYou parcels: edit the tracking of a parcel

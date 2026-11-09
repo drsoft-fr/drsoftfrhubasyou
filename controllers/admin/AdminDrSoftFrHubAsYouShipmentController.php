@@ -13,6 +13,8 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
 use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
 use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
@@ -20,7 +22,8 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 /**
  * Back office › order page › HubAsYou parcels: edit the tracking of a parcel
  * (?hubasyou_view=edit) or delete it after a confirmation page (?hubasyou_view=delete);
- * send the "parcel on its way" or "order delivered" e-mail again (buttons of the order page).
+ * send the "parcel on its way" or "order delivered" e-mail again (buttons of the order page);
+ * show the whole history of an order's parcels (?hubasyou_view=journal&id_order=…&page=…).
  *
  * Same CQRS commands as the Admin API, so the same rules apply.
  */
@@ -30,12 +33,18 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
 
     private const DOMAIN = 'Modules.Drsoftfrhubasyou.Admin';
 
+    /** Lines per page of the history page */
+    public const JOURNAL_PAGE_LINES = 50;
+
     /**
      * @var drsoftfrhubasyou
      */
     public $module;
 
     private ?Shipment $shipment = null;
+
+    /** History page: the order whose parcel history is shown, null for the other views */
+    private ?int $journalOrderId = null;
 
     /** After a conflict: the form shows the saved values, not the ones sent */
     private bool $showCurrentValues = false;
@@ -50,6 +59,18 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     public function init(): void
     {
         parent::init();
+
+        if ($this->isJournalView()) {
+            $orderId = (int) Tools::getValue('id_order');
+
+            if ((new OrderRepository())->find($orderId)) {
+                $this->journalOrderId = $orderId;
+            } else {
+                $this->addError($this->trans('Order not found.', [], self::DOMAIN));
+            }
+
+            return;
+        }
 
         try {
             $this->shipment = (new ShipmentRepository())->find((int) Tools::getValue('id_shipment'));
@@ -132,6 +153,20 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
      */
     public function initContent(): void
     {
+        if ($this->isJournalView()) {
+            if ($this->journalOrderId && $this->checkPermission('view')) {
+                try {
+                    $this->content = $this->renderJournal($this->journalOrderId);
+                } catch (ShipmentException $e) {
+                    $this->addError($this->getErrorMessage($e));
+                }
+            }
+
+            parent::initContent();
+
+            return;
+        }
+
         $view = Tools::getValue('hubasyou_view') === 'delete' ? 'delete' : 'edit';
 
         if ($this->shipment && $this->checkPermission($view)) {
@@ -147,7 +182,7 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
      * Permission of the employee's profile on this tab (Advanced Parameters › Team ›
      * Permissions), with PrestaShop's message when it is missing.
      *
-     * @param 'edit'|'delete' $action
+     * @param 'view'|'edit'|'delete' $action
      */
     private function checkPermission(string $action): bool
     {
@@ -155,9 +190,11 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
             return true;
         }
 
-        $this->addError($action === 'delete'
-            ? $this->trans('You do not have permission to delete this.', [], 'Admin.Notifications.Error')
-            : $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error'));
+        $this->addError(match ($action) {
+            'view' => $this->trans('You do not have permission to view this.', [], 'Admin.Notifications.Error'),
+            'delete' => $this->trans('You do not have permission to delete this.', [], 'Admin.Notifications.Error'),
+            default => $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error'),
+        });
 
         return false;
     }
@@ -173,7 +210,9 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
     {
         parent::initToolbarTitle();
 
-        if ($this->shipment) {
+        if ($this->journalOrderId) {
+            $this->toolbar_title[] = $this->trans('History of the parcels of order #%id%', ['%id%' => $this->journalOrderId], self::DOMAIN);
+        } elseif ($this->shipment) {
             $this->toolbar_title[] = $this->trans('Parcel %reference%', ['%reference%' => $this->escapeHtml($this->shipment->externalReference)], self::DOMAIN);
         }
     }
@@ -267,6 +306,71 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         return $helper->generateForm([$form]);
     }
 
+    private function isJournalView(): bool
+    {
+        return Tools::getValue('hubasyou_view') === 'journal';
+    }
+
+    /**
+     * One page of the history, newest first. Any page number that is not a page of this
+     * history (missing, 0, -1, 1.5, abc, past the last page) shows page 1.
+     *
+     * @throws ShipmentException The database could not be read
+     */
+    private function renderJournal(int $orderId): string
+    {
+        $journal = new ShipmentLogRepository();
+        $total = $journal->countByOrder($orderId);
+        $pages = max(1, (int) ceil($total / self::JOURNAL_PAGE_LINES));
+        $requested = Tools::getValue('page');
+        $page = is_string($requested) && preg_match('/^[1-9]\d{0,8}$/D', $requested) && (int) $requested <= $pages
+            ? (int) $requested
+            : 1;
+        $offset = ($page - 1) * self::JOURNAL_PAGE_LINES;
+        $rows = $this->module->presentJournal($journal->findByOrder($orderId, self::JOURNAL_PAGE_LINES, $offset));
+
+        $this->context->smarty->assign([
+            'hubasyou_order_id' => $orderId,
+            'hubasyou_journal' => $rows,
+            'hubasyou_journal_total' => $total,
+            'hubasyou_journal_first' => $offset + 1,
+            'hubasyou_journal_last' => $offset + count($rows),
+            'hubasyou_journal_pages' => $pages,
+            'hubasyou_journal_links' => $this->getPageLinks($orderId, $page, $pages),
+            'hubasyou_order_url' => $this->getOrderUrl($orderId),
+        ]);
+
+        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/journal-page.tpl');
+    }
+
+    /**
+     * First, previous, the pages around the current one, next, last: never more than 9 links,
+     * whatever the length of the history.
+     *
+     * @return array<int, array{label: string, url: string, current: bool}>
+     */
+    private function getPageLinks(int $orderId, int $page, int $pages): array
+    {
+        $link = fn (string $label, int $target): array => [
+            'label' => $label,
+            'url' => $target >= 1 && $target <= $pages ? $this->module->getJournalUrl($orderId, $target) : '',
+            'current' => false,
+        ];
+        $links = [
+            $link('« ' . $this->trans('First', [], self::DOMAIN), $page > 1 ? 1 : 0),
+            $link('‹ ' . $this->trans('Previous', [], self::DOMAIN), $page - 1),
+        ];
+
+        for ($i = max(1, $page - 2); $i <= min($pages, $page + 2); ++$i) {
+            $links[] = ['current' => $i === $page] + $link((string) $i, $i);
+        }
+
+        $links[] = $link($this->trans('Next', [], self::DOMAIN) . ' ›', $page + 1);
+        $links[] = $link($this->trans('Last', [], self::DOMAIN) . ' »', $page < $pages ? $pages : 0);
+
+        return $links;
+    }
+
     private function renderDeleteConfirmation(): string
     {
         $this->context->smarty->assign([
@@ -311,11 +415,11 @@ class AdminDrSoftFrHubAsYouShipmentController extends ModuleAdminController
         ));
     }
 
-    private function getOrderUrl(): string
+    private function getOrderUrl(?int $orderId = null): string
     {
         return $this->context->link->getAdminLink('AdminOrders', true, [
             'route' => 'admin_orders_view',
-            'orderId' => $this->shipment->orderId,
+            'orderId' => $orderId ?? $this->shipment->orderId,
         ]);
     }
 

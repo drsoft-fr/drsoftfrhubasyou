@@ -39,8 +39,11 @@ if (file_exists($autoloadPath)) {
  */
 class drsoftfrhubasyou extends Module
 {
-    /** Hidden tab of the back office that edits and deletes a parcel (controller and permissions) */
+    /** Hidden tab of the back office that edits and deletes a parcel and shows the whole history of an order's parcels (controller and permissions) */
     public const TAB_SHIPMENT = 'AdminDrSoftFrHubAsYouShipment';
+
+    /** Lines of the parcel history shown on the order page, the most recent ones; the rest is on the history page */
+    public const JOURNAL_ORDER_PAGE_LINES = 20;
 
     /**
      * @var string $authorEmail Author email
@@ -424,10 +427,17 @@ class drsoftfrhubasyou extends Module
 
             $deliveredMailDate = (new OrderMailRepository())->findDeliveredMailDate($orderId);
             $deliveredMailAllowed = $shipments && $this->mayDeliveredMailBeSent($orderId);
+            $journal = new ShipmentLogRepository();
+            $journalTotal = $journal->countByOrder($orderId);
 
             $this->context->smarty->assign([
                 'hubasyou_shipments' => $shipments,
-                'hubasyou_journal' => $this->presentJournal((new ShipmentLogRepository())->findByOrder($orderId)),
+                'hubasyou_journal' => $this->presentJournal($journal->findByOrder($orderId, self::JOURNAL_ORDER_PAGE_LINES)),
+                'hubasyou_journal_total' => $journalTotal,
+                // Same permission as the history page: "view" on the parcel tab
+                'hubasyou_journal_url' => $journalTotal > self::JOURNAL_ORDER_PAGE_LINES && $employee && $employee->can('view', self::TAB_SHIPMENT)
+                    ? $this->getJournalUrl($orderId)
+                    : '',
                 'hubasyou_state_warning' => $shipments ? $this->getBlockedStateWarning($orderId) : '',
                 'hubasyou_delivered_mail_at' => $deliveredMailDate ? Tools::displayDate($deliveredMailDate) : '',
                 'hubasyou_delivered_mail_allowed' => $deliveredMailAllowed,
@@ -559,14 +569,28 @@ class drsoftfrhubasyou extends Module
     }
 
     /**
-     * Journal rows → data for the order page: who, what and the details, in the context
-     * language. Raw values: the template escapes them.
+     * Back office page with the whole history of an order's parcels, one page of lines at a time.
+     *
+     * @param int<1, max> $page
+     */
+    public function getJournalUrl(int $orderId, int $page = 1): string
+    {
+        return $this->context->link->getAdminLink(self::TAB_SHIPMENT, true, [], array_filter([
+            'hubasyou_view' => 'journal',
+            'id_order' => $orderId,
+            'page' => $page > 1 ? $page : null,
+        ]));
+    }
+
+    /**
+     * Journal rows → data for the order page and the history page: who, what and the
+     * details, in the context language. Raw values: the template escapes them.
      *
      * @param array<int, array<string, mixed>> $rows ShipmentLogRepository::findByOrder()
      *
      * @return array<int, array{date: string, reference: string, action: string, actor: string, details: string[]}>
      */
-    private function presentJournal(array $rows): array
+    public function presentJournal(array $rows): array
     {
         $domain = 'Modules.Drsoftfrhubasyou.Admin';
         $actions = [

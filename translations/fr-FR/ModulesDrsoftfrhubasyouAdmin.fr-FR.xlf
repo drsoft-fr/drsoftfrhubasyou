@@ -354,6 +354,54 @@
         <source>Details</source>
         <target>Détails</target>
       </trans-unit>
+      <trans-unit id="5f08534bfd0e64ced6ecef6f9fd56ed7">
+        <source>The %shown% most recent lines out of %total%.</source>
+        <target>Les %shown% lignes les plus récentes sur %total%.</target>
+      </trans-unit>
+      <trans-unit id="4a1ed4cc8354f1bd9c7c6b77da840c8a">
+        <source>See the whole history</source>
+        <target>Voir tout l'historique</target>
+      </trans-unit>
+      <trans-unit id="d4b868fb69688c0810f9912e410bfb04">
+        <source>History of the parcels of order #%id%</source>
+        <target>Historique des colis de la commande n° %id%</target>
+      </trans-unit>
+      <trans-unit id="b1ef1be3118503c9636ba2803bb17316">
+        <source>Lines %first% to %last% out of %total%, most recent first.</source>
+        <target>Lignes %first% à %last% sur %total%, de la plus récente à la plus ancienne.</target>
+      </trans-unit>
+      <trans-unit id="00d9084cdce4f6a52baddf6ff58c0412">
+        <source>%total% line(s), most recent first.</source>
+        <target>%total% ligne(s), de la plus récente à la plus ancienne.</target>
+      </trans-unit>
+      <trans-unit id="8ded7564036a03b553777d8cf4e48a6f">
+        <source>No line in the history of this order.</source>
+        <target>Aucune ligne dans l'historique de cette commande.</target>
+      </trans-unit>
+      <trans-unit id="c2b110a70a78af07cb5f50a5f30d2314">
+        <source>Pages of the history</source>
+        <target>Pages de l'historique</target>
+      </trans-unit>
+      <trans-unit id="149ad34562bd32ca88aac01cd023fce5">
+        <source>Order not found.</source>
+        <target>Commande introuvable.</target>
+      </trans-unit>
+      <trans-unit id="7fb55ed0b7a30342ba6da306428cae04">
+        <source>First</source>
+        <target>Première</target>
+      </trans-unit>
+      <trans-unit id="dd1f775e443ff3b9a89270713580a51b">
+        <source>Previous</source>
+        <target>Précédente</target>
+      </trans-unit>
+      <trans-unit id="10ac3d04253ef7e1ddc73e6091c0cd55">
+        <source>Next</source>
+        <target>Suivante</target>
+      </trans-unit>
+      <trans-unit id="d55b30607c2a9a2616347d6edb789f6b">
+        <source>Last</source>
+        <target>Dernière</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

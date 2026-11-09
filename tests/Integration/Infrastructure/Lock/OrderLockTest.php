@@ -11,13 +11,10 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Infrastructure\Lock;
 
-use Db;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\OrderLock;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
-use RuntimeException;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -34,7 +31,7 @@ final class OrderLockTest extends TestCase
     /** No order is needed: the lock only names an order id, far from the real ones */
     private int $orderId;
 
-    private ?Db $other = null;
+    private ?\Db $other = null;
 
     protected function setUp(): void
     {
@@ -47,7 +44,7 @@ final class OrderLockTest extends TestCase
         $this->other?->getValue('SELECT RELEASE_ALL_LOCKS()', false);
         // Closed by its destructor: disconnect() then __destruct() of PrestaShop's DbPDO warns
         $this->other = null;
-        Db::getInstance()->getValue('SELECT RELEASE_ALL_LOCKS()', false);
+        \Db::getInstance()->getValue('SELECT RELEASE_ALL_LOCKS()', false);
     }
 
     public function testTheLockIsHeldDuringTheWorkAndReleasedAfter(): void
@@ -75,10 +72,10 @@ final class OrderLockTest extends TestCase
     {
         try {
             $this->lock->synchronized($this->orderId, static function (): void {
-                throw new RuntimeException('The work failed.');
+                throw new \RuntimeException('The work failed.');
             });
             self::fail('The exception of the work must reach the caller.');
-        } catch (RuntimeException $e) {
+        } catch (\RuntimeException $e) {
             self::assertSame('The work failed.', $e->getMessage());
         }
 
@@ -118,7 +115,7 @@ final class OrderLockTest extends TestCase
 
     private function lockFromAnotherConnection(int $orderId): void
     {
-        $class = Db::getClass();
+        $class = \Db::getClass();
         $this->other = new $class(_DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_);
 
         self::assertSame(1, (int) $this->other->getValue('SELECT GET_LOCK(' . $this->quotedName($orderId) . ', 0)', false));
@@ -126,12 +123,12 @@ final class OrderLockTest extends TestCase
 
     private function isFree(int $orderId): bool
     {
-        return (int) Db::getInstance()->getValue('SELECT IS_FREE_LOCK(' . $this->quotedName($orderId) . ')', false) === 1;
+        return (int) \Db::getInstance()->getValue('SELECT IS_FREE_LOCK(' . $this->quotedName($orderId) . ')', false) === 1;
     }
 
     private function isHeldByThisConnection(int $orderId): bool
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
         return (int) $db->getValue('SELECT IS_USED_LOCK(' . $this->quotedName($orderId) . ')', false) === (int) $db->getValue('SELECT CONNECTION_ID()', false);
     }
@@ -141,6 +138,6 @@ final class OrderLockTest extends TestCase
      */
     private function quotedName(int $orderId): string
     {
-        return "'" . (new ReflectionMethod(OrderLock::class, 'getName'))->invoke($this->lock, $orderId) . "'";
+        return "'" . (new \ReflectionMethod(OrderLock::class, 'getName'))->invoke($this->lock, $orderId) . "'";
     }
 }

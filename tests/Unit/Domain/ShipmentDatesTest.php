@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Unit\Domain;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\ApiPlatform\ShipmentErrorMessages;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
@@ -25,17 +24,17 @@ if (!defined('_PS_VERSION_')) {
 
 final class ShipmentDatesTest extends TestCase
 {
-    private DateTimeImmutable $now;
-    private DateTimeImmutable $yesterday;
-    private DateTimeImmutable $lastWeek;
-    private DateTimeImmutable $tomorrow;
+    private \DateTimeImmutable $now;
+    private \DateTimeImmutable $yesterday;
+    private \DateTimeImmutable $lastWeek;
+    private \DateTimeImmutable $tomorrow;
 
     protected function setUp(): void
     {
-        $this->now = new DateTimeImmutable('2026-11-06 12:00:00');
-        $this->yesterday = new DateTimeImmutable('2026-11-05 12:00:00');
-        $this->lastWeek = new DateTimeImmutable('2026-10-30 12:00:00');
-        $this->tomorrow = new DateTimeImmutable('2026-11-07 12:00:00');
+        $this->now = new \DateTimeImmutable('2026-11-06 12:00:00');
+        $this->yesterday = new \DateTimeImmutable('2026-11-05 12:00:00');
+        $this->lastWeek = new \DateTimeImmutable('2026-10-30 12:00:00');
+        $this->tomorrow = new \DateTimeImmutable('2026-11-07 12:00:00');
     }
 
     public function testADateNotSentStaysNull(): void
@@ -45,7 +44,7 @@ final class ShipmentDatesTest extends TestCase
 
     public function testAValidDateIsRead(): void
     {
-        self::assertEquals(new DateTimeImmutable('2026-11-05T10:12:00+01:00'), ShipmentDates::fromInput('shippedAt', '2026-11-05T10:12:00+01:00'));
+        self::assertEquals(new \DateTimeImmutable('2026-11-05T10:12:00+01:00'), ShipmentDates::fromInput('shippedAt', '2026-11-05T10:12:00+01:00'));
     }
 
     /**
@@ -87,7 +86,7 @@ final class ShipmentDatesTest extends TestCase
     #[DataProvider('validDateProvider')]
     public function testAValidFormatIsAccepted(string $value): void
     {
-        self::assertInstanceOf(DateTimeImmutable::class, ShipmentDates::fromInput('shippedAt', $value));
+        self::assertInstanceOf(\DateTimeImmutable::class, ShipmentDates::fromInput('shippedAt', $value));
     }
 
     public function testADateCanBeOneDayAheadAtMost(): void
@@ -104,7 +103,7 @@ final class ShipmentDatesTest extends TestCase
 
     public function testADateBefore2000IsRefused(): void
     {
-        $first = new DateTimeImmutable('2000-01-01T00:00:00+00:00');
+        $first = new \DateTimeImmutable('2000-01-01T00:00:00+00:00');
 
         self::assertEquals([$first, null], ShipmentDates::resolve(ShipmentStatus::Shipped, $first, null, null, null, $this->now));
 
@@ -117,7 +116,7 @@ final class ShipmentDatesTest extends TestCase
     public function testADeliveryDateOutOfRangeIsRefusedAndNamed(): void
     {
         try {
-            ShipmentDates::resolve(ShipmentStatus::Delivered, null, new DateTimeImmutable('2099-01-01T10:00:00+01:00'), null, null, $this->now);
+            ShipmentDates::resolve(ShipmentStatus::Delivered, null, new \DateTimeImmutable('2099-01-01T10:00:00+01:00'), null, null, $this->now);
             self::fail('Refusal expected');
         } catch (ShipmentConstraintException $e) {
             self::assertSame(ShipmentConstraintException::DATE_OUT_OF_RANGE, $e->getCode());
@@ -127,7 +126,7 @@ final class ShipmentDatesTest extends TestCase
 
     public function testAnOldSavedDateDoesNotBlockAChange(): void
     {
-        $old = new DateTimeImmutable('1995-01-01 00:00:00');
+        $old = new \DateTimeImmutable('1995-01-01 00:00:00');
 
         self::assertEquals([$old, null], ShipmentDates::resolve(ShipmentStatus::InTransit, null, null, $old, null, $this->now));
     }

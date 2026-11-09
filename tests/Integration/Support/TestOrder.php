@@ -11,13 +11,9 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Support;
 
-use Configuration;
-use Db;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
-use RuntimeException;
-use Shop;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -45,19 +41,19 @@ final class TestOrder
      */
     public static function create(int $stateId, array $quantities): self
     {
-        $db = Db::getInstance();
-        $shopId = (int) Configuration::get('PS_SHOP_DEFAULT');
+        $db = \Db::getInstance();
+        $shopId = (int) \Configuration::get('PS_SHOP_DEFAULT');
         $now = date('Y-m-d H:i:s');
 
         self::insert('orders', [
             'reference' => self::REFERENCE,
-            'id_shop_group' => (int) (new Shop($shopId))->id_shop_group,
+            'id_shop_group' => (int) (new \Shop($shopId))->id_shop_group,
             'id_shop' => $shopId,
             'id_carrier' => 0,
-            'id_lang' => (int) Configuration::get('PS_LANG_DEFAULT'),
+            'id_lang' => (int) \Configuration::get('PS_LANG_DEFAULT'),
             'id_customer' => 0,
             'id_cart' => 0,
-            'id_currency' => (int) Configuration::get('PS_CURRENCY_DEFAULT'),
+            'id_currency' => (int) \Configuration::get('PS_CURRENCY_DEFAULT'),
             'id_address_delivery' => 0,
             'id_address_invoice' => 0,
             'current_state' => $stateId,
@@ -92,7 +88,7 @@ final class TestOrder
      */
     public function delete(): void
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
         $p = _DB_PREFIX_;
 
         $db->execute('DELETE l FROM ' . $p . ShipmentRepository::TABLE_LINE . ' l INNER JOIN ' . $p . ShipmentRepository::TABLE . ' s ON s.id_shipment = l.id_shipment WHERE s.id_order = ' . $this->id);
@@ -109,8 +105,8 @@ final class TestOrder
      */
     private static function insert(string $table, array $row): void
     {
-        if (!Db::getInstance()->insert($table, $row)) {
-            throw new RuntimeException(sprintf('The test order could not be written in %s: %s', $table, Db::getInstance()->getMsgError()));
+        if (!\Db::getInstance()->insert($table, $row)) {
+            throw new \RuntimeException(sprintf('The test order could not be written in %s: %s', $table, \Db::getInstance()->getMsgError()));
         }
     }
 }

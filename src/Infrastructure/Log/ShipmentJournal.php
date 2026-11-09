@@ -18,8 +18,6 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentLogRepository;
 use PrestaShop\PrestaShop\Core\Context\ApiClientContext;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
-use PrestaShopLogger;
-use Throwable;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -162,8 +160,8 @@ class ShipmentJournal
     private function log(int $orderId, string $message): void
     {
         try {
-            PrestaShopLogger::addLog($message, self::SEVERITY_INFORMATIVE, null, 'Order', $orderId, true, $this->getEmployeeId());
-        } catch (Throwable) {
+            \PrestaShopLogger::addLog($message, self::SEVERITY_INFORMATIVE, null, 'Order', $orderId, true, $this->getEmployeeId());
+        } catch (\Throwable) {
             // The module's own journal has the line
         }
     }

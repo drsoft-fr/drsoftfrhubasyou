@@ -11,11 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use DateTimeImmutable;
-use DateTimeInterface;
-use DateTimeZone;
-use Db;
-use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
@@ -23,7 +18,6 @@ use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
-use RuntimeException;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -44,7 +38,7 @@ class ShipmentRepository
 
     public function find(int $shipmentId): ?Shipment
     {
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('s.*')
             ->from(self::TABLE, 's')
             ->where('s.id_shipment = ' . $shipmentId);
@@ -59,7 +53,7 @@ class ShipmentRepository
 
     public function findByExternalReference(string $externalReference): ?Shipment
     {
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('s.*')
             ->from(self::TABLE, 's')
             ->where("s.external_reference = '" . pSQL($externalReference, true) . "'");
@@ -75,7 +69,7 @@ class ShipmentRepository
      */
     public function findByOrder(int $orderId): array
     {
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('s.*')
             ->from(self::TABLE, 's')
             ->where('s.id_order = ' . $orderId)
@@ -102,9 +96,9 @@ class ShipmentRepository
         }
 
         $count = (int) DatabaseReader::value(
-            (new DbQuery())->select('COUNT(*)')->from(self::TABLE, 's')->where(implode(' AND ', $where))
+            (new \DbQuery())->select('COUNT(*)')->from(self::TABLE, 's')->where(implode(' AND ', $where))
         );
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('s.*')
             ->from(self::TABLE, 's')
             ->where(implode(' AND ', $where))
@@ -124,7 +118,7 @@ class ShipmentRepository
      */
     public function add(Shipment $shipment, ShipmentJournal $journal): int
     {
-        return DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($shipment, $journal): int {
+        return DatabaseError::transaction('The parcel could not be saved.', function (\Db $db) use ($shipment, $journal): int {
             $now = date(self::DATE_FORMAT);
             $columns = [
                 'external_reference' => $shipment->externalReference,
@@ -132,7 +126,7 @@ class ShipmentRepository
             ] + $this->changeableColumns($shipment);
 
             if (!$db->insert(self::TABLE, $this->escape($columns) + ['date_add' => $now, 'date_upd' => $now], true)) {
-                throw new RuntimeException('The parcel row was not inserted.');
+                throw new \RuntimeException('The parcel row was not inserted.');
             }
 
             $shipmentId = (int) $db->Insert_ID();
@@ -150,14 +144,14 @@ class ShipmentRepository
             }
 
             if (!$db->insert(self::TABLE_LINE, $rows)) {
-                throw new RuntimeException('The lines of the parcel were not inserted.');
+                throw new \RuntimeException('The lines of the parcel were not inserted.');
             }
 
             // As saved: same connection, the transaction sees its own rows
-            $journal->added($this->find($shipmentId) ?? throw new RuntimeException('The parcel saved could not be read again.'));
+            $journal->added($this->find($shipmentId) ?? throw new \RuntimeException('The parcel saved could not be read again.'));
 
             return $shipmentId;
-        }, static fn (Db $db): ?ShipmentException => (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY
+        }, static fn (\Db $db): ?ShipmentException => (int) $db->getNumberError() === self::MYSQL_DUPLICATE_KEY
             ? ShipmentConstraintException::duplicateReference($shipment->externalReference)
             : null);
     }
@@ -172,7 +166,7 @@ class ShipmentRepository
      */
     public function update(Shipment $before, Shipment $shipment, ShipmentJournal $journal): void
     {
-        DatabaseError::transaction('The parcel could not be saved.', function (Db $db) use ($before, $shipment, $journal): void {
+        DatabaseError::transaction('The parcel could not be saved.', function (\Db $db) use ($before, $shipment, $journal): void {
             if (!$db->update(
                 self::TABLE,
                 $this->escape($this->changeableColumns($shipment)) + ['date_upd' => date(self::DATE_FORMAT)],
@@ -180,11 +174,11 @@ class ShipmentRepository
                 0,
                 true
             )) {
-                throw new RuntimeException('The parcel row was not updated.');
+                throw new \RuntimeException('The parcel row was not updated.');
             }
 
             // As saved (dates in the shop's time): only what really changed is written
-            $journal->edited($before, $this->find($shipment->id) ?? throw new RuntimeException('The parcel saved could not be read again.'));
+            $journal->edited($before, $this->find($shipment->id) ?? throw new \RuntimeException('The parcel saved could not be read again.'));
         });
     }
 
@@ -196,11 +190,11 @@ class ShipmentRepository
      */
     public function delete(Shipment $shipment, ShipmentJournal $journal): void
     {
-        DatabaseError::transaction('The parcel could not be deleted.', static function (Db $db) use ($shipment, $journal): void {
+        DatabaseError::transaction('The parcel could not be deleted.', static function (\Db $db) use ($shipment, $journal): void {
             if (!$db->delete(self::TABLE_LINE, 'id_shipment = ' . $shipment->id)
                 || !$db->delete(self::TABLE, 'id_shipment = ' . $shipment->id)
             ) {
-                throw new RuntimeException('The parcel rows were not deleted.');
+                throw new \RuntimeException('The parcel rows were not deleted.');
             }
 
             $journal->deleted($shipment);
@@ -215,13 +209,13 @@ class ShipmentRepository
      */
     public function claimMail(int $shipmentId): bool
     {
-        DatabaseError::write('The "parcel on its way" e-mail could not be reserved.', static fn (Db $db): bool => $db->update(
+        DatabaseError::write('The "parcel on its way" e-mail could not be reserved.', static fn (\Db $db): bool => $db->update(
             self::TABLE,
             ['mail_sent_at' => date(self::DATE_FORMAT)],
             'id_shipment = ' . $shipmentId . ' AND mail_sent_at IS NULL'
         ));
 
-        return (int) Db::getInstance()->Affected_Rows() === 1;
+        return (int) \Db::getInstance()->Affected_Rows() === 1;
     }
 
     /**
@@ -231,7 +225,7 @@ class ShipmentRepository
      */
     public function releaseMail(int $shipmentId): void
     {
-        DatabaseError::write('The reservation of the "parcel on its way" e-mail could not be given back.', static fn (Db $db): bool => $db->update(
+        DatabaseError::write('The reservation of the "parcel on its way" e-mail could not be given back.', static fn (\Db $db): bool => $db->update(
             self::TABLE,
             ['mail_sent_at' => null],
             'id_shipment = ' . $shipmentId,
@@ -247,7 +241,7 @@ class ShipmentRepository
      */
     public function saveMailDate(int $shipmentId): void
     {
-        DatabaseError::write('The date of the "parcel on its way" e-mail could not be saved.', static fn (Db $db): bool => $db->update(
+        DatabaseError::write('The date of the "parcel on its way" e-mail could not be saved.', static fn (\Db $db): bool => $db->update(
             self::TABLE,
             ['mail_sent_at' => date(self::DATE_FORMAT)],
             'id_shipment = ' . $shipmentId
@@ -263,7 +257,7 @@ class ShipmentRepository
      */
     public function getShippedQuantities(int $orderId, bool $deliveredOnly = false): array
     {
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('l.id_order_detail, SUM(l.quantity) AS quantity')
             ->from(self::TABLE_LINE, 'l')
             ->innerJoin(self::TABLE, 's', 's.id_shipment = l.id_shipment')
@@ -293,7 +287,7 @@ class ShipmentRepository
     private function findProducts(array $lines): array
     {
         $ids = array_map(static fn (ShipmentLine $line): int => $line->orderDetailId, $lines);
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('id_order_detail, product_name, product_reference')
             ->from('order_detail')
             ->where('id_order_detail IN (' . implode(',', $ids) . ')');
@@ -318,7 +312,7 @@ class ShipmentRepository
         }
 
         $ids = array_map(static fn (array $row): int => (int) $row['id_shipment'], $rows);
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('l.id_shipment, l.id_order_detail, l.quantity, l.product_name, l.product_reference')
             ->from(self::TABLE_LINE, 'l')
             ->where('l.id_shipment IN (' . implode(',', $ids) . ')')
@@ -369,10 +363,10 @@ class ShipmentRepository
      * received with another offset ("…Z", "…-05:00") is converted first. PrestaShop sets
      * PHP's default time zone to the shop's (PS_TIMEZONE) when it starts.
      */
-    private function toShopTime(DateTimeInterface $date): string
+    private function toShopTime(\DateTimeInterface $date): string
     {
-        return DateTimeImmutable::createFromInterface($date)
-            ->setTimezone(new DateTimeZone(date_default_timezone_get()))
+        return \DateTimeImmutable::createFromInterface($date)
+            ->setTimezone(new \DateTimeZone(date_default_timezone_get()))
             ->format(self::DATE_FORMAT);
     }
 
@@ -381,7 +375,7 @@ class ShipmentRepository
         $escaped = [];
 
         foreach ($data as $column => $value) {
-            if ($value instanceof DateTimeInterface) {
+            if ($value instanceof \DateTimeInterface) {
                 $value = $this->toShopTime($value);
             }
 

@@ -138,10 +138,7 @@ final class ShipmentRules
         ]));
 
         if ($changed) {
-            throw new ShipmentConstraintException(sprintf(
-                'The content of a parcel cannot be changed (%s): delete the parcel and declare it again.',
-                implode(', ', $changed)
-            ), ShipmentConstraintException::CONTENT_CHANGED, parameters: ['fields' => $changed]);
+            throw new ShipmentConstraintException(sprintf('The content of a parcel cannot be changed (%s): delete the parcel and declare it again.', implode(', ', $changed)), ShipmentConstraintException::CONTENT_CHANGED, parameters: ['fields' => $changed]);
         }
     }
 }

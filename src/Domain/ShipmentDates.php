@@ -11,10 +11,8 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Domain;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
-use Exception;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -49,7 +47,7 @@ final class ShipmentDates
      *
      * @throws ShipmentConstraintException
      */
-    public static function fromInput(string $field, ?string $value): ?DateTimeImmutable
+    public static function fromInput(string $field, ?string $value): ?\DateTimeImmutable
     {
         if ($value === null) {
             return null;
@@ -57,11 +55,11 @@ final class ShipmentDates
 
         try {
             if (!preg_match(self::INPUT_FORMAT, $value, $parts) || !checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])) {
-                throw new Exception('Not an ISO 8601 date with an offset.');
+                throw new \Exception('Not an ISO 8601 date with an offset.');
             }
 
-            return new DateTimeImmutable($value);
-        } catch (Exception $e) {
+            return new \DateTimeImmutable($value);
+        } catch (\Exception $e) {
             throw new ShipmentConstraintException(sprintf('%s must be an ISO 8601 date with its time offset.', $field), ShipmentConstraintException::INVALID_DATE, $e, ['fields' => [$field]]);
         }
     }
@@ -69,29 +67,29 @@ final class ShipmentDates
     /**
      * Date saved on a parcel, null when it has none.
      */
-    public static function fromSaved(?string $value): ?DateTimeImmutable
+    public static function fromSaved(?string $value): ?\DateTimeImmutable
     {
-        return $value ? new DateTimeImmutable($value) : null;
+        return $value ? new \DateTimeImmutable($value) : null;
     }
 
     /**
      * @param ShipmentStatus $status State of the parcel after the change
-     * @param ?DateTimeImmutable $sentShippedAt Date sent with the change
-     * @param ?DateTimeImmutable $sentDeliveredAt Date sent with the change
-     * @param ?DateTimeImmutable $savedShippedAt Date already saved (null for a new parcel)
-     * @param ?DateTimeImmutable $savedDeliveredAt Date already saved (null for a new parcel)
+     * @param ?\DateTimeImmutable $sentShippedAt Date sent with the change
+     * @param ?\DateTimeImmutable $sentDeliveredAt Date sent with the change
+     * @param ?\DateTimeImmutable $savedShippedAt Date already saved (null for a new parcel)
+     * @param ?\DateTimeImmutable $savedDeliveredAt Date already saved (null for a new parcel)
      *
-     * @return array{0: ?DateTimeImmutable, 1: ?DateTimeImmutable} [shippedAt, deliveredAt]
+     * @return array{0: ?\DateTimeImmutable, 1: ?\DateTimeImmutable} [shippedAt, deliveredAt]
      *
      * @throws ShipmentConstraintException
      */
     public static function resolve(
         ShipmentStatus $status,
-        ?DateTimeImmutable $sentShippedAt,
-        ?DateTimeImmutable $sentDeliveredAt,
-        ?DateTimeImmutable $savedShippedAt,
-        ?DateTimeImmutable $savedDeliveredAt,
-        DateTimeImmutable $now,
+        ?\DateTimeImmutable $sentShippedAt,
+        ?\DateTimeImmutable $sentDeliveredAt,
+        ?\DateTimeImmutable $savedShippedAt,
+        ?\DateTimeImmutable $savedDeliveredAt,
+        \DateTimeImmutable $now,
     ): array {
         self::assertInRange('shippedAt', $sentShippedAt, $now);
         self::assertInRange('deliveredAt', $sentDeliveredAt, $now);
@@ -123,9 +121,9 @@ final class ShipmentDates
      *
      * @throws ShipmentConstraintException
      */
-    private static function assertInRange(string $field, ?DateTimeImmutable $date, DateTimeImmutable $now): void
+    private static function assertInRange(string $field, ?\DateTimeImmutable $date, \DateTimeImmutable $now): void
     {
-        if ($date && ($date < new DateTimeImmutable(self::EARLIEST) || $date > $now->modify(self::LATEST_MARGIN))) {
+        if ($date && ($date < new \DateTimeImmutable(self::EARLIEST) || $date > $now->modify(self::LATEST_MARGIN))) {
             throw new ShipmentConstraintException(sprintf('%s is too old or too far in the future.', $field), ShipmentConstraintException::DATE_OUT_OF_RANGE, parameters: ['fields' => [$field]]);
         }
     }

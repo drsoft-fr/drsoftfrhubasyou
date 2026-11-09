@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Support;
 
-use Db;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 
 if (!defined('_PS_VERSION_')) {
@@ -30,7 +29,7 @@ final class RecordingStateWriter extends OrderStateWriter
 
     public function change(int $orderId, int $stateId): void
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
         if ((int) $db->getValue('SELECT current_state FROM ' . _DB_PREFIX_ . 'orders WHERE id_order = ' . $orderId, false) === $stateId) {
             return;

@@ -22,7 +22,6 @@ use DrSoftFr\Module\HubAsYou\Infrastructure\Order\OrderStateWriter;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderMailRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\OrderRepository;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
-use Throwable;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -82,7 +81,7 @@ class ShipmentEffects
                 fn () => $this->sendShipmentMailOnce($order, $shipment)
             );
             $this->applyProgress($order);
-        }, function (Throwable $t) use ($shipmentId, &$orderId): void {
+        }, function (\Throwable $t) use ($shipmentId, &$orderId): void {
             $this->log->failure(sprintf('parcel #%d', $shipmentId), $t, $orderId);
         });
     }
@@ -99,7 +98,7 @@ class ShipmentEffects
             if ($order) {
                 $this->applyProgress($order);
             }
-        }, function (Throwable $t) use ($orderId): void {
+        }, function (\Throwable $t) use ($orderId): void {
             $this->log->failure(sprintf('order #%d', $orderId), $t, $orderId);
         });
     }
@@ -163,7 +162,7 @@ class ShipmentEffects
     {
         try {
             $send();
-        } catch (Throwable $t) {
+        } catch (\Throwable $t) {
             $this->log->failure($subject, $t, $orderId);
 
             throw new ShipmentConstraintException('The e-mail could not be sent.', $failureCode, $t);
@@ -172,7 +171,7 @@ class ShipmentEffects
 
     /**
      * @param callable(): void $work
-     * @param callable(Throwable): void $onFailure
+     * @param callable(\Throwable): void $onFailure
      */
     private function run(callable $work, callable $onFailure): void
     {
@@ -184,7 +183,7 @@ class ShipmentEffects
 
         try {
             $work();
-        } catch (Throwable $t) {
+        } catch (\Throwable $t) {
             $onFailure($t);
         } finally {
             self::$running = false;
@@ -219,7 +218,7 @@ class ShipmentEffects
     {
         try {
             $step();
-        } catch (Throwable $t) {
+        } catch (\Throwable $t) {
             $this->log->failure($subject, $t, $orderId);
         }
     }
@@ -280,10 +279,10 @@ class ShipmentEffects
 
         try {
             $send();
-        } catch (Throwable $t) {
+        } catch (\Throwable $t) {
             try {
                 $release();
-            } catch (Throwable) {
+            } catch (\Throwable) {
                 // Already in the logs (DatabaseError): the e-mail stays reserved, the merchant
                 // can send it from the back office. The failure to report is the sending.
             }

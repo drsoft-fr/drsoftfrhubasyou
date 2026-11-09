@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use Db;
-use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 
 if (!defined('_PS_VERSION_')) {
@@ -34,12 +32,12 @@ class OrderMailRepository
      */
     public function claimDeliveredMail(int $orderId): bool
     {
-        DatabaseError::write('The "order delivered" e-mail could not be reserved.', static fn (Db $db): bool => $db->insert(self::TABLE, [
+        DatabaseError::write('The "order delivered" e-mail could not be reserved.', static fn (\Db $db): bool => $db->insert(self::TABLE, [
             'id_order' => $orderId,
             'delivered_mail_sent_at' => date(ShipmentRepository::DATE_FORMAT),
-        ], false, true, Db::INSERT_IGNORE));
+        ], false, true, \Db::INSERT_IGNORE));
 
-        return (int) Db::getInstance()->Affected_Rows() === 1;
+        return (int) \Db::getInstance()->Affected_Rows() === 1;
     }
 
     /**
@@ -49,7 +47,7 @@ class OrderMailRepository
      */
     public function saveDeliveredMailDate(int $orderId): void
     {
-        DatabaseError::write('The date of the "order delivered" e-mail could not be saved.', static fn (Db $db): bool => $db->execute(sprintf(
+        DatabaseError::write('The date of the "order delivered" e-mail could not be saved.', static fn (\Db $db): bool => $db->execute(sprintf(
             "INSERT INTO `%s%s` (id_order, delivered_mail_sent_at) VALUES (%d, '%s') ON DUPLICATE KEY UPDATE delivered_mail_sent_at = VALUES(delivered_mail_sent_at)",
             _DB_PREFIX_,
             self::TABLE,
@@ -64,7 +62,7 @@ class OrderMailRepository
     public function findDeliveredMailDate(int $orderId): ?string
     {
         return DatabaseReader::value(
-            (new DbQuery())
+            (new \DbQuery())
                 ->select('delivered_mail_sent_at')
                 ->from(self::TABLE)
                 ->where('id_order = ' . $orderId)
@@ -78,6 +76,6 @@ class OrderMailRepository
      */
     public function releaseDeliveredMail(int $orderId): void
     {
-        DatabaseError::write('The reservation of the "order delivered" e-mail could not be given back.', static fn (Db $db): bool => $db->delete(self::TABLE, 'id_order = ' . $orderId));
+        DatabaseError::write('The reservation of the "order delivered" e-mail could not be given back.', static fn (\Db $db): bool => $db->delete(self::TABLE, 'id_order = ' . $orderId));
     }
 }

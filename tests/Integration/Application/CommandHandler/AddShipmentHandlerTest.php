@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Application\CommandHandler;
 
-use Db;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
@@ -121,7 +120,7 @@ final class AddShipmentHandlerTest extends IntegrationTestCase
         $order = $this->createOrder(1);
         $reference = $this->reference();
         $table = _DB_PREFIX_ . ShipmentLogRepository::TABLE;
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
         // The journal cannot be written: a real failure of the database, not a test double
         $db->execute('RENAME TABLE `' . $table . '` TO `' . $table . '_off`');

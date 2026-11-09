@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\QueryResult;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 
@@ -35,8 +34,8 @@ final class ShipmentForEditing
         private readonly string $trackingNumber,
         private readonly ?string $trackingUrl,
         private readonly string $status,
-        private readonly ?DateTimeImmutable $shippedAt,
-        private readonly ?DateTimeImmutable $deliveredAt,
+        private readonly ?\DateTimeImmutable $shippedAt,
+        private readonly ?\DateTimeImmutable $deliveredAt,
         private readonly array $lines,
     ) {
     }
@@ -95,12 +94,12 @@ final class ShipmentForEditing
         return $this->status;
     }
 
-    public function getShippedAt(): ?DateTimeImmutable
+    public function getShippedAt(): ?\DateTimeImmutable
     {
         return $this->shippedAt;
     }
 
-    public function getDeliveredAt(): ?DateTimeImmutable
+    public function getDeliveredAt(): ?\DateTimeImmutable
     {
         return $this->deliveredAt;
     }

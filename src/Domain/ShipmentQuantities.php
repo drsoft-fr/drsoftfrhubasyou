@@ -53,13 +53,7 @@ final class ShipmentQuantities
             $already = $inParcels[$orderDetailId] ?? 0;
 
             if ($already + $quantity > $orderLines[$orderDetailId]['ordered']) {
-                throw new ShipmentConstraintException(sprintf(
-                    'Order line %d: %d unit(s) ordered, %d already in parcels, %d sent.',
-                    $orderDetailId,
-                    $orderLines[$orderDetailId]['ordered'],
-                    $already,
-                    $quantity
-                ), ShipmentConstraintException::QUANTITY_EXCEEDED, parameters: ['line' => $orderDetailId, 'ordered' => $orderLines[$orderDetailId]['ordered'], 'already' => $already, 'sent' => $quantity]);
+                throw new ShipmentConstraintException(sprintf('Order line %d: %d unit(s) ordered, %d already in parcels, %d sent.', $orderDetailId, $orderLines[$orderDetailId]['ordered'], $already, $quantity), ShipmentConstraintException::QUANTITY_EXCEEDED, parameters: ['line' => $orderDetailId, 'ordered' => $orderLines[$orderDetailId]['ordered'], 'already' => $already, 'sent' => $quantity]);
             }
         }
     }

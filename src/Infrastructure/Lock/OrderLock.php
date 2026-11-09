@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Lock;
 
-use Db;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 
 if (!defined('_PS_VERSION_')) {
@@ -45,7 +44,7 @@ class OrderLock
      */
     public function synchronized(int $orderId, callable $work): mixed
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
         $name = "'" . $this->getName($orderId) . "'";
 
         if ((int) $db->getValue('SELECT GET_LOCK(' . $name . ', ' . self::TIMEOUT . ')', false) !== 1) {

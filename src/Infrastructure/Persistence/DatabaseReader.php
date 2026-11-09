@@ -11,10 +11,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use Db;
-use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
-use Throwable;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -37,11 +34,11 @@ final class DatabaseReader
      *
      * @throws ShipmentException The database could not be read
      */
-    public static function rows(DbQuery $query): array
+    public static function rows(\DbQuery $query): array
     {
         try {
-            $rows = Db::getInstance()->executeS($query, true, false);
-        } catch (Throwable $t) {
+            $rows = \Db::getInstance()->executeS($query, true, false);
+        } catch (\Throwable $t) {
             throw DatabaseError::exception('The database could not be read.', $t);
         }
 
@@ -57,7 +54,7 @@ final class DatabaseReader
      *
      * @throws ShipmentException The database could not be read
      */
-    public static function row(DbQuery $query): ?array
+    public static function row(\DbQuery $query): ?array
     {
         return self::rows($query->limit(1))[0] ?? null;
     }
@@ -69,7 +66,7 @@ final class DatabaseReader
      *
      * @throws ShipmentException The database could not be read
      */
-    public static function value(DbQuery $query): mixed
+    public static function value(\DbQuery $query): mixed
     {
         $row = self::row($query);
 

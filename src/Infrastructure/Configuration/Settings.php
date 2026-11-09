@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Configuration;
 
-use Configuration;
 use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
 
 if (!defined('_PS_VERSION_')) {
@@ -64,10 +63,10 @@ class Settings
 
     public function install(): bool
     {
-        return Configuration::updateValue(self::ORDER_STATE_SHIPPED, (int) Configuration::get('PS_OS_SHIPPING'))
-            && Configuration::updateValue(self::ORDER_STATE_DELIVERED, (int) Configuration::get('PS_OS_DELIVERED'))
-            && Configuration::updateValue(self::SEND_MAIL, 1)
-            && Configuration::updateValue(self::SEND_DELIVERED_MAIL, 1)
+        return \Configuration::updateValue(self::ORDER_STATE_SHIPPED, (int) \Configuration::get('PS_OS_SHIPPING'))
+            && \Configuration::updateValue(self::ORDER_STATE_DELIVERED, (int) \Configuration::get('PS_OS_DELIVERED'))
+            && \Configuration::updateValue(self::SEND_MAIL, 1)
+            && \Configuration::updateValue(self::SEND_DELIVERED_MAIL, 1)
             && $this->setChangeableStates($this->getDefaultChangeableStates());
     }
 
@@ -76,7 +75,7 @@ class Settings
         $result = true;
 
         foreach (self::KEYS as $key) {
-            $result = Configuration::deleteByName($key) && $result;
+            $result = \Configuration::deleteByName($key) && $result;
         }
 
         return $result;
@@ -115,7 +114,7 @@ class Settings
         $stateIds = array_values(array_unique(array_filter(array_map('intval', $stateIds))));
         sort($stateIds);
 
-        return Configuration::updateValue(self::CHANGEABLE_STATES, implode(',', $stateIds));
+        return \Configuration::updateValue(self::CHANGEABLE_STATES, implode(',', $stateIds));
     }
 
     /**
@@ -123,7 +122,7 @@ class Settings
      */
     public function getDefaultChangeableStates(): array
     {
-        return array_map(static fn (string $key): int => (int) Configuration::get($key), self::DEFAULT_CHANGEABLE_STATE_KEYS);
+        return array_map(static fn (string $key): int => (int) \Configuration::get($key), self::DEFAULT_CHANGEABLE_STATE_KEYS);
     }
 
     public function isMailEnabled(?ShopOrder $order = null): bool
@@ -145,6 +144,6 @@ class Settings
      */
     private function get(string $key, ?ShopOrder $order): mixed
     {
-        return Configuration::get($key, null, $order?->shopGroupId, $order?->shopId);
+        return \Configuration::get($key, null, $order?->shopGroupId, $order?->shopId);
     }
 }

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
@@ -85,7 +84,7 @@ final class AddShipmentHandler
                 $command->shippedAt,
                 $command->deliveredAt,
                 $command->lines,
-                new DateTimeImmutable()
+                new \DateTimeImmutable()
             ), $this->journal);
 
             $this->effects->onShipmentSaved($shipmentId);

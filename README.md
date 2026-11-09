@@ -54,6 +54,17 @@ Sont testés : les champs et les lignes d'un colis, les quantités, l'avancement
 
 PHPUnit sert seulement au développement. `make package` le retire de `vendor/` pour construire l'archive, et n'y met pas les tests : après une archive, relancer `composer install` avant `make test` ou `make test-integration`.
 
+## Style du code
+
+Le code suit le style de PrestaShop, celui que vérifie son validateur de modules (PHP CS Fixer avec la configuration de `prestashop/php-dev-tools`, dans `.php-cs-fixer.dist.php`). Exemple : `\Order` dans le code plutôt qu'un `use Order;` en tête du fichier.
+
+Une seule règle est désactivée, `blank_line_after_opening_tag`, comme dans le code de PrestaShop : la licence suit `<?php` sans ligne vide. Le validateur se contredit sur ce point : sa vérification du style demande une ligne vide, sa vérification des licences la refuse. Le module fait comme le cœur et les modules natifs de PrestaShop ; le validateur signale donc ce seul point de style.
+
+- `make cs` remet en forme tous les fichiers du module ;
+- `make cs-check` signale les écarts sans rien modifier. `make test` le lance en premier : un fichier mal présenté fait échouer les tests.
+
+Comme PHPUnit, ces outils ne servent qu'au développement : absents de l'archive, à réinstaller par `composer install` après `make package`.
+
 ## Personnalisation
 
 - Gabarit du compte client : `themes/<thème>/modules/drsoftfrhubasyou/views/templates/hook/order-detail.tpl` (classes `hubasyou-shipments`, `hubasyou-shipment__…`).
@@ -76,7 +87,7 @@ PHPUnit sert seulement au développement. `make package` le retire de `vendor/` 
 - Règles du validateur de modules de PrestaShop, vérifiées sur chaque fichier par `tests/Unit/ModuleFilesTest.php` (`make test`), pour qu'un nouveau fichier ne puisse pas les oublier :
     - un `index.php` dans chaque dossier, sauf `src/ApiPlatform/Resources/` ;
     - en tête de chaque fichier PHP, après les `use`, `if (!defined('_PS_VERSION_')) { exit; }` : chargé hors de PrestaShop, le fichier ne fait rien. Les tests unitaires définissent la constante dans `tests/Unit/bootstrap.php` ;
-    - l'en-tête de licence (MIT) en tête des fichiers PHP et des gabarits ;
+    - l'en-tête de licence (MIT) en tête des fichiers PHP (juste après `<?php`, voir Style du code) et des gabarits ;
     - un `.htaccess` à la racine : le serveur web ne sert que les images (le logo dans le BO). Exemple : `/modules/drsoftfrhubasyou/README.md`, les gabarits d'e-mails ou `install.sql` répondent `403`.
 
 **Désinstaller** supprime les colis reçus. **Réinitialiser** les conserve : seuls les réglages reviennent à leurs valeurs par défaut, et les droits de l'onglet Colis HubAsYou sont à redonner aux profils autres que SuperAdmin.

@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Domain\Exception;
 
-use RuntimeException;
-use Throwable;
-
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -24,7 +21,7 @@ if (!defined('_PS_VERSION_')) {
  *
  * Used as it is, this class is a technical failure: the API answers a generic 500.
  */
-class ShipmentException extends RuntimeException
+class ShipmentException extends \RuntimeException
 {
     /**
      * @param array<string, int|array<string>> $parameters Values for the message of the API table
@@ -32,7 +29,7 @@ class ShipmentException extends RuntimeException
     public function __construct(
         string $message = '',
         int $code = 0,
-        ?Throwable $previous = null,
+        ?\Throwable $previous = null,
         public readonly array $parameters = [],
     ) {
         parent::__construct($message, $code, $previous);

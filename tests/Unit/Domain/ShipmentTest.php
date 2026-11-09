@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Unit\Domain;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\ApiPlatform\ShipmentErrorMessages;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
@@ -25,11 +24,11 @@ if (!defined('_PS_VERSION_')) {
 
 final class ShipmentTest extends TestCase
 {
-    private DateTimeImmutable $now;
+    private \DateTimeImmutable $now;
 
     protected function setUp(): void
     {
-        $this->now = new DateTimeImmutable('2026-11-06 12:00:00');
+        $this->now = new \DateTimeImmutable('2026-11-06 12:00:00');
     }
 
     private function parcel(): Shipment
@@ -187,7 +186,7 @@ final class ShipmentTest extends TestCase
             $parcel->withChanges(null, 'TN2', null, null, null, null, $this->now),
             $parcel->withChanges(null, null, '', null, null, null, $this->now),
             $parcel->withChanges(null, null, null, ShipmentStatus::InTransit, null, null, $this->now),
-            $parcel->withChanges(null, null, null, null, new DateTimeImmutable('2026-11-01 12:00:00'), null, $this->now),
+            $parcel->withChanges(null, null, null, null, new \DateTimeImmutable('2026-11-01 12:00:00'), null, $this->now),
         ] as $changed) {
             self::assertNotSame($parcel->version(), $changed->version());
         }

@@ -12,8 +12,6 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
-use PrestaShopLogger;
-use Throwable;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -43,7 +41,7 @@ final class ModuleLog
      * The message of an exception and of the exceptions that caused it, for example
      * "The e-mail was not sent. - caused by: Connection refused".
      */
-    public static function describe(Throwable $t): string
+    public static function describe(\Throwable $t): string
     {
         $messages = [];
 
@@ -60,10 +58,10 @@ final class ModuleLog
 
         try {
             // The same failure can happen again on the next save: it is written again
-            if (PrestaShopLogger::addLog($message, $severity, null, $orderId ? 'Order' : null, $orderId ?: null, true)) {
+            if (\PrestaShopLogger::addLog($message, $severity, null, $orderId ? 'Order' : null, $orderId ?: null, true)) {
                 return;
             }
-        } catch (Throwable) {
+        } catch (\Throwable) {
             // The PHP error log below
         }
 

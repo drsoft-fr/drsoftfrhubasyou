@@ -11,15 +11,14 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\CommandHandler;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Service\ShipmentEffects;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
+use DrSoftFr\Module\HubAsYou\Infrastructure\Context\RequestOrigin;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Lock\ShipmentLock;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\ShipmentRepository;
-use DrSoftFr\Module\HubAsYou\Infrastructure\Context\RequestOrigin;
 use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 
 if (!defined('_PS_VERSION_')) {
@@ -65,7 +64,7 @@ final class EditShipmentHandler
                 $command->status,
                 $command->shippedAt,
                 $command->deliveredAt,
-                new DateTimeImmutable()
+                new \DateTimeImmutable()
             );
 
             $this->shipments->update($current, $changed, $this->journal);

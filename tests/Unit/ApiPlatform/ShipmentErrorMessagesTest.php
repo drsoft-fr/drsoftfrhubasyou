@@ -19,7 +19,6 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentQuantities;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -128,9 +127,9 @@ final class ShipmentErrorMessagesTest extends TestCase
     public function testEveryRefusalCodeHasAMessageExceptTheBackOfficeOnes(): void
     {
         $backOfficeOnly = ['DELIVERED_MAIL_NOT_ALLOWED', 'DELIVERED_MAIL_FAILED', 'SHIPMENT_MAIL_NOT_ALLOWED', 'SHIPMENT_MAIL_FAILED'];
-        $table = (new ReflectionClass(ShipmentErrorMessages::class))->getConstant('BY_CODE');
+        $table = (new \ReflectionClass(ShipmentErrorMessages::class))->getConstant('BY_CODE');
 
-        foreach ((new ReflectionClass(ShipmentConstraintException::class))->getConstants() as $name => $code) {
+        foreach ((new \ReflectionClass(ShipmentConstraintException::class))->getConstants() as $name => $code) {
             if (in_array($name, $backOfficeOnly, true)) {
                 self::assertArrayNotHasKey($code, $table, $name);
             } else {

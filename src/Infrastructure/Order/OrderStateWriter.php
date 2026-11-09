@@ -13,10 +13,7 @@ namespace DrSoftFr\Module\HubAsYou\Infrastructure\Order;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Persistence\DatabaseError;
-use Order;
-use OrderHistory;
 use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
-use RuntimeException;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -44,17 +41,17 @@ class OrderStateWriter
 
     /**
      * @throws ShipmentException The history could not be saved (in the logs)
-     * @throws RuntimeException The e-mail of the state was not sent
+     * @throws \RuntimeException The e-mail of the state was not sent
      */
     public function change(int $orderId, int $stateId): void
     {
-        $order = new Order($orderId);
+        $order = new \Order($orderId);
 
         if ((int) $order->getCurrentState() === $stateId) {
             return;
         }
 
-        $history = new OrderHistory();
+        $history = new \OrderHistory();
         $history->id_order = (int) $order->id;
         $history->id_employee = $this->employeeContext
             ? (int) $this->employeeContext->getEmployee()?->getId()
@@ -67,10 +64,10 @@ class OrderStateWriter
             sprintf('The history of order #%d could not be saved for state %d.', $orderId, $stateId),
             static fn (): bool => (bool) $history->add(true)
         );
-        Order::cleanHistoryCache();
+        \Order::cleanHistoryCache();
 
         if (!$history->sendEmail($order)) {
-            throw new RuntimeException(sprintf('Order #%d is in state %d, but the e-mail of this state was not sent.', $orderId, $stateId));
+            throw new \RuntimeException(sprintf('Order #%d is in state %d, but the e-mail of this state was not sent.', $orderId, $stateId));
         }
     }
 }

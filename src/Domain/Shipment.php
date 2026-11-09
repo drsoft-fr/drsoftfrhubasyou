@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Domain;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
 
@@ -41,9 +40,9 @@ final class Shipment
         public readonly string $trackingNumber,
         public readonly ?string $trackingUrl,
         public readonly ShipmentStatus $status,
-        public readonly ?DateTimeImmutable $shippedAt,
-        public readonly ?DateTimeImmutable $deliveredAt,
-        public readonly ?DateTimeImmutable $mailSentAt,
+        public readonly ?\DateTimeImmutable $shippedAt,
+        public readonly ?\DateTimeImmutable $deliveredAt,
+        public readonly ?\DateTimeImmutable $mailSentAt,
         public readonly array $lines,
     ) {
     }
@@ -62,10 +61,10 @@ final class Shipment
         string $trackingNumber,
         ?string $trackingUrl,
         ShipmentStatus $status,
-        ?DateTimeImmutable $shippedAt,
-        ?DateTimeImmutable $deliveredAt,
+        ?\DateTimeImmutable $shippedAt,
+        ?\DateTimeImmutable $deliveredAt,
         array $quantities,
-        DateTimeImmutable $now,
+        \DateTimeImmutable $now,
     ): self {
         [$shippedAt, $deliveredAt] = ShipmentDates::resolve($status, $shippedAt, $deliveredAt, null, null, $now);
         $lines = [];
@@ -104,9 +103,9 @@ final class Shipment
         ?string $trackingNumber,
         ?string $trackingUrl,
         ?ShipmentStatus $status,
-        ?DateTimeImmutable $shippedAt,
-        ?DateTimeImmutable $deliveredAt,
-        DateTimeImmutable $now,
+        ?\DateTimeImmutable $shippedAt,
+        ?\DateTimeImmutable $deliveredAt,
+        \DateTimeImmutable $now,
     ): self {
         $status ??= $this->status;
         [$shippedAt, $deliveredAt] = ShipmentDates::resolve($status, $shippedAt, $deliveredAt, $this->shippedAt, $this->deliveredAt, $now);

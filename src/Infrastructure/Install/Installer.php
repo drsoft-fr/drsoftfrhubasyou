@@ -11,10 +11,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Install;
 
-use Db;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
-use Exception;
-use Module;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -34,18 +31,18 @@ final class Installer
     private const SQL_DIR = __DIR__ . '/Resources/sql/';
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
-    public function install(Module $module): void
+    public function install(\Module $module): void
     {
         $this->executeSqlFile(self::SQL_DIR . 'install.sql');
 
         if (!$module->registerHook(self::HOOKS)) {
-            throw new Exception('An error occurred when registering the hooks of the module.');
+            throw new \Exception('An error occurred when registering the hooks of the module.');
         }
 
         if (!(new Settings())->install()) {
-            throw new Exception('An error occurred when saving the settings of the module.');
+            throw new \Exception('An error occurred when saving the settings of the module.');
         }
     }
 
@@ -53,7 +50,7 @@ final class Installer
      * The parcels are deleted with the module, except when it is being reset: "Reset" in
      * the back office is an uninstallation followed by an installation.
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function uninstall(bool $keepParcels = false): void
     {
@@ -62,26 +59,26 @@ final class Installer
         }
 
         if (!(new Settings())->uninstall()) {
-            throw new Exception('An error occurred when deleting the settings of the module.');
+            throw new \Exception('An error occurred when deleting the settings of the module.');
         }
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     private function executeSqlFile(string $file): void
     {
         $sql = file_get_contents($file);
 
         if ($sql === false) {
-            throw new Exception(sprintf('Unable to read %s.', basename($file)));
+            throw new \Exception(sprintf('Unable to read %s.', basename($file)));
         }
 
         $sql = str_replace(['_DB_PREFIX_', '_MYSQL_ENGINE_'], [_DB_PREFIX_, _MYSQL_ENGINE_], $sql);
 
         foreach (self::splitStatements($sql) as $statement) {
-            if (!Db::getInstance()->execute($statement)) {
-                throw new Exception(sprintf('SQL error in %s: %s', basename($file), Db::getInstance()->getMsgError()));
+            if (!\Db::getInstance()->execute($statement)) {
+                throw new \Exception(sprintf('SQL error in %s: %s', basename($file), \Db::getInstance()->getMsgError()));
             }
         }
     }

@@ -13,7 +13,6 @@ namespace DrSoftFr\Module\HubAsYou\ApiPlatform\Resources;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Application\Query\ListShipments;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use PrestaShopBundle\ApiPlatform\Metadata\CQRSPaginate;
@@ -72,9 +71,9 @@ class ShipmentList
 
     public string $status;
 
-    public ?DateTimeImmutable $shippedAt;
+    public ?\DateTimeImmutable $shippedAt;
 
-    public ?DateTimeImmutable $deliveredAt;
+    public ?\DateTimeImmutable $deliveredAt;
 
     #[ApiProperty(openapiContext: Shipment::LINES_OPENAPI)]
     public array $lines;

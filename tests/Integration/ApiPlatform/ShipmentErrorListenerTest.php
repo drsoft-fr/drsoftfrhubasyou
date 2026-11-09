@@ -22,13 +22,10 @@ use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Throwable;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -91,13 +88,13 @@ final class ShipmentErrorListenerTest extends TestCase
     {
         // Back office (no operation of API Platform), or an error that is not the module's
         self::assertNull($this->answer(ShipmentNotFoundException::withId(12), null));
-        self::assertNull($this->answer(new RuntimeException('other'), $this->exceptionToStatus(Shipment::class)));
+        self::assertNull($this->answer(new \RuntimeException('other'), $this->exceptionToStatus(Shipment::class)));
     }
 
     /**
      * @param array<class-string, int>|null $statuses null: not a request of the Admin API
      */
-    private function answer(Throwable $exception, ?array $statuses): ?Response
+    private function answer(\Throwable $exception, ?array $statuses): ?Response
     {
         $request = new Request();
 
@@ -116,6 +113,6 @@ final class ShipmentErrorListenerTest extends TestCase
      */
     private function exceptionToStatus(string $resource): array
     {
-        return (new ReflectionClass($resource))->getAttributes(ApiResource::class)[0]->getArguments()['exceptionToStatus'];
+        return (new \ReflectionClass($resource))->getAttributes(ApiResource::class)[0]->getArguments()['exceptionToStatus'];
     }
 }

@@ -11,10 +11,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\ShopOrder;
-use Order;
-use Validate;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -27,9 +24,9 @@ class OrderRepository
 {
     public function find(int $orderId): ?ShopOrder
     {
-        $order = new Order($orderId);
+        $order = new \Order($orderId);
 
-        if (!Validate::isLoadedObject($order)) {
+        if (!\Validate::isLoadedObject($order)) {
             return null;
         }
 
@@ -45,11 +42,11 @@ class OrderRepository
      */
     public function findLines(int $orderId): ?array
     {
-        if (!DatabaseReader::value((new DbQuery())->select('1')->from('orders')->where('id_order = ' . $orderId))) {
+        if (!DatabaseReader::value((new \DbQuery())->select('1')->from('orders')->where('id_order = ' . $orderId))) {
             return null;
         }
 
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('od.id_order_detail, od.product_quantity, od.product_quantity_refunded, od.product_quantity_return, p.is_virtual')
             ->from('order_detail', 'od')
             ->leftJoin('product', 'p', 'p.id_product = od.product_id')
@@ -74,7 +71,7 @@ class OrderRepository
     public function hasHadState(int $orderId, int $stateId): bool
     {
         return (bool) DatabaseReader::value(
-            (new DbQuery())
+            (new \DbQuery())
                 ->select('1')
                 ->from('order_history')
                 ->where('id_order = ' . $orderId . ' AND id_order_state = ' . $stateId)

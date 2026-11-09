@@ -43,11 +43,7 @@ final class ShipmentUpdateProcessor implements ProcessorInterface
         $urlId = (int) ($uriVariables['shipmentId'] ?? 0);
 
         if (is_array($body) && array_key_exists('shipmentId', $body) && $body['shipmentId'] !== $urlId) {
-            throw new ShipmentConstraintException(
-                sprintf('The shipmentId of the body is not the parcel %d of the URL.', $urlId),
-                ShipmentConstraintException::ID_MISMATCH,
-                parameters: ['id' => $urlId]
-            );
+            throw new ShipmentConstraintException(sprintf('The shipmentId of the body is not the parcel %d of the URL.', $urlId), ShipmentConstraintException::ID_MISMATCH, parameters: ['id' => $urlId]);
         }
 
         return $this->commands->process($data, $operation, $uriVariables, $context);

@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Log;
 
-use Throwable;
-
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -27,7 +25,7 @@ class ShipmentEffectsLog
     /**
      * @param string $subject What failed, for example "parcel #12"
      */
-    public function failure(string $subject, Throwable $t, int $orderId): void
+    public function failure(string $subject, \Throwable $t, int $orderId): void
     {
         ModuleLog::error(sprintf('%s - %s', $subject, ModuleLog::describe($t)), $orderId);
     }

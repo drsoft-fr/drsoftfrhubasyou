@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Application\Command;
 
-use DateTimeImmutable;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentDates;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
 use DrSoftFr\Module\HubAsYou\Domain\ValueObject\ShipmentStatus;
@@ -35,9 +34,9 @@ final class AddShipmentCommand
 
     public readonly ShipmentStatus $status;
 
-    public readonly ?DateTimeImmutable $shippedAt;
+    public readonly ?\DateTimeImmutable $shippedAt;
 
-    public readonly ?DateTimeImmutable $deliveredAt;
+    public readonly ?\DateTimeImmutable $deliveredAt;
 
     /**
      * @var array<int, int> id_order_detail => quantity

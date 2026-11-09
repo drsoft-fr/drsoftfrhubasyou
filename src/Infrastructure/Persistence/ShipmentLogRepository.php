@@ -11,10 +11,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Persistence;
 
-use Db;
-use DbQuery;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
-use InvalidArgumentException;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -60,7 +57,7 @@ class ShipmentLogRepository
             'date_add' => date(ShipmentRepository::DATE_FORMAT),
         ];
 
-        DatabaseError::write('The journal line of the parcel could not be saved.', static fn (Db $db): bool => $db->insert(self::TABLE, $row, true));
+        DatabaseError::write('The journal line of the parcel could not be saved.', static fn (\Db $db): bool => $db->insert(self::TABLE, $row, true));
     }
 
     /**
@@ -78,10 +75,10 @@ class ShipmentLogRepository
     public function findByOrder(int $orderId, int $limit, int $offset = 0): array
     {
         if ($limit < 1 || $offset < 0) {
-            throw new InvalidArgumentException('The journal is read one page at a time: limit >= 1, offset >= 0.');
+            throw new \InvalidArgumentException('The journal is read one page at a time: limit >= 1, offset >= 0.');
         }
 
-        $query = (new DbQuery())
+        $query = (new \DbQuery())
             ->select('j.*, e.firstname, e.lastname')
             ->from(self::TABLE, 'j')
             ->leftJoin('employee', 'e', 'e.id_employee = j.id_employee')
@@ -103,7 +100,7 @@ class ShipmentLogRepository
     public function countByOrder(int $orderId): int
     {
         return (int) DatabaseReader::value(
-            (new DbQuery())
+            (new \DbQuery())
                 ->select('COUNT(*)')
                 ->from(self::TABLE)
                 ->where('id_order = ' . $orderId)

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Integration\Support;
 
-use Configuration;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\CommandHandler\AddShipmentHandler;
 use DrSoftFr\Module\HubAsYou\Application\CommandHandler\DeleteShipmentHandler;
@@ -178,6 +177,6 @@ abstract class IntegrationTestCase extends TestCase
      */
     private function apiClientContext(bool $fromApi): ApiClientContext
     {
-        return new ApiClientContext($fromApi ? new ApiClient(0, self::API_CLIENT, [], null, (int) Configuration::get('PS_SHOP_DEFAULT')) : null);
+        return new ApiClientContext($fromApi ? new ApiClient(0, self::API_CLIENT, [], null, (int) \Configuration::get('PS_SHOP_DEFAULT')) : null);
     }
 }

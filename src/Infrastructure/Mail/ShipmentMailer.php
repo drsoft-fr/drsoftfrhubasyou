@@ -11,17 +11,9 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Infrastructure\Mail;
 
-use Context;
-use Customer;
 use DrSoftFr\Module\HubAsYou\Domain\Shipment;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentLine;
 use DrSoftFr\Module\HubAsYou\Infrastructure\Configuration\Settings;
-use Language;
-use Link;
-use Mail;
-use Order;
-use RuntimeException;
-use Validate;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -44,7 +36,7 @@ class ShipmentMailer
     /**
      * "Your parcel is on its way": one parcel, its content and its tracking.
      *
-     * @throws RuntimeException Not sent, with the reason
+     * @throws \RuntimeException Not sent, with the reason
      */
     public function sendShipmentMail(int $orderId, Shipment $shipment): void
     {
@@ -56,7 +48,7 @@ class ShipmentMailer
      *
      * @param Shipment[] $shipments
      *
-     * @throws RuntimeException Not sent, with the reason
+     * @throws \RuntimeException Not sent, with the reason
      */
     public function sendDeliveredMail(int $orderId, array $shipments): void
     {
@@ -105,28 +97,28 @@ class ShipmentMailer
     }
 
     /**
-     * @throws RuntimeException Not sent: no customer with a valid e-mail address, or refused by PrestaShop
+     * @throws \RuntimeException Not sent: no customer with a valid e-mail address, or refused by PrestaShop
      */
     private function send(int $orderId, string $template, string $subject, array $vars): void
     {
-        $order = new Order($orderId);
-        $customer = new Customer((int) $order->id_customer);
+        $order = new \Order($orderId);
+        $customer = new \Customer((int) $order->id_customer);
 
-        if (!Validate::isLoadedObject($customer) || !Validate::isEmail($customer->email)) {
-            throw new RuntimeException(sprintf('The e-mail was not sent: customer #%d of order #%d does not exist or has no valid e-mail address.', (int) $order->id_customer, $orderId));
+        if (!\Validate::isLoadedObject($customer) || !\Validate::isEmail($customer->email)) {
+            throw new \RuntimeException(sprintf('The e-mail was not sent: customer #%d of order #%d does not exist or has no valid e-mail address.', (int) $order->id_customer, $orderId));
         }
 
         // Mail::send() of PrestaShop reads the context (shop, link to build the URLs of the
         // template): it has no other way to receive them
-        $context = Context::getContext();
+        $context = \Context::getContext();
 
         if (!$context->link) {
-            $context->link = new Link();
+            $context->link = new \Link();
         }
 
-        $language = new Language((int) $order->id_lang);
+        $language = new \Language((int) $order->id_lang);
 
-        $sent = Mail::send(
+        $sent = \Mail::send(
             (int) $order->id_lang,
             $template,
             $context->getTranslator()->trans($subject, [], 'Modules.Drsoftfrhubasyou.Shop', $language->locale),
@@ -148,7 +140,7 @@ class ShipmentMailer
 
         if (!$sent) {
             // PrestaShop writes its own reason in the logs just before (SMTP error, missing template…)
-            throw new RuntimeException(sprintf('The e-mail was not sent: PrestaShop refused or failed to send it (template %s, see the e-mail settings and the log line before this one).', $template));
+            throw new \RuntimeException(sprintf('The e-mail was not sent: PrestaShop refused or failed to send it (template %s, see the e-mail settings and the log line before this one).', $template));
         }
     }
 

@@ -3,7 +3,7 @@ VERSION := 1.0.1
 COMPOSER ?= composer
 ARCHIVE := $(CURDIR)/dist/$(MODULE_NAME)-$(VERSION).zip
 
-.PHONY: build composer package clean test test-integration
+.PHONY: build composer package clean test test-integration cs cs-check
 
 composer:
 	$(COMPOSER) install --no-dev --prefer-dist --optimize-autoloader --no-interaction
@@ -28,11 +28,20 @@ package: build
 		   "$(MODULE_NAME)/composer.lock" \
 		   "$(MODULE_NAME)/config_*.xml" \
 		   "$(MODULE_NAME)/phpunit*.xml.dist" \
+		   "$(MODULE_NAME)/.php-cs-fixer*" \
 		   "$(MODULE_NAME)/*.log"
 	@echo "Archive créée : $(ARCHIVE)"
 
-# Unit tests: no PrestaShop, no database
-test:
+# PrestaShop's coding standard (the one its module validator checks): cs fixes the files,
+# cs-check only reports, and fails if a file does not follow it
+cs:
+	vendor/bin/php-cs-fixer fix
+
+cs-check:
+	vendor/bin/php-cs-fixer fix --dry-run --diff
+
+# Unit tests: no PrestaShop, no database; the coding standard first
+test: cs-check
 	vendor/bin/phpunit
 
 # Integration tests: inside a PrestaShop shop where the module is installed, as the user of

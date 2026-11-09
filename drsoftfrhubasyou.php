@@ -53,17 +53,17 @@ class drsoftfrhubasyou extends Module
     public const JOURNAL_ORDER_PAGE_LINES = 20;
 
     /**
-     * @var string $authorEmail Author email
+     * @var string Author email
      */
     public $authorEmail;
 
     /**
-     * @var string $moduleGithubRepositoryUrl Module GitHub repository URL
+     * @var string Module GitHub repository URL
      */
     public $moduleGithubRepositoryUrl;
 
     /**
-     * @var string $moduleGithubIssuesUrl Module GitHub issues URL
+     * @var string Module GitHub issues URL
      */
     public $moduleGithubIssuesUrl;
 
@@ -335,7 +335,7 @@ class drsoftfrhubasyou extends Module
                             ['id' => 'send_mail_on', 'value' => 1, 'label' => $this->trans('Yes', [], 'Admin.Global')],
                             ['id' => 'send_mail_off', 'value' => 0, 'label' => $this->trans('No', [], 'Admin.Global')],
                         ],
-                        'desc' => $this->trans('Sent once per parcel, while it is on its way, in the language of the order (template "drsoftfrhubasyou_shipment"). Not sent for a parcel received as already delivered.', [],'Modules.Drsoftfrhubasyou.Admin'),
+                        'desc' => $this->trans('Sent once per parcel, while it is on its way, in the language of the order (template "drsoftfrhubasyou_shipment"). Not sent for a parcel received as already delivered.', [], 'Modules.Drsoftfrhubasyou.Admin'),
                     ],
                     [
                         'type' => 'switch',

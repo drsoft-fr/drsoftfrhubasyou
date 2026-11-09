@@ -11,12 +11,7 @@ declare(strict_types=1);
 
 namespace DrSoftFr\Module\HubAsYou\Tests\Unit;
 
-use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
-use RecursiveCallbackFilterIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -36,8 +31,8 @@ final class ModuleFilesTest extends TestCase
     /** API Platform runs every file of this folder: an index.php there would break the API */
     private const NO_INDEX = ['src/ApiPlatform/Resources'];
 
-    /** Run before PrestaShop (tests), or the file PrestaShop opens on a folder */
-    private const NO_GUARD = ['tests/Unit/bootstrap.php', 'tests/Integration/bootstrap.php'];
+    /** Run before PrestaShop (tests) or without it (PHP CS Fixer) */
+    private const NO_GUARD = ['.php-cs-fixer.dist.php', 'tests/Unit/bootstrap.php', 'tests/Integration/bootstrap.php'];
 
     private const GUARD = "if (!defined('_PS_VERSION_')) {\n    exit;\n}";
 
@@ -93,6 +88,7 @@ final class ModuleFilesTest extends TestCase
         $missing = [];
 
         foreach ($this->files('php') as $path => $content) {
+            // Right after the opening tag, no blank line: the validator's license check refuses one
             if (!preg_match('~\A<\?php\n/\*\*\n(?: \*.*\n)*? \* @license   https://opensource\.org/licenses/MIT MIT License\n~', $content)) {
                 $missing[] = $path;
             }
@@ -144,20 +140,20 @@ final class ModuleFilesTest extends TestCase
     }
 
     /**
-     * @return iterable<SplFileInfo>
+     * @return iterable<\SplFileInfo>
      */
     private function iterator(): iterable
     {
-        $directory = new RecursiveDirectoryIterator(self::ROOT, FilesystemIterator::SKIP_DOTS);
-        $filter = new RecursiveCallbackFilterIterator(
+        $directory = new \RecursiveDirectoryIterator(self::ROOT, \FilesystemIterator::SKIP_DOTS);
+        $filter = new \RecursiveCallbackFilterIterator(
             $directory,
-            fn (SplFileInfo $item): bool => !($item->isDir() && (str_starts_with($item->getFilename(), '.') || in_array($this->relative($item), self::SKIPPED_FOLDERS, true)))
+            fn (\SplFileInfo $item): bool => !($item->isDir() && (str_starts_with($item->getFilename(), '.') || in_array($this->relative($item), self::SKIPPED_FOLDERS, true)))
         );
 
-        return new RecursiveIteratorIterator($filter, RecursiveIteratorIterator::SELF_FIRST);
+        return new \RecursiveIteratorIterator($filter, \RecursiveIteratorIterator::SELF_FIRST);
     }
 
-    private function relative(SplFileInfo $item): string
+    private function relative(\SplFileInfo $item): string
     {
         return ltrim(substr($item->getPathname(), strlen(self::ROOT)), '/');
     }

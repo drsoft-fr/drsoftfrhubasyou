@@ -35,6 +35,7 @@ class ShipmentConstraintException extends ShipmentException
     public const INVALID_LIST_PARAMETER = 21;
     public const FORBIDDEN_CHARACTER = 22;
     public const DELIVERED_IS_FINAL = 23;
+    public const ID_MISMATCH = 24;
 
     public static function duplicateReference(string $externalReference): self
     {

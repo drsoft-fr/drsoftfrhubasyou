@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DrSoftFr\Module\HubAsYou\ApiPlatform;
 
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException as Refusal;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
@@ -40,11 +39,11 @@ final class ShipmentErrorMessages
         Refusal::INVALID_LIST_PARAMETER => 'The value of %fields% is not valid.',
         Refusal::FORBIDDEN_CHARACTER => '%fields% cannot contain line breaks, control characters or invisible characters.',
         Refusal::DELIVERED_IS_FINAL => 'Parcel %id% is delivered: its state can no longer be changed. To correct it, delete the parcel and declare it again.',
+        Refusal::ID_MISMATCH => 'The shipmentId of the body must be %id%, the parcel of the URL: a parcel keeps its id.',
     ];
 
     private const BY_CLASS = [
         ShipmentNotFoundException::class => 'Parcel %id% not found.',
-        ShipmentConflictException::class => 'Parcel %id% has changed since it was read: read it again before changing it.',
         OrderBusyException::class => 'The parcels of order %order% are being updated by another request: send this request again in a moment.',
     ];
 

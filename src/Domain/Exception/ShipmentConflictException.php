@@ -6,7 +6,8 @@ namespace DrSoftFr\Module\HubAsYou\Domain\Exception;
 
 /**
  * The parcel changed since the version the change was based on (form of the back
- * office opened before an update of HubAsYou): nothing saved, HTTP 409.
+ * office opened before an update of HubAsYou): nothing saved, the form shows the current
+ * values. Back office only: the Admin API sends no version, so it never raises it.
  */
 class ShipmentConflictException extends ShipmentException
 {

@@ -64,12 +64,12 @@ Paramètres de la liste : `orderId`, `externalReference` (filtres), `limit` (10 
 
 | Champ | Type | Création | Règles |
 | --- | --- | --- | --- |
-| `shipmentId` | entier | — (attribué) | identifiant du colis dans la boutique, à conserver pour les mises à jour |
+| `shipmentId` | entier | — (attribué) | identifiant du colis dans la boutique, à conserver pour les mises à jour ; dans le corps d'un `PATCH`, facultatif, et seulement s'il est celui de l'URL (`422` sinon) |
 | `externalReference` | texte, 64 max. | **obligatoire** | identifiant du colis chez HubAsYou ; **unique**, comparé à l'identique (`HAY-1` et `hay-1` sont deux colis, dans le filtre de la liste aussi) ; non modifiable |
 | `orderId` | entier | **obligatoire** | commande existante ; non modifiable |
 | `carrierName` | texte, 64 max. | **obligatoire** | nom du transporteur affiché au client |
 | `trackingNumber` | texte, 64 max. | **obligatoire** | numéro de suivi |
-| `trackingUrl` | URL http(s), 255 max. | facultatif | page de suivi du transporteur, lien affiché au client |
+| `trackingUrl` | URL http(s), 255 max. | facultatif | page de suivi du transporteur, lien affiché au client ; `""` dans un `PATCH` retire le lien |
 | `status` | texte | **obligatoire** | `shipped`, `in_transit`, `delivered`, `exception` |
 | `shippedAt` | date | facultatif | date d'expédition ; par défaut, date de réception du premier état `shipped`, `in_transit` ou `delivered` (pour un colis déclaré livré à une date passée : sa date de livraison) |
 | `deliveredAt` | date | facultatif | date de livraison, **seulement avec l'état `delivered`** ; par défaut, date de réception de cet état ; jamais avant `shippedAt` |
@@ -89,6 +89,8 @@ Règles de cohérence :
 - une suppression n'annule ni l'e-mail déjà envoyé au client ni l'état de la commande ;
 - **colis perdu et colis de remplacement** : un colis perdu garde ses articles, quel que soit son état, `exception` compris. Le colis qui le remplace est donc refusé tant que le colis perdu existe (`422`, quantité dépassée). Il faut **supprimer le colis perdu, puis déclarer le nouveau**. La suppression est inscrite dans l'historique des colis de la commande (fiche de la commande, dans le BO), avec la référence et le contenu du colis ; cet historique n'est jamais effacé par le module. Cette règle empêche une commande de compter plus d'articles que commandé si le colis perdu réapparaît : il ne peut plus s'ajouter. Exemple complet ci-dessous (§ 4) ;
 - un `PATCH` ne change que les champs envoyés ; une date déjà enregistrée n'est pas écrasée par la date par défaut ;
+- `null` dans un `PATCH` : pour `trackingUrl`, `shippedAt` et `deliveredAt`, il ne change rien (comme un champ absent) ; pour les autres champs, la requête est refusée (`400`). Pour retirer le lien de suivi, envoyer `"trackingUrl": ""`. Exemple : `{"trackingUrl": ""}` retire le lien, `{"trackingUrl": null}` le garde, `{"carrierName": null}` répond `400` ;
+- `shipmentId` dans le corps d'un `PATCH` : accepté seulement s'il est le nombre de l'URL. Exemple : `{"shipmentId": 13, "status": "delivered"}` envoyé à `/hubasyou/shipments/12` est refusé en entier (`422`), aucun colis n'est modifié ;
 - tant qu'un colis n'est pas livré, son état peut changer librement (`shipped`, `in_transit`, `exception`, `delivered`, dans n'importe quel ordre) ;
 - **un colis livré ne change plus d'état** : un `PATCH` qui demande `shipped`, `in_transit` ou `exception` est refusé (`422`, rien n'est appliqué). À ce moment, la commande est déjà livrée et le client a reçu l'e-mail de livraison : un état plus ancien les contredirait. Exemple : `HAY-000981` est `delivered` le 5 novembre ; le 7, le transporteur signale un problème : le `PATCH` vers `exception` est refusé. Pour corriger un `delivered` envoyé par erreur, **supprimer le colis** puis le déclarer à nouveau. Restent permis sur un colis livré : renvoyer `delivered`, corriger le transporteur, le numéro, l'URL ou les dates. Le marchand, lui, peut toujours changer l'état depuis le BO ;
 - les dates restent cohérentes : `deliveredAt` n'est accepté qu'avec l'état `delivered` (envoyé ou déjà enregistré), la livraison ne peut pas précéder l'expédition (`422` sinon), et un colis qui quitte l'état `delivered` (depuis le BO) perd sa date de livraison (une nouvelle est fixée s'il le redevient).
@@ -160,13 +162,13 @@ Si l'ancien colis réapparaît ensuite, un `POST` de `HAY-000982` est refusé (`
 | `403` | jeton sans le droit demandé | message |
 | `404` | colis introuvable ; ou identifiant mal écrit dans l'URL (`1.5`, `01`, `abc`…), qui ne désigne aucun colis | `detail` : par exemple `Parcel 12 not found.` ; pour un identifiant mal écrit, seul le code est garanti |
 | `422` | champ manquant ou invalide | liste `[{"propertyPath": "status", "message": "…"}, …]` |
-| `422` | refus métier : retour à la ligne ou caractère invisible dans un texte, date mal écrite, inexistante ou hors limites, `externalReference` déjà utilisée par un colis au contenu différent, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis, `PATCH` qui fait quitter l'état `delivered` | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
+| `422` | refus métier : retour à la ligne ou caractère invisible dans un texte, date mal écrite, inexistante ou hors limites, `externalReference` déjà utilisée par un colis au contenu différent, commande inconnue, ligne d'une autre commande, produit virtuel, quantité dépassée, `PATCH` qui change le contenu du colis, `shipmentId` du corps différent de celui de l'URL, `PATCH` qui fait quitter l'état `delivered` | `detail` : message en anglais, par exemple `Order line 8: 2 unit(s) ordered, 1 already in parcels, 2 sent.` |
 | `500` | **temporaire** : erreur technique de la boutique, base de données indisponible par exemple. La réponse ne dit rien de la demande | message générique ; renvoyer la même requête plus tard |
-| `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail` ; renvoyer la même requête un peu plus tard |
+| `503` | **temporaire** : une autre requête met à jour les colis de la même commande depuis plus de 15 secondes | `detail`, et l'en-tête `Retry-After: 5` (secondes) ; renvoyer la même requête après ce délai |
 
 **Requêtes simultanées** : les requêtes qui touchent les colis d'une même commande sont traitées l'une après l'autre (une requête attend la précédente jusqu'à 15 secondes, puis répond `503`). HubAsYou peut donc envoyer en parallèle les colis d'une commande : les quantités, l'état de la commande et les e-mails restent justes.
 
-**Renvoi sans risque** : en cas de doute (délai dépassé, coupure, `500`, `503`), HubAsYou peut renvoyer la même requête. Pour un `503`, attendre quelques secondes, en allongeant l'attente à chaque nouvel essai.
+**Renvoi sans risque** : en cas de doute (délai dépassé, coupure, `500`, `503`), HubAsYou peut renvoyer la même requête. Pour un `503`, attendre au moins le nombre de secondes de l'en-tête `Retry-After`, en allongeant l'attente à chaque nouvel essai.
 
 Un `POST` renvoyé pour un colis déjà enregistré répond `201` avec le colis existant. Il suffit que la commande, les lignes, le transporteur, le numéro et l'URL de suivi soient les mêmes. Exemple : la boutique s'arrête juste après avoir enregistré le colis, avant l'e-mail ; le renvoi fait partir l'e-mail et change l'état de la commande, sans doublon. Rien n'est écrasé : si le colis est déjà `delivered`, un `POST` en retard qui dit `shipped` ne le fait pas reculer, et la réponse montre l'état réel.
 

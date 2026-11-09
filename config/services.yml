@@ -19,6 +19,10 @@ services:
   DrSoftFr\Module\HubAsYou\Infrastructure\Log\ShipmentJournal: ~
   DrSoftFr\Module\HubAsYou\Infrastructure\Context\RequestOrigin: ~
 
+  # Admin API: PATCH of a parcel (shipmentId of the body checked, then PrestaShop's CQRS processor)
+  DrSoftFr\Module\HubAsYou\ApiPlatform\Processor\ShipmentUpdateProcessor:
+    tags: [ 'api_platform.state_processor' ]
+
   # Admin API: must run before the error listener of API Platform (priority -96)
   DrSoftFr\Module\HubAsYou\ApiPlatform\EventListener\ShipmentErrorListener:
     tags:

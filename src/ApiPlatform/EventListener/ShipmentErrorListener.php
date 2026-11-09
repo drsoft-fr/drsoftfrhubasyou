@@ -6,6 +6,7 @@ namespace DrSoftFr\Module\HubAsYou\ApiPlatform\EventListener;
 
 use ApiPlatform\Metadata\HttpOperation;
 use DrSoftFr\Module\HubAsYou\ApiPlatform\ShipmentErrorMessages;
+use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -20,6 +21,12 @@ use Symfony\Component\HttpKernel\Event\ExceptionEvent;
  */
 final class ShipmentErrorListener
 {
+    /**
+     * 503 (order busy): seconds to wait before sending the request again. The lock is
+     * waited for 15 seconds, so the other request has been running for at least that long.
+     */
+    public const RETRY_AFTER_SECONDS = 5;
+
     public function onKernelException(ExceptionEvent $event): void
     {
         $exception = $event->getThrowable();
@@ -35,6 +42,12 @@ final class ShipmentErrorListener
             return;
         }
 
+        $headers = ['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'deny'];
+
+        if ($exception instanceof OrderBusyException) {
+            $headers['Retry-After'] = (string) self::RETRY_AFTER_SECONDS;
+        }
+
         $event->setResponse(new JsonResponse(
             [
                 'type' => 'https://tools.ietf.org/html/rfc2616#section-10',
@@ -43,7 +56,7 @@ final class ShipmentErrorListener
                 'detail' => ShipmentErrorMessages::for($exception),
             ],
             $status,
-            ['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'deny'],
+            $headers,
         ));
     }
 }

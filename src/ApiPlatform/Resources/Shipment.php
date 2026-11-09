@@ -6,12 +6,12 @@ namespace DrSoftFr\Module\HubAsYou\ApiPlatform\Resources;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use DrSoftFr\Module\HubAsYou\ApiPlatform\Processor\ShipmentUpdateProcessor;
 use DrSoftFr\Module\HubAsYou\Application\Command\AddShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\DeleteShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Command\EditShipmentCommand;
 use DrSoftFr\Module\HubAsYou\Application\Query\GetShipmentForEditing;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\OrderBusyException;
-use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConflictException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentConstraintException;
 use DrSoftFr\Module\HubAsYou\Domain\Exception\ShipmentNotFoundException;
 use DrSoftFr\Module\HubAsYou\Domain\ShipmentRules;
@@ -47,6 +47,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             uriTemplate: '/hubasyou/shipments/{shipmentId}',
             requirements: self::ID_REQUIREMENT,
             validationContext: ['groups' => ['Default', 'Update']],
+            // Refuses a shipmentId of the body that is not the one of the URL, then runs the command
+            processor: ShipmentUpdateProcessor::class,
             CQRSCommand: EditShipmentCommand::class,
             CQRSQuery: GetShipmentForEditing::class,
             scopes: ['hubasyou_shipment_write'],
@@ -61,7 +63,6 @@ use Symfony\Component\Validator\Constraints as Assert;
     exceptionToStatus: [
         ShipmentConstraintException::class => Response::HTTP_UNPROCESSABLE_ENTITY,
         ShipmentNotFoundException::class => Response::HTTP_NOT_FOUND,
-        ShipmentConflictException::class => Response::HTTP_CONFLICT,
         // Temporary: the same request can be sent again
         OrderBusyException::class => Response::HTTP_SERVICE_UNAVAILABLE,
     ],
@@ -98,12 +99,10 @@ class Shipment
     public int $orderId;
 
     #[Assert\NotBlank(groups: ['Create'])]
-    #[Assert\NotBlank(allowNull: true, groups: ['Update'])]
     #[Assert\Length(max: ShipmentRules::TEXT_MAX_LENGTH)]
     public string $carrierName;
 
     #[Assert\NotBlank(groups: ['Create'])]
-    #[Assert\NotBlank(allowNull: true, groups: ['Update'])]
     #[Assert\Length(max: ShipmentRules::TEXT_MAX_LENGTH)]
     public string $trackingNumber;
 
